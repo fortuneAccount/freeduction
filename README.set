@@ -204,7 +204,7 @@ win
 ### Now you can clone or download the repo, and install the requirements via pip
 ```
 		cd %userprofile%/Downloads
-		git clone --recursive https://https://{{GIT_SOURCE}}/{{RJ_PROJ}}/anattagen/anattagen
+		git clone --recursive https://{{GIT_SOURCE}}/{{GIT_USER}}/{{RJ_PROJ}}/
 		cd {{RJ_PROJ}}
 		python -m pip install -r requirements_win.txt
 		python -m Python\main.py
@@ -234,13 +234,13 @@ win
 ```
 	python Python\deploy.py
 ```
-## Apple Mac Users
+## CrApple Muck Users
 ```
-		  Update iTunes to enable auto-deduction from your ApplePay account. 
+		  Update iFumes to enable auto-deduction from your CrAppleCash account. 
 
-		Upgrade your monitor-stand
+		Upgrade your monitor-stand.
 		Do not look directly at {{RJ_PROJ}}.
- 		Carefully replace the stickers and reattatch any modification-detection
+ 		Carefully replace the stickers and reattatch any obsolescence-subversion
   		components before initializing apology-procedures. 
   		Disconnect your keyboard and press the button
 		to authorize Thought-Coin permissions.
