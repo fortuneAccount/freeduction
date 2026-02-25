@@ -61,79 +61,119 @@ read_ini() {
 }
 
 # ===== PARSE INI FILE =====
+# Game section
 GAMEPATH=$(read_ini "$GAMEINI" "Game" "Executable")
 GAMEDIR=$(read_ini "$GAMEINI" "Game" "Directory")
 GAMENAME_INI=$(read_ini "$GAMEINI" "Game" "Name")
 ISOPATH=$(read_ini "$GAMEINI" "Game" "IsoPath")
-RUNASADMIN=$(read_ini "$GAMEINI" "Options" "RunAsAdmin")
-USEKILLLIST=$(read_ini "$GAMEINI" "Options" "UseKillList")
-KILLLIST=$(read_ini "$GAMEINI" "Options" "KillList")
-MAPPERAPP=$(read_ini "$GAMEINI" "Paths" "ControllerMapperApp")
-MAPPEROPTS=$(read_ini "$GAMEINI" "Paths" "ControllerMapperOptions")
-MAPPERARGS=$(read_ini "$GAMEINI" "Paths" "ControllerMapperArguments")
-BORDERLESSAPP=$(read_ini "$GAMEINI" "Paths" "BorderlessWindowingApp")
-BORDERLESSOPTS=$(read_ini "$GAMEINI" "Paths" "BorderlessWindowingOptions")
-BORDERLESSARGS=$(read_ini "$GAMEINI" "Paths" "BorderlessWindowingArguments")
-MMTOOL=$(read_ini "$GAMEINI" "Paths" "MultiMonitorTool")
-MMOPTS=$(read_ini "$GAMEINI" "Paths" "MultiMonitorOptions")
-MMGAMECONFIG=$(read_ini "$GAMEINI" "Paths" "MultiMonitorGamingConfig")
-MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "Paths" "MultiMonitorDesktopConfig")
-MOUNTAPP=$(read_ini "$GAMEINI" "Paths" "DiscMountApp")
-MOUNTOPTS=$(read_ini "$GAMEINI" "Paths" "DiscMountOptions")
-MOUNTARGS=$(read_ini "$GAMEINI" "Paths" "DiscMountArguments")
-UNMOUNTAPP=$(read_ini "$GAMEINI" "Paths" "DiscUnmountApp")
-UNMOUNTOPTS=$(read_ini "$GAMEINI" "Paths" "DiscUnmountOptions")
-UNMOUNTARGS=$(read_ini "$GAMEINI" "Paths" "DiscUnmountArguments")
-PREAPP1=$(read_ini "$GAMEINI" "PreLaunch" "App1")
-PREAPP1OPTS=$(read_ini "$GAMEINI" "PreLaunch" "App1Options")
-PREAPP1ARGS=$(read_ini "$GAMEINI" "PreLaunch" "App1Arguments")
-PREAPP1WAIT=$(read_ini "$GAMEINI" "PreLaunch" "App1Wait")
-PREAPP2=$(read_ini "$GAMEINI" "PreLaunch" "App2")
-PREAPP2OPTS=$(read_ini "$GAMEINI" "PreLaunch" "App2Options")
-PREAPP2ARGS=$(read_ini "$GAMEINI" "PreLaunch" "App2Arguments")
-PREAPP2WAIT=$(read_ini "$GAMEINI" "PreLaunch" "App2Wait")
-PREAPP3=$(read_ini "$GAMEINI" "PreLaunch" "App3")
-PREAPP3OPTS=$(read_ini "$GAMEINI" "PreLaunch" "App3Options")
-PREAPP3ARGS=$(read_ini "$GAMEINI" "PreLaunch" "App3Arguments")
-PREAPP3WAIT=$(read_ini "$GAMEINI" "PreLaunch" "App3Wait")
-POSTAPP1=$(read_ini "$GAMEINI" "PostLaunch" "App1")
-POSTAPP1OPTS=$(read_ini "$GAMEINI" "PostLaunch" "App1Options")
-POSTAPP1ARGS=$(read_ini "$GAMEINI" "PostLaunch" "App1Arguments")
-POSTAPP1WAIT=$(read_ini "$GAMEINI" "PostLaunch" "App1Wait")
-POSTAPP2=$(read_ini "$GAMEINI" "PostLaunch" "App2")
-POSTAPP2OPTS=$(read_ini "$GAMEINI" "PostLaunch" "App2Options")
-POSTAPP2ARGS=$(read_ini "$GAMEINI" "PostLaunch" "App2Arguments")
-POSTAPP2WAIT=$(read_ini "$GAMEINI" "PostLaunch" "App2Wait")
-POSTAPP3=$(read_ini "$GAMEINI" "PostLaunch" "App3")
-POSTAPP3OPTS=$(read_ini "$GAMEINI" "PostLaunch" "App3Options")
-POSTAPP3ARGS=$(read_ini "$GAMEINI" "PostLaunch" "App3Arguments")
-POSTAPP3WAIT=$(read_ini "$GAMEINI" "PostLaunch" "App3Wait")
-JUSTAFTERAPP=$(read_ini "$GAMEINI" "PostLaunch" "JustAfterLaunchApp")
-JUSTAFTEROPTS=$(read_ini "$GAMEINI" "PostLaunch" "JustAfterLaunchOptions")
-JUSTAFTERARGS=$(read_ini "$GAMEINI" "PostLaunch" "JustAfterLaunchArguments")
-JUSTAFTERWAIT=$(read_ini "$GAMEINI" "PostLaunch" "JustAfterLaunchWait")
-JUSTBEFOREAPP=$(read_ini "$GAMEINI" "PostLaunch" "JustBeforeExitApp")
-JUSTBEFOREOPTS=$(read_ini "$GAMEINI" "PostLaunch" "JustBeforeExitOptions")
-JUSTBEFOREARGS=$(read_ini "$GAMEINI" "PostLaunch" "JustBeforeExitArguments")
-JUSTBEFOREWAIT=$(read_ini "$GAMEINI" "PostLaunch" "JustBeforeExitWait")
+
+# Launcher section
+RUNASADMIN=$(read_ini "$GAMEINI" "Launcher" "RunAsAdmin")
+HIDETASKBAR=$(read_ini "$GAMEINI" "Launcher" "HideTaskbar")
+BORDERLESS=$(read_ini "$GAMEINI" "Launcher" "Borderless")
+USEKILLLIST=$(read_ini "$GAMEINI" "Launcher" "UseKillList")
+KILLLIST=$(read_ini "$GAMEINI" "Launcher" "KillList")
+TERMBORDERLESS=$(read_ini "$GAMEINI" "Launcher" "TerminateBorderlessOnExit")
+
+# Profiles section
+PLAYER1PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player1Profile")
+PLAYER2PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player2Profile")
+MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "Profiles" "MediaCenterProfile")
+MMGAMECONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorGamingConfig")
+MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorMediaCenterConfig")
+
+# ControllerMapper section
+MAPPERAPP=$(read_ini "$GAMEINI" "ControllerMapper" "ControllerMapperPath")
+MAPPEROPTS=$(read_ini "$GAMEINI" "ControllerMapper" "ControllerMapperPathOptions")
+MAPPERARGS=$(read_ini "$GAMEINI" "ControllerMapper" "ControllerMapperPathArguments")
+
+# BorderlessWindowing section
+BORDERLESSAPP=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPath")
+BORDERLESSOPTS=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPathOptions")
+BORDERLESSARGS=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPathArguments")
+
+# MultiMonitor section
+MMTOOL=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPath")
+MMOPTS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathOptions")
+MMARGS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathArguments")
+
+# DiscMount section
+MOUNTAPP=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPath")
+MOUNTOPTS=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathOptions")
+MOUNTARGS=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathArguments")
+MOUNTWAIT=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathRunWait")
+
+# DiscUnmount section
+UNMOUNTAPP=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPath")
+UNMOUNTOPTS=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathOptions")
+UNMOUNTARGS=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathArguments")
+UNMOUNTWAIT=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathRunWait")
+
+# Pre1, Pre2, Pre3 sections
+PREAPP1=$(read_ini "$GAMEINI" "Pre1" "Pre1Path")
+PREAPP1OPTS=$(read_ini "$GAMEINI" "Pre1" "Pre1PathOptions")
+PREAPP1ARGS=$(read_ini "$GAMEINI" "Pre1" "Pre1PathArguments")
+PREAPP1WAIT=$(read_ini "$GAMEINI" "Pre1" "Pre1PathRunWait")
+PREAPP2=$(read_ini "$GAMEINI" "Pre2" "Pre2Path")
+PREAPP2OPTS=$(read_ini "$GAMEINI" "Pre2" "Pre2PathOptions")
+PREAPP2ARGS=$(read_ini "$GAMEINI" "Pre2" "Pre2PathArguments")
+PREAPP2WAIT=$(read_ini "$GAMEINI" "Pre2" "Pre2PathRunWait")
+PREAPP3=$(read_ini "$GAMEINI" "Pre3" "Pre3Path")
+PREAPP3OPTS=$(read_ini "$GAMEINI" "Pre3" "Pre3PathOptions")
+PREAPP3ARGS=$(read_ini "$GAMEINI" "Pre3" "Pre3PathArguments")
+PREAPP3WAIT=$(read_ini "$GAMEINI" "Pre3" "Pre3PathRunWait")
+
+# Post1, Post2, Post3 sections
+POSTAPP1=$(read_ini "$GAMEINI" "Post1" "Post1Path")
+POSTAPP1OPTS=$(read_ini "$GAMEINI" "Post1" "Post1PathOptions")
+POSTAPP1ARGS=$(read_ini "$GAMEINI" "Post1" "Post1PathArguments")
+POSTAPP1WAIT=$(read_ini "$GAMEINI" "Post1" "Post1PathRunWait")
+POSTAPP2=$(read_ini "$GAMEINI" "Post2" "Post2Path")
+POSTAPP2OPTS=$(read_ini "$GAMEINI" "Post2" "Post2PathOptions")
+POSTAPP2ARGS=$(read_ini "$GAMEINI" "Post2" "Post2PathArguments")
+POSTAPP2WAIT=$(read_ini "$GAMEINI" "Post2" "Post2PathRunWait")
+POSTAPP3=$(read_ini "$GAMEINI" "Post3" "Post3Path")
+POSTAPP3OPTS=$(read_ini "$GAMEINI" "Post3" "Post3PathOptions")
+POSTAPP3ARGS=$(read_ini "$GAMEINI" "Post3" "Post3PathArguments")
+POSTAPP3WAIT=$(read_ini "$GAMEINI" "Post3" "Post3PathRunWait")
+
+# JustAfterLaunch section
+JUSTAFTERAPP=$(read_ini "$GAMEINI" "JustAfterLaunch" "Path")
+JUSTAFTEROPTS=$(read_ini "$GAMEINI" "JustAfterLaunch" "PathOptions")
+JUSTAFTERARGS=$(read_ini "$GAMEINI" "JustAfterLaunch" "PathArguments")
+JUSTAFTERWAIT=$(read_ini "$GAMEINI" "JustAfterLaunch" "PathRunWait")
+
+# JustBeforeExit section
+JUSTBEFOREAPP=$(read_ini "$GAMEINI" "JustBeforeExit" "Path")
+JUSTBEFOREOPTS=$(read_ini "$GAMEINI" "JustBeforeExit" "PathOptions")
+JUSTBEFOREARGS=$(read_ini "$GAMEINI" "JustBeforeExit" "PathArguments")
+JUSTBEFOREWAIT=$(read_ini "$GAMEINI" "JustBeforeExit" "PathRunWait")
+
+# Sequences section
 LAUNCHSEQ=$(read_ini "$GAMEINI" "Sequences" "LaunchSequence")
 EXITSEQ=$(read_ini "$GAMEINI" "Sequences" "ExitSequence")
 
 # CloudSync section
-CLOUDENABLED=$(read_ini "$GAMEINI" "CloudSync" "Enabled")
-CLOUDAPP=$(read_ini "$GAMEINI" "CloudSync" "App")
-CLOUDOPTS=$(read_ini "$GAMEINI" "CloudSync" "Options")
-CLOUDARGS=$(read_ini "$GAMEINI" "CloudSync" "Arguments")
-CLOUDWAIT=$(read_ini "$GAMEINI" "CloudSync" "Wait")
+CLOUDENABLED=$(read_ini "$GAMEINI" "CloudSync" "EnableCloudSync")
+CLOUDAPP=$(read_ini "$GAMEINI" "CloudSync" "CloudSyncPath")
+CLOUDOPTS=$(read_ini "$GAMEINI" "CloudSync" "CloudSyncPathOptions")
+CLOUDARGS=$(read_ini "$GAMEINI" "CloudSync" "CloudSyncPathArguments")
+CLOUDWAIT=$(read_ini "$GAMEINI" "CloudSync" "CloudSyncPathRunWait")
+CLOUDREMOTENAME=$(read_ini "$GAMEINI" "CloudSync" "RemoteName")
+CLOUDUSERPREFIX=$(read_ini "$GAMEINI" "CloudSync" "UserPrefix")
+CLOUDSAVEPATH=$(read_ini "$GAMEINI" "CloudSync" "SavePath")
 CLOUDBACKUPONLAUNCH=$(read_ini "$GAMEINI" "CloudSync" "BackupOnLaunch")
 CLOUDUPLOADONEXIT=$(read_ini "$GAMEINI" "CloudSync" "UploadOnExit")
 
 # LocalBackup section
-BACKUPENABLED=$(read_ini "$GAMEINI" "LocalBackup" "Enabled")
-BACKUPAPP=$(read_ini "$GAMEINI" "LocalBackup" "App")
-BACKUPOPTS=$(read_ini "$GAMEINI" "LocalBackup" "Options")
-BACKUPARGS=$(read_ini "$GAMEINI" "LocalBackup" "Arguments")
-BACKUPWAIT=$(read_ini "$GAMEINI" "LocalBackup" "Wait")
+BACKUPENABLED=$(read_ini "$GAMEINI" "LocalBackup" "EnableLocalBackup")
+BACKUPAPP=$(read_ini "$GAMEINI" "LocalBackup" "LocalBackupPath")
+BACKUPOPTS=$(read_ini "$GAMEINI" "LocalBackup" "LocalBackupPathOptions")
+BACKUPARGS=$(read_ini "$GAMEINI" "LocalBackup" "LocalBackupPathArguments")
+BACKUPWAIT=$(read_ini "$GAMEINI" "LocalBackup" "LocalBackupPathRunWait")
+BACKUPLOCALPREFIX=$(read_ini "$GAMEINI" "LocalBackup" "LocalPrefix")
+BACKUPSAVEPATH=$(read_ini "$GAMEINI" "LocalBackup" "SavePath")
+BACKUPMAXBACKUPS=$(read_ini "$GAMEINI" "LocalBackup" "MaxBackups")
 BACKUPBACKUPONLAUNCH=$(read_ini "$GAMEINI" "LocalBackup" "BackupOnLaunch")
 BACKUPBACKUPONEXIT=$(read_ini "$GAMEINI" "LocalBackup" "BackupOnExit")
 
@@ -180,9 +220,9 @@ execute_sequence_item() {
                 [ -n "$MMTOOL" ] && [ -n "$MMDESKTOPCONFIG" ] && echo "    Restoring desktop monitor config..." && run_app "$MMTOOL" "$MMOPTS" "/LoadConfig \"$MMDESKTOPCONFIG\"" "1"
             fi ;;
         "mount-disc")
-            [ -n "$MOUNTAPP" ] && [ -n "$ISOPATH" ] && echo "    Mounting disc: $ISOPATH..." && run_app "$MOUNTAPP" "$MOUNTOPTS" "\"$ISOPATH\" $MOUNTARGS" "1" ;;
+            [ -n "$MOUNTAPP" ] && [ -n "$ISOPATH" ] && echo "    Mounting disc: $ISOPATH..." && run_app "$MOUNTAPP" "$MOUNTOPTS" "\"$ISOPATH\" $MOUNTARGS" "$MOUNTWAIT" ;;
         "Unmount-disc")
-            [ -n "$UNMOUNTAPP" ] && [ -n "$ISOPATH" ] && echo "    Unmounting disc..." && run_app "$UNMOUNTAPP" "$UNMOUNTOPTS" "\"$ISOPATH\" $UNMOUNTARGS" "1" ;;
+            [ -n "$UNMOUNTAPP" ] && [ -n "$ISOPATH" ] && echo "    Unmounting disc..." && run_app "$UNMOUNTAPP" "$UNMOUNTOPTS" "\"$ISOPATH\" $UNMOUNTARGS" "$UNMOUNTWAIT" ;;
         "Borderless")
             [ -n "$BORDERLESSAPP" ] && echo "    Starting Borderless Gaming..." && run_app "$BORDERLESSAPP" "$BORDERLESSOPTS" "$BORDERLESSARGS" "0" ;;
         "Pre1")
@@ -234,7 +274,11 @@ for item in "${LAUNCH_ITEMS[@]}"; do
 done
 
 # ===== JUST AFTER LAUNCH APP =====
-[ -n "$JUSTAFTERAPP" ] && echo "Running Just After Launch app..." && run_app "$JUSTAFTERAPP" "$JUSTAFTEROPTS" "$JUSTAFTERARGS" "$JUSTAFTERWAIT"
+if [ -n "$JUSTAFTERAPP" ]; then
+    echo "Running Just After Launch app..."
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Just After Launch app: $JUSTAFTERAPP" >> "$LOGFILE"
+    run_app "$JUSTAFTERAPP" "$JUSTAFTEROPTS" "$JUSTAFTERARGS" "$JUSTAFTERWAIT"
+fi
 
 # ===== LAUNCH GAME =====
 echo "Launching game: $GAMENAME"
@@ -251,7 +295,11 @@ echo "Game exited"
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] Game exited" >> "$LOGFILE"
 
 # ===== JUST BEFORE EXIT APP =====
-[ -n "$JUSTBEFOREAPP" ] && echo "Running Just Before Exit app..." && run_app "$JUSTBEFOREAPP" "$JUSTBEFOREOPTS" "$JUSTBEFOREARGS" "$JUSTBEFOREWAIT"
+if [ -n "$JUSTBEFOREAPP" ]; then
+    echo "Running Just Before Exit app..."
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] Running Just Before Exit app: $JUSTBEFOREAPP" >> "$LOGFILE"
+    run_app "$JUSTBEFOREAPP" "$JUSTBEFOREOPTS" "$JUSTBEFOREARGS" "$JUSTBEFOREWAIT"
+fi
 
 # ===== EXECUTE EXIT SEQUENCE =====
 echo "Executing exit sequence: $EXITSEQ"

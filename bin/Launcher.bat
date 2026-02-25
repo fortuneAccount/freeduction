@@ -55,85 +55,111 @@ call :ReadINI "%GAMEINI%" "Game" "Directory" GAMEDIR
 call :ReadINI "%GAMEINI%" "Game" "Name" GAMENAME_INI
 call :ReadINI "%GAMEINI%" "Game" "IsoPath" ISOPATH
 
-REM Parse INI file - Options section
-call :ReadINI "%GAMEINI%" "Options" "RunAsAdmin" RUNASADMIN
-call :ReadINI "%GAMEINI%" "Options" "HideTaskbar" HIDETASKBAR
-call :ReadINI "%GAMEINI%" "Options" "UseKillList" USEKILLLIST
-call :ReadINI "%GAMEINI%" "Options" "KillList" KILLLIST
-call :ReadINI "%GAMEINI%" "Options" "TerminateBorderlessOnExit" TERMBORDERLESS
+REM Parse INI file - Launcher section
+call :ReadINI "%GAMEINI%" "Launcher" "RunAsAdmin" RUNASADMIN
+call :ReadINI "%GAMEINI%" "Launcher" "HideTaskbar" HIDETASKBAR
+call :ReadINI "%GAMEINI%" "Launcher" "Borderless" BORDERLESS
+call :ReadINI "%GAMEINI%" "Launcher" "UseKillList" USEKILLLIST
+call :ReadINI "%GAMEINI%" "Launcher" "KillList" KILLLIST
+call :ReadINI "%GAMEINI%" "Launcher" "TerminateBorderlessOnExit" TERMBORDERLESS
 
-REM Parse INI file - Paths section
-call :ReadINI "%GAMEINI%" "Paths" "ControllerMapperApp" MAPPERAPP
-call :ReadINI "%GAMEINI%" "Paths" "ControllerMapperOptions" MAPPEROPTS
-call :ReadINI "%GAMEINI%" "Paths" "ControllerMapperArguments" MAPPERARGS
-call :ReadINI "%GAMEINI%" "Paths" "BorderlessWindowingApp" BORDERLESSAPP
-call :ReadINI "%GAMEINI%" "Paths" "BorderlessWindowingOptions" BORDERLESSOPTS
-call :ReadINI "%GAMEINI%" "Paths" "BorderlessWindowingArguments" BORDERLESSARGS
-call :ReadINI "%GAMEINI%" "Paths" "MultiMonitorTool" MMTOOL
-call :ReadINI "%GAMEINI%" "Paths" "MultiMonitorOptions" MMOPTS
-call :ReadINI "%GAMEINI%" "Paths" "MultiMonitorArguments" MMARGS
-call :ReadINI "%GAMEINI%" "Paths" "MultiMonitorGamingConfig" MMGAMECONFIG
-call :ReadINI "%GAMEINI%" "Paths" "MultiMonitorDesktopConfig" MMDESKTOPCONFIG
-call :ReadINI "%GAMEINI%" "Paths" "DiscMountApp" MOUNTAPP
-call :ReadINI "%GAMEINI%" "Paths" "DiscMountOptions" MOUNTOPTS
-call :ReadINI "%GAMEINI%" "Paths" "DiscMountArguments" MOUNTARGS
-call :ReadINI "%GAMEINI%" "Paths" "DiscUnmountApp" UNMOUNTAPP
-call :ReadINI "%GAMEINI%" "Paths" "DiscUnmountOptions" UNMOUNTOPTS
-call :ReadINI "%GAMEINI%" "Paths" "DiscUnmountArguments" UNMOUNTARGS
+REM Parse INI file - Profiles section
+call :ReadINI "%GAMEINI%" "Profiles" "Player1Profile" PLAYER1PROFILE
+call :ReadINI "%GAMEINI%" "Profiles" "Player2Profile" PLAYER2PROFILE
+call :ReadINI "%GAMEINI%" "Profiles" "MediaCenterProfile" MEDIACENTERPROFILE
+call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorGamingConfig" MMGAMECONFIG
+call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorMediaCenterConfig" MMDESKTOPCONFIG
+
+REM Parse INI file - ControllerMapper section
+call :ReadINI "%GAMEINI%" "ControllerMapper" "ControllerMapperPath" MAPPERAPP
+call :ReadINI "%GAMEINI%" "ControllerMapper" "ControllerMapperPathOptions" MAPPEROPTS
+call :ReadINI "%GAMEINI%" "ControllerMapper" "ControllerMapperPathArguments" MAPPERARGS
+
+REM Parse INI file - BorderlessWindowing section
+call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPath" BORDERLESSAPP
+call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPathOptions" BORDERLESSOPTS
+call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPathArguments" BORDERLESSARGS
+
+REM Parse INI file - MultiMonitor section
+call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPath" MMTOOL
+call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathOptions" MMOPTS
+call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathArguments" MMARGS
+
+REM Parse INI file - DiscMount section
+call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPath" MOUNTAPP
+call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathOptions" MOUNTOPTS
+call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathArguments" MOUNTARGS
+call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathRunWait" MOUNTWAIT
+
+REM Parse INI file - DiscUnmount section
+call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPath" UNMOUNTAPP
+call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathOptions" UNMOUNTOPTS
+call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathArguments" UNMOUNTARGS
+call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathRunWait" UNMOUNTWAIT
 
 REM Parse INI file - CloudSync section
-call :ReadINI "%GAMEINI%" "CloudSync" "Enabled" CLOUDENABLED
-call :ReadINI "%GAMEINI%" "CloudSync" "App" CLOUDAPP
-call :ReadINI "%GAMEINI%" "CloudSync" "Options" CLOUDOPTS
-call :ReadINI "%GAMEINI%" "CloudSync" "Arguments" CLOUDARGS
-call :ReadINI "%GAMEINI%" "CloudSync" "Wait" CLOUDWAIT
+call :ReadINI "%GAMEINI%" "CloudSync" "EnableCloudSync" CLOUDENABLED
+call :ReadINI "%GAMEINI%" "CloudSync" "CloudSyncPath" CLOUDAPP
+call :ReadINI "%GAMEINI%" "CloudSync" "CloudSyncPathOptions" CLOUDOPTS
+call :ReadINI "%GAMEINI%" "CloudSync" "CloudSyncPathArguments" CLOUDARGS
+call :ReadINI "%GAMEINI%" "CloudSync" "CloudSyncPathRunWait" CLOUDWAIT
+call :ReadINI "%GAMEINI%" "CloudSync" "RemoteName" CLOUDREMOTENAME
+call :ReadINI "%GAMEINI%" "CloudSync" "UserPrefix" CLOUDUSERPREFIX
+call :ReadINI "%GAMEINI%" "CloudSync" "SavePath" CLOUDSAVEPATH
 call :ReadINI "%GAMEINI%" "CloudSync" "BackupOnLaunch" CLOUDBACKUPONLAUNCH
 call :ReadINI "%GAMEINI%" "CloudSync" "UploadOnExit" CLOUDUPLOADONEXIT
 
 REM Parse INI file - LocalBackup section
-call :ReadINI "%GAMEINI%" "LocalBackup" "Enabled" BACKUPENABLED
-call :ReadINI "%GAMEINI%" "LocalBackup" "App" BACKUPAPP
-call :ReadINI "%GAMEINI%" "LocalBackup" "Options" BACKUPOPTS
-call :ReadINI "%GAMEINI%" "LocalBackup" "Arguments" BACKUPARGS
-call :ReadINI "%GAMEINI%" "LocalBackup" "Wait" BACKUPWAIT
+call :ReadINI "%GAMEINI%" "LocalBackup" "EnableLocalBackup" BACKUPENABLED
+call :ReadINI "%GAMEINI%" "LocalBackup" "LocalBackupPath" BACKUPAPP
+call :ReadINI "%GAMEINI%" "LocalBackup" "LocalBackupPathOptions" BACKUPOPTS
+call :ReadINI "%GAMEINI%" "LocalBackup" "LocalBackupPathArguments" BACKUPARGS
+call :ReadINI "%GAMEINI%" "LocalBackup" "LocalBackupPathRunWait" BACKUPWAIT
+call :ReadINI "%GAMEINI%" "LocalBackup" "LocalPrefix" BACKUPLOCALPREFIX
+call :ReadINI "%GAMEINI%" "LocalBackup" "SavePath" BACKUPSAVEPATH
+call :ReadINI "%GAMEINI%" "LocalBackup" "MaxBackups" BACKUPMAXBACKUPS
 call :ReadINI "%GAMEINI%" "LocalBackup" "BackupOnLaunch" BACKUPBACKUPONLAUNCH
 call :ReadINI "%GAMEINI%" "LocalBackup" "BackupOnExit" BACKUPBACKUPONEXIT
 
-REM Parse INI file - PreLaunch section
-call :ReadINI "%GAMEINI%" "PreLaunch" "App1" PREAPP1
-call :ReadINI "%GAMEINI%" "PreLaunch" "App1Options" PREAPP1OPTS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App1Arguments" PREAPP1ARGS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App1Wait" PREAPP1WAIT
-call :ReadINI "%GAMEINI%" "PreLaunch" "App2" PREAPP2
-call :ReadINI "%GAMEINI%" "PreLaunch" "App2Options" PREAPP2OPTS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App2Arguments" PREAPP2ARGS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App2Wait" PREAPP2WAIT
-call :ReadINI "%GAMEINI%" "PreLaunch" "App3" PREAPP3
-call :ReadINI "%GAMEINI%" "PreLaunch" "App3Options" PREAPP3OPTS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App3Arguments" PREAPP3ARGS
-call :ReadINI "%GAMEINI%" "PreLaunch" "App3Wait" PREAPP3WAIT
+REM Parse INI file - Pre1, Pre2, Pre3 sections
+call :ReadINI "%GAMEINI%" "Pre1" "Pre1Path" PREAPP1
+call :ReadINI "%GAMEINI%" "Pre1" "Pre1PathOptions" PREAPP1OPTS
+call :ReadINI "%GAMEINI%" "Pre1" "Pre1PathArguments" PREAPP1ARGS
+call :ReadINI "%GAMEINI%" "Pre1" "Pre1PathRunWait" PREAPP1WAIT
+call :ReadINI "%GAMEINI%" "Pre2" "Pre2Path" PREAPP2
+call :ReadINI "%GAMEINI%" "Pre2" "Pre2PathOptions" PREAPP2OPTS
+call :ReadINI "%GAMEINI%" "Pre2" "Pre2PathArguments" PREAPP2ARGS
+call :ReadINI "%GAMEINI%" "Pre2" "Pre2PathRunWait" PREAPP2WAIT
+call :ReadINI "%GAMEINI%" "Pre3" "Pre3Path" PREAPP3
+call :ReadINI "%GAMEINI%" "Pre3" "Pre3PathOptions" PREAPP3OPTS
+call :ReadINI "%GAMEINI%" "Pre3" "Pre3PathArguments" PREAPP3ARGS
+call :ReadINI "%GAMEINI%" "Pre3" "Pre3PathRunWait" PREAPP3WAIT
 
-REM Parse INI file - PostLaunch section
-call :ReadINI "%GAMEINI%" "PostLaunch" "App1" POSTAPP1
-call :ReadINI "%GAMEINI%" "PostLaunch" "App1Options" POSTAPP1OPTS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App1Arguments" POSTAPP1ARGS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App1Wait" POSTAPP1WAIT
-call :ReadINI "%GAMEINI%" "PostLaunch" "App2" POSTAPP2
-call :ReadINI "%GAMEINI%" "PostLaunch" "App2Options" POSTAPP2OPTS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App2Arguments" POSTAPP2ARGS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App2Wait" POSTAPP2WAIT
-call :ReadINI "%GAMEINI%" "PostLaunch" "App3" POSTAPP3
-call :ReadINI "%GAMEINI%" "PostLaunch" "App3Options" POSTAPP3OPTS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App3Arguments" POSTAPP3ARGS
-call :ReadINI "%GAMEINI%" "PostLaunch" "App3Wait" POSTAPP3WAIT
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustAfterLaunchApp" JUSTAFTERAPP
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustAfterLaunchOptions" JUSTAFTEROPTS
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustAfterLaunchArguments" JUSTAFTERARGS
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustAfterLaunchWait" JUSTAFTERWAIT
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustBeforeExitApp" JUSTBEFOREAPP
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustBeforeExitOptions" JUSTBEFOREOPTS
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustBeforeExitArguments" JUSTBEFOREARGS
-call :ReadINI "%GAMEINI%" "PostLaunch" "JustBeforeExitWait" JUSTBEFOREWAIT
+REM Parse INI file - Post1, Post2, Post3 sections
+call :ReadINI "%GAMEINI%" "Post1" "Post1Path" POSTAPP1
+call :ReadINI "%GAMEINI%" "Post1" "Post1PathOptions" POSTAPP1OPTS
+call :ReadINI "%GAMEINI%" "Post1" "Post1PathArguments" POSTAPP1ARGS
+call :ReadINI "%GAMEINI%" "Post1" "Post1PathRunWait" POSTAPP1WAIT
+call :ReadINI "%GAMEINI%" "Post2" "Post2Path" POSTAPP2
+call :ReadINI "%GAMEINI%" "Post2" "Post2PathOptions" POSTAPP2OPTS
+call :ReadINI "%GAMEINI%" "Post2" "Post2PathArguments" POSTAPP2ARGS
+call :ReadINI "%GAMEINI%" "Post2" "Post2PathRunWait" POSTAPP2WAIT
+call :ReadINI "%GAMEINI%" "Post3" "Post3Path" POSTAPP3
+call :ReadINI "%GAMEINI%" "Post3" "Post3PathOptions" POSTAPP3OPTS
+call :ReadINI "%GAMEINI%" "Post3" "Post3PathArguments" POSTAPP3ARGS
+call :ReadINI "%GAMEINI%" "Post3" "Post3PathRunWait" POSTAPP3WAIT
+
+REM Parse INI file - JustAfterLaunch section
+call :ReadINI "%GAMEINI%" "JustAfterLaunch" "Path" JUSTAFTERAPP
+call :ReadINI "%GAMEINI%" "JustAfterLaunch" "PathOptions" JUSTAFTEROPTS
+call :ReadINI "%GAMEINI%" "JustAfterLaunch" "PathArguments" JUSTAFTERARGS
+call :ReadINI "%GAMEINI%" "JustAfterLaunch" "PathRunWait" JUSTAFTERWAIT
+
+REM Parse INI file - JustBeforeExit section
+call :ReadINI "%GAMEINI%" "JustBeforeExit" "Path" JUSTBEFOREAPP
+call :ReadINI "%GAMEINI%" "JustBeforeExit" "PathOptions" JUSTBEFOREOPTS
+call :ReadINI "%GAMEINI%" "JustBeforeExit" "PathArguments" JUSTBEFOREARGS
+call :ReadINI "%GAMEINI%" "JustBeforeExit" "PathRunWait" JUSTBEFOREWAIT
 
 REM Parse INI file - Sequences section
 call :ReadINI "%GAMEINI%" "Sequences" "LaunchSequence" LAUNCHSEQ
@@ -166,6 +192,13 @@ echo [%date% %time%] Executing launch sequence: %LAUNCHSEQ% >> "%LOGFILE%"
 
 for %%S in (%LAUNCHSEQ%) do (
     call :ExecuteSequenceItem "%%S" "launch"
+)
+
+REM ===== JUST AFTER LAUNCH APP =====
+if not "%JUSTAFTERAPP%"=="" (
+    echo Running Just After Launch app...
+    echo [%date% %time%] Running Just After Launch app: %JUSTAFTERAPP% >> "%LOGFILE%"
+    call :RunApp "%JUSTAFTERAPP%" "%JUSTAFTEROPTS%" "%JUSTAFTERARGS%" "%JUSTAFTERWAIT%"
 )
 
 REM ===== LAUNCH GAME =====
@@ -271,14 +304,14 @@ if /i "%Item%"=="Taskbar" (
 if /i "%Item%"=="mount-disc" (
     if not "%MOUNTAPP%"=="" if not "%ISOPATH%"=="" (
         echo     Mounting disc: %ISOPATH%...
-        call :RunApp "%MOUNTAPP%" "%MOUNTOPTS%" ""%ISOPATH%" %MOUNTARGS%" "1"
+        call :RunApp "%MOUNTAPP%" "%MOUNTOPTS%" ""%ISOPATH%" %MOUNTARGS%" "%MOUNTWAIT%"
     )
 )
 
 if /i "%Item%"=="Unmount-disc" (
     if not "%UNMOUNTAPP%"=="" if not "%ISOPATH%"=="" (
         echo     Unmounting disc...
-        call :RunApp "%UNMOUNTAPP%" "%UNMOUNTOPTS%" ""%ISOPATH%" %UNMOUNTARGS%" "1"
+        call :RunApp "%UNMOUNTAPP%" "%UNMOUNTOPTS%" ""%ISOPATH%" %UNMOUNTARGS%" "%UNMOUNTWAIT%"
     )
 )
 

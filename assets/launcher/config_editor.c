@@ -36,6 +36,7 @@ extern void log_message(const char* level, const char* message);
 #define IDC_SAVE_BTN 2004
 #define IDC_EXPORT_BTN 2005
 #define IDC_OK_BTN 2006
+#define IDC_CANCEL_BTN 2007
 #define IDC_SCROLL_VERT 2010
 #define IDC_CONTROL_BASE 3000
 
@@ -445,8 +446,10 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
                 save_config(data);
                 result = TRUE;
                 break;
-            } else if (id == IDC_CANCEL_BTN) {
-                result = FALSE;
+            } else if (id == IDC_OK_BTN) {
+                // OK button - save and close
+                save_config(data);
+                result = TRUE;
                 break;
             }
         } else if (msg.message == WM_CLOSE && msg.hwnd == hwnd) {
@@ -592,7 +595,7 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             ctrl->button = CreateWindowExA(0, "BUTTON", "",
                 WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
                 x_edit, y, 20, 20,
-                data->content_area, (HMENU)(ctrl->id),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             
             if (_stricmp(val, "true") == 0 || _stricmp(val, "1") == 0) {
@@ -605,7 +608,7 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             ctrl->combo = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
                 x_edit, y, EDIT_WIDTH - 70, 200,
-                data->content_area, (HMENU)(ctrl->id),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             
             // Parse and add items
@@ -634,13 +637,13 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             ctrl->add_btn = CreateWindowExA(0, "BUTTON", "+",
                 WS_CHILD | WS_VISIBLE,
                 x_edit + EDIT_WIDTH - 65, y, 30, 20,
-                data->content_area, (HMENU)(ctrl->id + 2),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id + 2),
                 GetModuleHandle(NULL), NULL);
             
             ctrl->del_btn = CreateWindowExA(0, "BUTTON", "-",
                 WS_CHILD | WS_VISIBLE,
                 x_edit + EDIT_WIDTH - 30, y, 30, 20,
-                data->content_area, (HMENU)(ctrl->id + 3),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id + 3),
                 GetModuleHandle(NULL), NULL);
             break;
         }
@@ -650,13 +653,13 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             ctrl->edit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", val,
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                 x_edit, y, EDIT_WIDTH - 35, 20,
-                data->content_area, (HMENU)(ctrl->id),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             
             ctrl->button = CreateWindowExA(0, "BUTTON", "...",
                 WS_CHILD | WS_VISIBLE,
                 x_edit + EDIT_WIDTH - 30, y, 30, 20,
-                data->content_area, (HMENU)(ctrl->id + 1),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id + 1),
                 GetModuleHandle(NULL), NULL);
             break;
         }
@@ -665,7 +668,7 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             ctrl->edit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", val,
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
                 x_edit, y, EDIT_WIDTH, 20,
-                data->content_area, (HMENU)(ctrl->id),
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             break;
         }
