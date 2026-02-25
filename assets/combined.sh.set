@@ -1,0 +1,91 @@
+#!/bin/bash
+DISCIMAGE="$1"
+FLAG="$2"
+SCRIPT_NAME=$(basename "$0" .sh)
+
+if [ -z "$DISCIMAGE" ]; then 
+    echo "Usage: $0 <disc_image> [--unmount]"
+    exit 1
+fi
+
+# Clean previous drive letter file
+if [ -f "drvltr" ]; then rm "drvltr"; fi
+
+# Check for unmount flag
+if [ "$FLAG" = "--unmount" ] || [ "$FLAG" = "-unmount" ] || [ "$SCRIPT_NAME" = "_unmount" ]; then
+    # ============================================
+    # UNMOUNT LOGIC
+    # ============================================
+    
+    if [ ! -f "drvltr" ]; then
+        echo "Warning: drvltr file not found, attempting unmount anyway"
+    fi
+    
+    # Try cdemu
+    if command -v cdemu &> /dev/null; then
+        cdemu unload 0 &> /dev/null
+        rm -f "drvltr"
+        exit 0
+    fi
+    
+    # Try udisksctl
+    if command -v udisksctl &> /dev/null && [ -f "drvltr" ]; then
+        MOUNTPOINT=$(cat "drvltr")
+        if [ ! -z "$MOUNTPOINT" ]; then
+            udisksctl unmount -b "$MOUNTPOINT" 2>/dev/null
+            udisksctl loop-delete -b "$MOUNTPOINT" 2>/dev/null
+            rm -f "drvltr"
+            exit 0
+        fi
+    fi
+    
+    # Try fuseiso
+    if command -v fusermount &> /dev/null && [ -f "drvltr" ]; then
+        MOUNTPOINT=$(cat "drvltr")
+        if [ ! -z "$MOUNTPOINT" ]; then
+            fusermount -u "$MOUNTPOINT" 2>/dev/null
+            rmdir "$MOUNTPOINT" 2>/dev/null
+            rm -f "drvltr"
+            exit 0
+        fi
+    fi
+    
+    echo "Could not unmount disc image."
+    exit 1
+fi
+
+# ============================================
+# MOUNT LOGIC
+# ============================================
+
+# Try cdemu
+if command -v cdemu &> /dev/null; then
+    cdemu load 0 "$DISCIMAGE"
+    # Assume device 0 is /dev/sr0. Prefix with 2 for cdemu/wincdemu parity
+    echo "2/dev/sr0" > drvltr
+    exit 0
+fi
+
+# Try udisksctl
+if command -v udisksctl &> /dev/null; then
+    LOOPDEV=$(udisksctl loop-setup -f "$DISCIMAGE" 2>/dev/null | awk '{print $NF}' | sed 's/\.$//')
+    if [ ! -z "$LOOPDEV" ]; then
+        MOUNTPATH=$(udisksctl mount -b "$LOOPDEV" 2>/dev/null | awk '{print $NF}' | sed 's/\.$//')
+        echo "$MOUNTPATH" > drvltr
+        exit 0
+    fi
+fi
+
+# Try fuseiso
+if command -v fuseiso &> /dev/null; then
+    MOUNTPOINT="/tmp/disc_$(basename "$DISCIMAGE" .iso)"
+    mkdir -p "$MOUNTPOINT"
+    fuseiso "$DISCIMAGE" "$MOUNTPOINT"
+    if [ $? -eq 0 ]; then
+        echo "$MOUNTPOINT" > drvltr
+        exit 0
+    fi
+fi
+
+echo "Could not mount disc image."
+exit 1

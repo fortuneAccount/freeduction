@@ -1,0 +1,26 @@
+[GLOBALVARS]
+$GAME_TITLE = $SAFE_GAME_NAME
+$PLAYER_P# = $PLAYER_{$PLAYER_NUMBER}
+$APP_DIR = $APP_ROOT_DIR
+$INSTALL_DIR = $GAME_DIRECTORY
+$EXE_NAME = $GAME_EXECUTABLE
+$STEAM_ID = $STEAM_ID
+$GAME_DIRECTORY = $game_install_path
+$STEAM_LOCATION = %STEAMPATH% | ~/.steam/steam | ~/Library/Application Support/Steam | /data/data/com.valvesoftware.android.steam.community
+$UBISOFT_INSTALL = $ubisoft_install_path
+$USER_NAME = %USERNAME% | $USER | $USER | $USER
+$USER_PROFILE = %USERPROFILE% | $HOME | $HOME | /data/data/<package_name>
+$HOME = %USERPROFILE% | $HOME | $HOME | /data/data/<package_name> 
+$USER_DOCUMENTS = %USERPROFILE%\Documents | ~/Documents | ~/Documents | /storage/emulated/0/Documents
+$LOCAL_LOW = %LOCALAPPDATA%Low | ~/.local/share | ~/Library/Application Support | /data/data/<package_name>/files
+$APP_DATA = %APPDATA% | ~/.config | ~/Library/Application Support | /data/data/<package_name>/shared_prefs
+$LOCAL_APPDATA = %LOCALAPPDATA% | ~/.local/share | ~/Library/Application Support | /data/data/<package_name>/files
+$PROGRAM_FILES = %PROGRAMFILES% | /usr/local | /Applications | /data/app
+$PROGRAM_FILES32 = %PROGRAMFILES(X86)% | /usr/lib32 | N/A (universal binaries) | N/A
+$PROGRAM_DATA = %PROGRAMDATA% | /usr/share | /Library/Application Support | /data
+$PUBLIC_PROFILE = %ALLUSERSPUBLIC% | /usr/share | /Users/Shared | /storage/emulated/0
+$SYSTEM_ROOT = %WINDIR% | / | /System | /system
+$HKEY_PREFS = HKEY_CURRENT_USER | ~/.config | ~/Library/Preferences | /data/data/<package_name>/shared_prefs
+$HKEY_LOCAL = HKEY_LOCAL_MACHINE | /etc | /Library/Preferences | /system
+$HKEY_MULTIARCH = HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node | /etc (multiarch paths like /usr/lib32) | N/A | N/A
+$TEMP_DIR = %LOCALAPPDATA%\temp | var/tmp | $TMPDIR | getCacheDir()

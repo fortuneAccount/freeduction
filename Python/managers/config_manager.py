@@ -1,0 +1,482 @@
+import os
+import json
+import shutil
+import logging
+import string
+from pathlib import Path
+from PyQt6.QtCore import QObject, pyqtSignal
+from ..models import AppConfig
+from .. import constants
+
+
+CONFIG_FILE = os.path.join(constants.APP_ROOT_DIR, "config.json")
+
+# --- First Run Constants ---
+GAME_DIRECTORY_NAMES = [
+    "Games", "GOG Games", "Gaemz", "vidya", "Gaymez",
+    "Gaymes", "Installed Games", "Game Library"
+]
+ANTIMICROX_EXES = ["antimicrox.exe", "antimicrox"]
+KEYSTICKS_EXES = ["keysticks.exe"]
+MULTIMONITOR_EXES = ["multimonitortool.exe"]
+BORDERLESS_EXES = ["borderlessgaming.exe"]
+
+
+class ConfigManager(QObject):
+    """Manages loading and saving of application configuration."""
+    status_updated = pyqtSignal(str, int)
+
+    def __init__(self):
+        super().__init__()
+        self.config_file = CONFIG_FILE
+
+    def load_config(self) -> AppConfig:
+        """Loads the application configuration from config.json."""
+        if not os.path.exists(self.config_file):
+            logging.info("Config file not found. Running first-time setup.")
+            self.status_updated.emit("Performing first-time setup...", 0)
+            config = self._first_run_setup()
+            self.save_config(config)
+            self.status_updated.emit("First-time setup complete.", 3000)
+            return config
+
+        try:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+            
+            # Create an AppConfig instance and update it with loaded data
+            config = AppConfig()
+            for key, value in config_data.items():
+                setattr(config, key, value)
+
+            self.status_updated.emit("Configuration loaded.", 3000)
+            return config
+        except Exception as e:
+            logging.error(f"Failed to load config file {self.config_file}: {e}", exc_info=True)
+            self.status_updated.emit(f"Failed to load config file: {e}", 5000)
+            # Fallback to default config if loading fails
+            return self._first_run_setup()
+
+    def save_config(self, config: AppConfig):
+        """Saves the application configuration to config.json."""
+        try:
+            # Use a dictionary representation of the AppConfig model
+            config_data = {key: getattr(config, key) for key in dir(config) if not key.startswith('__') and not callable(getattr(config, key))}
+            with open(self.config_file, 'w', encoding='utf-8') as f:
+                json.dump(config_data, f, indent=4)
+            self.status_updated.emit("Configuration saved.", 3000)
+            logging.info(f"Configuration saved to '{self.config_file}'.")
+        except Exception as e:
+            logging.error(f"Failed to save config file {self.config_file}: {e}", exc_info=True)
+            self.status_updated.emit(f"Failed to save config file: {e}", 5000)
+
+    def _first_run_setup(self) -> AppConfig:
+        """
+        Run the complete first-time setup.
+        Called when no config.json exists.
+        """
+        logging.info("Running first-time setup...")
+        config = AppConfig()
+
+        config.source_dirs = self._scan_for_game_directories()
+        config.profiles_dir, config.launchers_dir = self._find_or_create_profiles_launchers_dirs()
+        self._detect_controller_mapper(config)
+        self._detect_multimonitor_tool(config)
+        self._detect_borderless_gaming(config)
+        self._detect_all_bin_tools(config)  # Auto-detect all tools in bin directory
+
+        # Set default sequences
+        config.launch_sequence = ["Cloud-Sync", "mount-disc", "Kill-Game", "Kill-List", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Borderless", "Pre2", "Pre3"]
+        config.exit_sequence = ["Kill-Game", "Kill-List", "Monitor-Config", "Taskbar", "Post1", "Controller-Mapper", "Post2", "Borderless", "Post3", "Unmount-disc", "Cloud-Sync"]
+
+        # Set default enabled states
+        config.defaults = {
+            'controller_mapper_path_enabled': True,
+            'borderless_gaming_path_enabled': True,
+            'multi_monitor_tool_path_enabled': True,
+            'just_after_launch_path_enabled': True,
+            'just_before_exit_path_enabled': True,
+            'pre1_path_enabled': True,
+            'post1_path_enabled': True,
+            'pre2_path_enabled': True,
+            'post2_path_enabled': True,
+            'pre3_path_enabled': True,
+            'post3_path_enabled': True,
+            'p1_profile_path_enabled': True,
+            'p2_profile_path_enabled': True,
+            'mediacenter_profile_path_enabled': True,
+            'multimonitor_gaming_path_enabled': True,
+            'multimonitor_media_path_enabled': True,
+            'profiles_dir_enabled': True,
+            'launchers_dir_enabled': True,
+            'disc_mount_path_enabled': True,
+            'disc_unmount_path_enabled': True,
+            'cloud_sync_path_enabled': True,
+            'local_backup_path_enabled': True,
+        }
+
+        # Set default run-wait states
+        config.run_wait_states = {
+            'controller_mapper_path_run_wait': False,
+            'borderless_gaming_path_run_wait': False,
+            'multi_monitor_tool_path_run_wait': False,
+            'just_after_launch_path_run_wait': False,
+            'just_before_exit_path_run_wait': False,
+            'pre1_path_run_wait': False, 'post1_path_run_wait': False,
+            'pre2_path_run_wait': False, 'post2_path_run_wait': False,
+            'pre3_path_run_wait': False, 'post3_path_run_wait': False,
+            'disc_mount_path_run_wait': False,
+            'disc_unmount_path_run_wait': False,
+            'cloud_sync_path_run_wait': False,
+            'local_backup_path_run_wait': False,
+        }
+
+        # Set default overwrite states (Deployment Tab -> Creation)
+        # Only profiles_dir and launchers_dir should be True by default
+        config.overwrite_states = {
+            "profiles_dir": True,
+            "launchers_dir": True
+        }
+
+        # Set default deployment tab options
+        config.download_game_json = True
+        config.download_pcgw_metadata = True
+        config.download_artwork = True
+        config.hide_taskbar = False
+        config.run_as_admin = True
+        config.enable_name_matching = True
+        config.steam_json_version = 2
+        config.create_overwrite_joystick_profiles = True
+
+        logging.info("First-time setup complete.")
+        return config
+
+    def _get_available_drives(self):
+        drives = []
+        for letter in string.ascii_uppercase:
+            drive = f"{letter}:\\"
+            if os.path.exists(drive):
+                drives.append(drive)
+        return drives
+
+    def _scan_for_game_directories(self):
+        found_dirs = []
+        drives = self._get_available_drives()
+        for drive in drives:
+            for dir_name in GAME_DIRECTORY_NAMES:
+                dir_path = os.path.join(drive, dir_name)
+                if os.path.isdir(dir_path):
+                    found_dirs.append(dir_path)
+                    logging.info(f"Found game directory: {dir_path}")
+        return found_dirs
+
+    def _find_or_create_profiles_launchers_dirs(self):
+        home_dir = Path.home()
+        documents_dir = home_dir / "Documents"
+        project_dir = Path(constants.APP_ROOT_DIR)
+        search_locations = [home_dir, documents_dir, project_dir]
+        profiles_dir, launchers_dir = None, None
+
+        for location in search_locations:
+            if profiles_dir is None and (location / "Profiles").is_dir():
+                profiles_dir = str(location / "Profiles")
+            if launchers_dir is None and (location / "Launchers").is_dir():
+                launchers_dir = str(location / "Launchers")
+
+        if profiles_dir is None:
+            profiles_dir = str(project_dir / "Profiles")
+            os.makedirs(profiles_dir, exist_ok=True)
+        if launchers_dir is None:
+            launchers_dir = str(project_dir / "Launchers")
+            os.makedirs(launchers_dir, exist_ok=True)
+        return profiles_dir, launchers_dir
+
+    def _find_executable_recursive(self, search_dir, exe_names):
+        search_path = Path(search_dir)
+        if not search_path.exists(): return None
+        for exe_name in exe_names:
+            for found in search_path.rglob(exe_name):
+                if found.is_file():
+                    logging.info(f"Found executable: {found}")
+                    return str(found)
+        return None
+
+    def _detect_controller_mapper(self, config: AppConfig):
+        project_dir = Path(constants.APP_ROOT_DIR)
+        bin_dir = project_dir / "bin"
+        
+        # Load options/arguments for applying defaults
+        options_args_map = self._load_options_arguments()
+        
+        antimicrox_path = self._find_executable_recursive(bin_dir, ANTIMICROX_EXES) or self._find_executable_recursive(project_dir, ANTIMICROX_EXES)
+        if antimicrox_path:
+            config.controller_mapper_path = antimicrox_path
+            logging.info(f"Using AntimicroX: {antimicrox_path}")
+            self._populate_controller_profiles(config, antimicrox_path, "antimicrox", ".amgp")
+            self._apply_tool_defaults(config, 'controller_mapper_path', antimicrox_path, options_args_map)
+            return
+
+        keysticks_path = self._find_executable_recursive(bin_dir, KEYSTICKS_EXES) or self._find_executable_recursive(project_dir, KEYSTICKS_EXES)
+        if keysticks_path:
+            config.controller_mapper_path = keysticks_path
+            logging.info(f"Using Keysticks: {keysticks_path}")
+            self._populate_controller_profiles(config, keysticks_path, "keysticks", ".keysticks")
+            self._apply_tool_defaults(config, 'controller_mapper_path', keysticks_path, options_args_map)
+    
+    def _populate_controller_profiles(self, config: AppConfig, mapper_path: str, prefix: str, ext: str):
+        """Populate controller profiles for Player1, Player2, and MediaCenter."""
+        project_dir = Path(constants.APP_ROOT_DIR)
+        mapper_dir = Path(mapper_path).parent
+        assets_dir = project_dir / "assets"
+        
+        # Profile mappings: config_attr -> (search_name, template_name, output_name)
+        profiles = {
+            'p1_profile_path': ('Player1', f'{prefix}_Player{ext}.set', f'Player1{ext}'),
+            'p2_profile_path': ('Player2', f'{prefix}_Player{ext}.set', f'Player2{ext}'),
+            'mediacenter_profile_path': ('MediaCenter', f'{prefix}_MediaCenter{ext}.set', f'MediaCenter{ext}')
+        }
+        
+        for config_attr, (search_name, template_name, output_name) in profiles.items():
+            # Search for existing profile in project dir or mapper subdirectories
+            found_profile = None
+            
+            # Search in project root
+            for file in project_dir.glob(f'*{search_name}*{ext}'):
+                found_profile = str(file)
+                break
+            
+            # Search in mapper directory and subdirectories
+            if not found_profile and mapper_dir.exists():
+                for file in mapper_dir.rglob(f'*{search_name}*{ext}'):
+                    found_profile = str(file)
+                    break
+            
+            if found_profile:
+                setattr(config, config_attr, found_profile)
+                logging.info(f"Found {search_name} profile: {found_profile}")
+            else:
+                # Create from template
+                template_path = assets_dir / template_name
+                output_path = project_dir / output_name
+                
+                if template_path.exists() and not output_path.exists():
+                    try:
+                        # Read template
+                        with open(template_path, 'r', encoding='utf-8') as f:
+                            content = f.read()
+                        
+                        # Replace tags
+                        # [NEWOSK] - path to osk program
+                        osk_path = "C:\\Windows\\System32\\osk.exe" if os.name == 'nt' else "/usr/bin/onboard"
+                        content = content.replace('[NEWOSK]', osk_path)
+                        
+                        # [AMICRX] - path to antimicrox.exe
+                        if prefix == "antimicrox":
+                            content = content.replace('[AMICRX]', mapper_path)
+                        else:
+                            content = content.replace('[AMICRX]', '')
+                        
+                        # Write output
+                        with open(output_path, 'w', encoding='utf-8') as f:
+                            f.write(content)
+                        
+                        setattr(config, config_attr, str(output_path))
+                        logging.info(f"Created {search_name} profile from template: {output_path}")
+                    except Exception as e:
+                        logging.error(f"Failed to create {search_name} profile from template: {e}")
+
+    def _detect_multimonitor_tool(self, config: AppConfig):
+        project_dir = Path(constants.APP_ROOT_DIR)
+        bin_dir = project_dir / "bin"
+        
+        # Load options/arguments for applying defaults
+        options_args_map = self._load_options_arguments()
+        
+        mm_path = self._find_executable_recursive(bin_dir, MULTIMONITOR_EXES) or self._find_executable_recursive(project_dir, MULTIMONITOR_EXES)
+        if mm_path:
+            config.multi_monitor_tool_path = mm_path
+            logging.info(f"Found MultiMonitorTool: {mm_path}")
+            self._apply_tool_defaults(config, 'multi_monitor_tool_path', mm_path, options_args_map)
+
+    def _detect_borderless_gaming(self, config: AppConfig):
+        project_dir = Path(constants.APP_ROOT_DIR)
+        bin_dir = project_dir / "bin"
+        
+        # Load options/arguments for applying defaults
+        options_args_map = self._load_options_arguments()
+        
+        bg_path = self._find_executable_recursive(bin_dir, BORDERLESS_EXES) or self._find_executable_recursive(project_dir, BORDERLESS_EXES)
+        if bg_path:
+            config.borderless_gaming_path = bg_path
+            logging.info(f"Found Borderless Gaming: {bg_path}")
+            self._apply_tool_defaults(config, 'borderless_gaming_path', bg_path, options_args_map)
+
+    def _detect_all_bin_tools(self, config: AppConfig):
+        """
+        Auto-detect all tools in the bin directory and populate config paths.
+        This scans recursively for known executables and updates the config.
+        Also loads default options and arguments from options_arguments.set.
+        """
+        project_dir = Path(constants.APP_ROOT_DIR)
+        bin_dir = project_dir / "bin"
+        
+        if not bin_dir.exists():
+            logging.warning(f"Bin directory not found: {bin_dir}")
+            return
+        
+        # Load options/arguments mapping
+        options_args_map = self._load_options_arguments()
+        
+        # Define tool mappings: config_attribute -> list of possible exe names
+        tool_mappings = {
+            'cloud_sync_path': ['rclone.exe', 'rclone', 'ludusavi.exe', 'ludusavi', 'syncthing.exe', 'syncthing', 'emusync.exe', 'emusync'],
+            'local_backup_path': ['gamebackupmonitor.exe', 'GameBackupMonitor.exe', 'gamesavemanager.exe', 'GameSaveManager.exe', 'savestate.exe', 'SaveState.exe'],
+            'disc_mount_path': ['imgdrive.exe', 'wincdemu.exe', 'osfmount.exe'],
+            'disc_unmount_path': ['imgdrive.exe', 'wincdemu.exe', 'osfmount.exe'],
+            'wincdemu_exe_path': ['wincdemu.exe'],
+            'imgdrive_exe_path': ['imgdrive.exe'],
+            'osf_exe_path': ['osfmount.exe', 'osfmount'],
+            'cdmage_exe_path': ['cdmage.exe'],
+        }
+        
+        logging.info("Auto-detecting tools in bin directory...")
+        
+        for config_attr, exe_names in tool_mappings.items():
+            # Skip if already set
+            current_value = getattr(config, config_attr, "")
+            if current_value and os.path.exists(current_value):
+                logging.info(f"{config_attr} already set to: {current_value}")
+                continue
+            
+            # Search for the executable
+            found_path = self._find_executable_recursive(bin_dir, exe_names)
+            if found_path:
+                setattr(config, config_attr, found_path)
+                logging.info(f"Auto-detected {config_attr}: {found_path}")
+                
+                # Apply default options and arguments if available
+                self._apply_tool_defaults(config, config_attr, found_path, options_args_map)
+            else:
+                logging.debug(f"Could not find executable for {config_attr} (looking for: {exe_names})")
+    
+    def _load_options_arguments(self):
+        """Load options and arguments from options_arguments.set file."""
+        import configparser
+        
+        mapping = {}
+        options_file = Path(constants.APP_ROOT_DIR) / "assets" / "options_arguments.set"
+        
+        if not options_file.exists():
+            logging.warning(f"Options/arguments file not found: {options_file}")
+            return mapping
+        
+        try:
+            parser = configparser.ConfigParser()
+            with open(options_file, 'r', encoding='utf-8-sig') as f:
+                parser.read_file(f)
+            
+            for section in parser.sections():
+                options = parser.get(section, 'options', fallback='')
+                arguments = parser.get(section, 'arguments', fallback='')
+                mapping[section.lower()] = (options, arguments)
+            
+            logging.debug(f"Loaded options/arguments for {len(mapping)} tools")
+        except Exception as e:
+            logging.error(f"Error loading options_arguments.set: {e}")
+        
+        return mapping
+    
+    def _apply_tool_defaults(self, config: AppConfig, config_attr: str, tool_path: str, options_args_map: dict):
+        """Apply default options and arguments for a detected tool."""
+        # Map config attributes to their options/arguments attributes
+        attr_mapping = {
+            'controller_mapper_path': ('controller_mapper_path_options', 'controller_mapper_path_arguments'),
+            'borderless_gaming_path': ('borderless_gaming_path_options', 'borderless_gaming_path_arguments'),
+            'multi_monitor_tool_path': ('multi_monitor_tool_path_options', 'multi_monitor_tool_path_arguments'),
+            'pre1_path': ('pre1_path_options', 'pre1_path_arguments'),
+            'pre2_path': ('pre2_path_options', 'pre2_path_arguments'),
+            'pre3_path': ('pre3_path_options', 'pre3_path_arguments'),
+            'post1_path': ('post1_path_options', 'post1_path_arguments'),
+            'post2_path': ('post2_path_options', 'post2_path_arguments'),
+            'post3_path': ('post3_path_options', 'post3_path_arguments'),
+            'just_after_launch_path': ('just_after_launch_path_options', 'just_after_launch_path_arguments'),
+            'just_before_exit_path': ('just_before_exit_path_options', 'just_before_exit_path_arguments'),
+            'cloud_sync_path': ('cloud_sync_path_options', 'cloud_sync_path_arguments'),
+            'local_backup_path': ('local_backup_path_options', 'local_backup_path_arguments'),
+            'disc_mount_path': ('disc_mount_path_options', 'disc_mount_path_arguments'),
+            'disc_unmount_path': ('disc_unmount_path_options', 'disc_unmount_path_arguments'),
+        }
+        
+        if config_attr not in attr_mapping:
+            return
+        
+        options_attr, arguments_attr = attr_mapping[config_attr]
+        
+        # Get the executable name
+        exe_name = os.path.basename(tool_path).lower()
+        exe_no_ext = os.path.splitext(exe_name)[0]
+        
+        # Check if we have defaults for this tool
+        defaults = None
+        if exe_name in options_args_map:
+            defaults = options_args_map[exe_name]
+        elif exe_no_ext in options_args_map:
+            defaults = options_args_map[exe_no_ext]
+        
+        if defaults:
+            options, arguments = defaults
+            
+            # Only set if not already configured
+            current_options = getattr(config, options_attr, "")
+            current_arguments = getattr(config, arguments_attr, "")
+            
+            if not current_options and options:
+                setattr(config, options_attr, options)
+                logging.info(f"  Applied default options for {config_attr}: {options}")
+            
+            if not current_arguments and arguments:
+                setattr(config, arguments_attr, arguments)
+                logging.info(f"  Applied default arguments for {config_attr}: {arguments}")
+    
+    def refresh_tool_paths(self, config: AppConfig):
+        """
+        Refresh tool paths by re-scanning the bin directory.
+        This can be called from the UI to update paths after downloading tools.
+        """
+        logging.info("Refreshing tool paths from bin directory...")
+        self._detect_all_bin_tools(config)
+        self.save_config(config)
+        logging.info("Tool paths refreshed and saved.")
+        return config
+
+    def reset_to_defaults(self, main_window):
+        """Resets the configuration to defaults and re-syncs the UI."""
+        logging.info("Resetting configuration to defaults.")
+        
+        # Delete Profiles directory
+        if os.path.exists(main_window.config.profiles_dir):
+            try:
+                shutil.rmtree(main_window.config.profiles_dir)
+                logging.info(f"Deleted profiles directory: {main_window.config.profiles_dir}")
+            except Exception as e:
+                logging.error(f"Failed to delete profiles directory: {e}")
+
+        # Delete Launchers directory
+        if os.path.exists(main_window.config.launchers_dir):
+            try:
+                shutil.rmtree(main_window.config.launchers_dir)
+                logging.info(f"Deleted launchers directory: {main_window.config.launchers_dir}")
+            except Exception as e:
+                logging.error(f"Failed to delete launchers directory: {e}")
+
+        # Create a new default config
+        default_config = self._first_run_setup()
+        # Save it
+        self.save_config(default_config)
+        # Update the main window's config instance
+        main_window.config = default_config
+        # Update the data manager with the new config, preserving the instance
+        main_window.data_manager.config = default_config
+        # Re-sync the entire UI
+        main_window.sync_ui_from_config()
+        self.status_updated.emit("Configuration has been reset to defaults.", 4000)

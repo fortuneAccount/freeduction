@@ -1,0 +1,63 @@
+[antimicrox]
+options = --tray --hidden --profile-controller 1 --profile
+arguments = --next --profile-controller 2 --profile
+
+[border_stripper]
+options = 
+arguments = 
+
+[borderlessgaming]
+options = 
+arguments = 
+
+[displaychanger]
+options = -configure=
+arguments = 
+
+[ds4windows]
+options = 
+arguments = 
+
+[ds4windowscmd]
+options = 
+arguments = 
+
+[fullscreenizer]
+options = 
+arguments = 
+
+[keysticks]
+options = 
+arguments = 
+
+[ludusavi]
+options = 
+arguments = 
+
+[multimonitortool]
+options = /loadconfig
+arguments = 
+
+[opencloudsave]
+options = 
+arguments = 
+
+[rclone]
+options = 
+arguments = 
+
+[setsounddevice]
+options = 
+arguments = 
+
+[soundvolumeview]
+options = 
+arguments = 
+
+[swre]
+options = 
+arguments = 
+
+[syncthing]
+options = 
+arguments = 

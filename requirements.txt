@@ -1,0 +1,10 @@
+py7zr
+PyQt6
+nltk
+requests
+beautifulsoup4
+configparser
+psutil
+pygame
+pyinstaller 
+cloudscraper 

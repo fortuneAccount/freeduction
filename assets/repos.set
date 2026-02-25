@@ -1,0 +1,69 @@
+[GLOBAL]
+CLOUDLOC = [REMOTEDRIVE]
+HOSTINGURL = [SITE]
+EXTRACTLOC = $app_directory\bin\$ITEMNAME
+SOURCEHOST = https://github.com/oldtools
+ALTHOST = https://github.com/romjacket
+EXHOST = https://github.com/fortuneAccount
+Version = [VERSION]
+UPDATEFILE = $SOURCEHOST/anattaGen/releases/download/portable/portable.zip
+STEAMJSON1 = https://raw.githubusercontent.com/fortuneAccount/steam.json/refs/heads/main/steam.json
+STEAMJSON2 = https://raw.githubusercontent.com/fortuneAccount/fortuneAccount/refs/heads/main/steam.json
+STEAMIDB = https://store.steampowered.com/api/appdetails?appids=
+PC_GWB = https://pcgamingwiki.com
+PCGWB = https://www.pcgamingwiki.com
+PCGWURL = https://www.pcgamingwiki.com/wiki/
+PCGWAPI = https://www.pcgamingwiki.com/api/appid.php?appid=
+STEAMDBI = https://steamdb.info/app/
+
+# Format: url|extract_dir|exe_name|flags
+# Flags (optional 4th field):
+#   INSTALLER - Extracted file is an installer that must be run
+#   INSTALLER:path/to/installed.exe - Installer with specific installed exe path
+#   SILENT - Run installer silently (use with INSTALLER)
+#   PORTABLE - Portable executable (default, no installation needed)
+
+
+[MAPPERS]
+antimicrox = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+keysticks = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ds4windows = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ds4windowscmd = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+
+
+[WINDOWING]
+borderlessgaming = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+borderless= $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+borderstripper = $SOURCEHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+fullscreenizer = $SOURCEHOST/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+
+
+[DISPLAY]
+multimonitortool = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+displaychanger = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$dc2.exe|$EXTRACTLOC|dc64.exe|$EXTRACTLOC|dc64cmd.exe
+
+
+[SYNC]
+opencloudsave = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+rclone = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ludusavi = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+syncthing = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+emusync = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+
+[LOCAL_BACKUP]
+gamebackupmonitor = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|GBM.exe
+gamesavemanager = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER
+savestate = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+
+
+[AUDIO]
+setsounddevice = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|SSD.exe
+syncthing = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+soundvolumeview = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+swre = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+
+[DISCS]
+wincdemu = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER:C:\Program Files\WinCDEmu\$ITEMNAME.exe
+osf = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAMEMount.exe
+cdmage = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+imgdrive = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe

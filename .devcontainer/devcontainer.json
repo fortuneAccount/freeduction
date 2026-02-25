@@ -1,0 +1,65 @@
+{
+  "name": "Python 3.12 + VNC (Qt-safe)",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12-bookworm",
+  "containerEnv": {
+  "DISPLAY": ":1",
+  "QT_QPA_PLATFORM": "xcb"
+  },
+
+  "forwardPorts": [5901, 6080],
+  "portsAttributes": {
+    "5901": { "label": "VNC", "visibility": "public" },
+    "6080": { "label": "noVNC", "visibility": "public" }
+  },
+"postCreateCommand": [
+    "apt-get update",
+    "apt-get install -y --no-install-recommends \\",
+    "  tigervnc-standalone-server \\",
+    "  tigervnc-common \\",
+    "  xfce4 \\",
+    "  xfce4-goodies \\",
+    "  websockify \\",
+    "  xterm \\",
+    "  libegl1 \\",
+    "  libx11-xcb1 \\",
+    "  libxcb-cursor0 \\",
+    "  libxcb-icccm4 \\",
+    "  libxcb-image0 \\",
+    "  libxcb-keysyms1 \\",
+    "  libxcb-render-util0 \\",
+    "  libxcb-xinerama0 \\",
+    "  libxcb-xkb1 \\",
+    "  libxkbcommon-x11-0 \\",
+    "  libgl1 \\",
+    "  libglib2.0-0 \\",
+    "  libdbus-1-3 \\",
+    "  libfontconfig1",
+    "",
+    "sudo git clone --depth 1 https://github.com/novnc/noVNC.git /opt/novnc",
+    "",
+    "sudo ln -s /opt/novnc/vnc.html /opt/novnc/index.html",
+    "",
+    "apt-get clean",
+    "rm -rf /var/lib/apt/lists/*",
+    "",
+    "python -m venv .venv",
+    "source .venv/bin/activate && pip install --upgrade pip & pip install --no-cache-dir -r requirements.txt"
+  ],
+
+ "postStartCommand": [
+  "mkdir -p ~/.vnc",
+  "echo '#!/bin/sh\nunset SESSION_MANAGER\nunset DBUS_SESSION_BUS_ADDRESS\nexec startxfce4 &' > ~/.vnc/xstartup",
+  "chmod +x ~/.vnc/xstartup",
+
+  "vncserver -kill :1 >/dev/null 2>&1 || true",
+  "rm -rf /tmp/.X1-lock /tmp/.X11-unix/X1 || true",
+
+  "sleep 1",
+  "vncserver :1 -geometry 1280x800 -localhost no",
+
+  "pkill -f websockify || true",
+  "sleep 1",
+  "websockify --web=/opt/novnc 0.0.0.0:6080 localhost:5901 &"
+]
+}
+
