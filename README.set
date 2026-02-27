@@ -178,9 +178,6 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 
 ## Quick Start
 
-- **[TUTORIAL.md](TUTORIAL.md*)* - Complete tutorial for creating game launchers
-- **[QUICK_START_CLOUD_BACKUP.md](QUICK_START_CLOUD_BACKUP.md*)* - Get cloud backup working in 5 minutes!
-
 # Setup
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip

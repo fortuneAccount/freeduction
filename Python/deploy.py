@@ -29,28 +29,6 @@ SITE_SET = Path("site") / "index.set"
 OUT_README = Path("README.md")
 OUT_INDEX = Path("site") / "index.html"
 
-# Variables to exclude from the deploy UI
-EXCLUDED_TAGS = {
-    "0",
-    "1",
-    "?&",
-    "htmlinjection",
-    "just after lauch &amp; just before exit",
-    "keymappers",
-    "monitors",
-    '^"&?\\/',
-    "^\\/",
-    "assigned level",
-    '"module", "exports"',
-    "data-smoothie",
-    "i",
-    "r",
-    "t",
-    "user",
-    "pre / post",
-}
-
-
 def read_file(path: Path) -> str:
     if not path.exists():
         return ""
@@ -67,9 +45,6 @@ def find_tags(files: List[Path]) -> List[str]:
     tags: Set[str] = set()
     for p in files:
         tags.update(find_tags_in_text(read_file(p)))
-    # Filter out excluded tags (case-insensitive)
-    excluded_lower = {tag.lower() for tag in EXCLUDED_TAGS}
-    tags = {tag for tag in tags if tag.lower() not in excluded_lower}
     # Keep deterministic order
     return sorted(tags)
 
@@ -152,13 +127,68 @@ def run_gui(ini_path: Path) -> None:
 
     if not cfg.has_section("build"):
         cfg.add_section("build")
+    
+    # Add launcher_build section if not exists
+    if not cfg.has_section("launcher_build"):
+        cfg.add_section("launcher_build")
 
     root = tk.Tk()
     root.title("Deploy: tag editor & builder")
+    root.geometry("900x600")
+    
+    # Make the window resizable but with minimum size
+    root.minsize(800, 500)
+    
+    # Configure grid weights for resizing
+    root.grid_rowconfigure(0, weight=1)
+    root.grid_columnconfigure(0, weight=1)
 
-    frame = ttk.Frame(root, padding=10)
-    frame.grid(row=0, column=0, sticky="nsew")
-
+    # Create main container with two sections: tags (scrollable) and build controls
+    main_container = ttk.Frame(root, padding=4)
+    main_container.grid(row=0, column=0, sticky="nsew")
+    
+    # Configure main container grid
+    main_container.grid_rowconfigure(0, weight=1)  # Tags frame gets all extra vertical space
+    main_container.grid_rowconfigure(1, weight=0)  # Build controls fixed height
+    main_container.grid_columnconfigure(0, weight=1)
+    
+    # --- Tags Section (Scrollable) ---
+    tags_container = ttk.Frame(main_container)
+    tags_container.grid(row=0, column=0, sticky="nsew", pady=(0, 4))
+    
+    # Create canvas with scrollbar for tags
+    tags_canvas = tk.Canvas(tags_container, highlightthickness=0)
+    tags_scrollbar = ttk.Scrollbar(tags_container, orient="vertical", command=tags_canvas.yview)
+    tags_scrollable_frame = ttk.Frame(tags_canvas)
+    
+    tags_scrollable_frame.bind(
+        "<Configure>",
+        lambda e: tags_canvas.configure(scrollregion=tags_canvas.bbox("all"))
+    )
+    
+    tags_canvas.create_window((0, 0), window=tags_scrollable_frame, anchor="nw")
+    tags_canvas.configure(yscrollcommand=tags_scrollbar.set)
+    
+    # Pack canvas and scrollbar
+    tags_canvas.pack(side="left", fill="both", expand=True)
+    tags_scrollbar.pack(side="right", fill="y")
+    
+    # Add mouse wheel support for scrolling
+    def _on_mousewheel(event):
+        tags_canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+    
+    tags_canvas.bind_all("<MouseWheel>", _on_mousewheel)
+    
+    # Clean up binding when window closes
+    def unbind_mousewheel():
+        tags_canvas.unbind_all("<MouseWheel>")
+    
+    root.bind("<Destroy>", lambda e: unbind_mousewheel())
+    
+    # Configure tags_container for resizing
+    tags_container.grid_rowconfigure(0, weight=1)
+    tags_container.grid_columnconfigure(0, weight=1)
+    
     vars: Dict[str, tk.StringVar] = {}
 
     def save_all(_=None):
@@ -173,23 +203,29 @@ def run_gui(ini_path: Path) -> None:
             cfg["build"]["commit_msg"] = build_vars['commit_msg'].get()
             cfg["build"]["skip_python"] = str(build_vars['skip_python'].get())
             cfg["build"]["skip_c"] = str(build_vars['skip_c'].get())
-            cfg["build"]["skip_anattagen"] = str(build_vars['skip_anattagen'].get())
+            cfg["build"]["skip_application"] = str(build_vars['skip_application'].get())
+            
+            # Save launcher build options
+            cfg["launcher_build"]["preset"] = build_vars['launcher_preset'].get()
+            cfg["launcher_build"]["nocs"] = str(build_vars['launcher_nocs'].get())
+            cfg["launcher_build"]["nopd"] = str(build_vars['launcher_nopd'].get())
+            cfg["launcher_build"]["upx"] = str(build_vars['launcher_upx'].get())
             
         save_ini(ini_path, cfg)
         apply_replacements({k: cfg["values"].get(k, "") for k in tags})
 
-    # Build form
+    # Build tag form in scrollable frame - optimized for 900x600 screen
     for i, k in enumerate(tags):
-        lbl = ttk.Label(frame, text=k)
-        lbl.grid(row=i, column=0, sticky="w", padx=(0, 8), pady=4)
+        lbl = ttk.Label(tags_scrollable_frame, text=k)
+        lbl.grid(row=i, column=0, sticky="w", padx=(0, 4), pady=1)
         sv = tk.StringVar(value=cfg["values"].get(k, ""))
-        ent = ttk.Entry(frame, textvariable=sv, width=60)
-        ent.grid(row=i, column=1, sticky="we", pady=4)
+        ent = ttk.Entry(tags_scrollable_frame, textvariable=sv, width=45)
+        ent.grid(row=i, column=1, sticky="we", pady=1)
         vars[k] = sv
 
         if k == "VERSION":
-            btn_inc = ttk.Button(frame, text="+", width=3, command=lambda s=sv: s.set(increment_version(s.get())))
-            btn_inc.grid(row=i, column=2, padx=2)
+            btn_inc = ttk.Button(tags_scrollable_frame, text="+", width=2, command=lambda s=sv: s.set(increment_version(s.get())))
+            btn_inc.grid(row=i, column=2, padx=1)
 
         # autosave on change
         def make_callback(key):
@@ -204,13 +240,17 @@ def run_gui(ini_path: Path) -> None:
     if "RDATE" in vars:
         now = datetime.datetime.now()
         vars["RDATE"].set(now.strftime("%m-%d-%Y"))
-
-    # --- Build Section ---
-    last_row = len(tags)
-    ttk.Separator(frame, orient='horizontal').grid(row=last_row, column=0, columnspan=2, sticky="ew", pady=15)
     
-    lbl_build = ttk.Label(frame, text="Build Portable Binary", font=("", 10, "bold"))
-    lbl_build.grid(row=last_row+1, column=0, columnspan=2, pady=(0, 5))
+    # Configure columns in scrollable frame
+    tags_scrollable_frame.grid_columnconfigure(1, weight=1)
+    
+    # --- Build Controls Section (Fixed) ---
+    build_container = ttk.LabelFrame(main_container, text="Build Controls", padding=6)
+    build_container.grid(row=1, column=0, sticky="ew", pady=(0, 4))
+    
+    # Configure build container columns for resizing
+    build_container.grid_columnconfigure(0, weight=1)
+    build_container.grid_columnconfigure(1, weight=1)
     
     build_vars = {
         'onefile': tk.BooleanVar(value=cfg.getboolean('build', 'onefile', fallback=False)),
@@ -219,40 +259,107 @@ def run_gui(ini_path: Path) -> None:
         'commit_msg': tk.StringVar(value=cfg.get('build', 'commit_msg', fallback="Update")),
         'skip_python': tk.BooleanVar(value=cfg.getboolean('build', 'skip_python', fallback=False)),
         'skip_c': tk.BooleanVar(value=cfg.getboolean('build', 'skip_c', fallback=False)),
-        'skip_anattagen': tk.BooleanVar(value=cfg.getboolean('build', 'skip_anattagen', fallback=False))
+        'skip_application': tk.BooleanVar(value=cfg.getboolean('build', 'skip_application', fallback=False)),
+        # Launcher build options
+        'launcher_preset': tk.StringVar(value=cfg.get('launcher_build', 'preset', fallback='full')),
+        'launcher_nocs': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'nocs', fallback=False)),
+        'launcher_nopd': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'nopd', fallback=False)),
+        'launcher_upx': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'upx', fallback=False)),
     }
     
-    ctl_frame = ttk.Frame(frame)
-    ctl_frame.grid(row=last_row+2, column=0, columnspan=2, sticky="ew")
+    # Build options grid layout
+    row = 0
     
-    ttk.Checkbutton(ctl_frame, text="Onefile", variable=build_vars['onefile']).pack(side="left", padx=5)
-    ttk.Label(ctl_frame, text="Dest:").pack(side="left", padx=5)
-    ttk.Entry(ctl_frame, textvariable=build_vars['dest']).pack(side="left", fill="x", expand=True)
+    # First row: Onefile checkbox and Dest path
+    ctl_frame = ttk.Frame(build_container)
+    ctl_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+    
+    ttk.Checkbutton(ctl_frame, text="Onefile", variable=build_vars['onefile']).pack(side="left", padx=2)
+    ttk.Label(ctl_frame, text="Dest:").pack(side="left", padx=2)
+    ttk.Entry(ctl_frame, textvariable=build_vars['dest'], width=35).pack(side="left", fill="x", expand=True)
     
     def browse_dest():
         d = filedialog.askdirectory()
         if d: build_vars['dest'].set(d)
-    ttk.Button(ctl_frame, text="...", width=3, command=browse_dest).pack(side="left", padx=2)
-
-    wp_frame = ttk.Frame(frame)
-    wp_frame.grid(row=last_row+3, column=0, columnspan=2, sticky="ew")
-    ttk.Label(wp_frame, text="Workpath:").pack(side="left", padx=5)
-    ttk.Entry(wp_frame, textvariable=build_vars['workpath']).pack(side="left", fill="x", expand=True)
+    ttk.Button(ctl_frame, text="...", width=2, command=browse_dest).pack(side="left", padx=1)
+    
+    row += 1
+    
+    # Second row: Workpath
+    wp_frame = ttk.Frame(build_container)
+    wp_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+    ttk.Label(wp_frame, text="Workpath:").pack(side="left", padx=2)
+    ttk.Entry(wp_frame, textvariable=build_vars['workpath'], width=35).pack(side="left", fill="x", expand=True)
     def browse_workpath():
         d = filedialog.askdirectory()
         if d: build_vars['workpath'].set(d)
-    ttk.Button(wp_frame, text="...", width=3, command=browse_workpath).pack(side="left", padx=2)
-
-    git_frame = ttk.Frame(frame)
-    git_frame.grid(row=last_row+4, column=0, columnspan=2, sticky="ew", pady=(5, 0))
-    ttk.Label(git_frame, text="Commit Msg:").pack(side="left", padx=5)
-    ttk.Entry(git_frame, textvariable=build_vars['commit_msg']).pack(side="left", fill="x", expand=True)
-
-    skip_frame = ttk.Frame(frame)
-    skip_frame.grid(row=last_row+5, column=0, columnspan=2, sticky="ew")
-    ttk.Checkbutton(skip_frame, text="Skip Python Build", variable=build_vars['skip_python']).pack(side="left", padx=5)
-    ttk.Checkbutton(skip_frame, text="Skip Anattagen Build", variable=build_vars['skip_anattagen']).pack(side="left", padx=5)
-    ttk.Checkbutton(skip_frame, text="Skip C Launcher Build", variable=build_vars['skip_c']).pack(side="left", padx=5)
+    ttk.Button(wp_frame, text="...", width=2, command=browse_workpath).pack(side="left", padx=1)
+    
+    row += 1
+    
+    # Third row: Commit message
+    git_frame = ttk.Frame(build_container)
+    git_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+    ttk.Label(git_frame, text="Commit:").pack(side="left", padx=2)
+    ttk.Entry(git_frame, textvariable=build_vars['commit_msg'], width=35).pack(side="left", fill="x", expand=True)
+    
+    row += 1
+    
+    # Fourth row: Skip options
+    skip_frame = ttk.Frame(build_container)
+    skip_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 4))
+    ttk.Checkbutton(skip_frame, text="Skip Python", variable=build_vars['skip_python']).pack(side="left", padx=2)
+    ttk.Checkbutton(skip_frame, text="Skip App", variable=build_vars['skip_application']).pack(side="left", padx=2)
+    ttk.Checkbutton(skip_frame, text="Skip C", variable=build_vars['skip_c']).pack(side="left", padx=2)
+    
+    row += 1
+    
+    # Launcher Build Options
+    launcher_frame = ttk.LabelFrame(build_container, text="Launcher Options", padding=4)
+    launcher_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+    
+    # Launcher options in two columns
+    launcher_frame.grid_columnconfigure(0, weight=1)
+    launcher_frame.grid_columnconfigure(1, weight=1)
+    
+    # Left column: Preset selection
+    preset_frame = ttk.Frame(launcher_frame)
+    preset_frame.grid(row=0, column=0, sticky="w", padx=2, pady=2)
+    
+    ttk.Label(preset_frame, text="Preset:").pack(side="left", padx=2)
+    preset_combo = ttk.Combobox(preset_frame, textvariable=build_vars['launcher_preset'], 
+                                 values=['full', 'minimal', 'standard', 'portable', 'debug'],
+                                 state='readonly', width=10)
+    preset_combo.pack(side="left", padx=2)
+    
+    # Preset descriptions
+    preset_descriptions = {
+        'full': 'Full',
+        'minimal': 'Minimal',
+        'standard': 'Standard',
+        'portable': 'Portable',
+        'debug': 'Debug'
+    }
+    
+    preset_desc_label = ttk.Label(preset_frame, text=preset_descriptions.get(build_vars['launcher_preset'].get(), ''))
+    preset_desc_label.pack(side="left", padx=4)
+    
+    def update_preset_desc(*args):
+        preset_desc_label.config(text=preset_descriptions.get(build_vars['launcher_preset'].get(), ''))
+    
+    build_vars['launcher_preset'].trace_add('write', update_preset_desc)
+    
+    # Right column: Modifiers
+    modifier_frame = ttk.Frame(launcher_frame)
+    modifier_frame.grid(row=0, column=1, sticky="e", padx=2, pady=2)
+    
+    ttk.Label(modifier_frame, text="Mods:").pack(side="left", padx=2)
+    ttk.Checkbutton(modifier_frame, text="nocs", 
+                    variable=build_vars['launcher_nocs']).pack(side="left", padx=2)
+    ttk.Checkbutton(modifier_frame, text="nopd", 
+                    variable=build_vars['launcher_nopd']).pack(side="left", padx=2)
+    ttk.Checkbutton(modifier_frame, text="upx", 
+                    variable=build_vars['launcher_upx']).pack(side="left", padx=2)
     
     from tkinter import scrolledtext
     
@@ -299,7 +406,7 @@ def run_gui(ini_path: Path) -> None:
                 if isinstance(child, (ttk.Frame, tk.Frame, ttk.LabelFrame)):
                     _recursive_set_state(child)
         
-        _recursive_set_state(frame)
+        _recursive_set_state(main_container)
         btn_cancel.configure(state='normal' if busy else 'disabled')
 
     def cancel_process():
@@ -343,7 +450,8 @@ def run_gui(ini_path: Path) -> None:
         workpath = build_vars['workpath'].get()
         skip_python = build_vars['skip_python'].get()
         skip_c = build_vars['skip_c'].get()
-        skip_anattagen = build_vars['skip_anattagen'].get()
+        skip_application = build_vars['skip_application'].get()
+        rj_proj = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
         
         def worker():
             set_ui_busy(True)
@@ -364,7 +472,7 @@ def run_gui(ini_path: Path) -> None:
             cmd_main = [
                 sys.executable, '-m', 'PyInstaller',
                 str(main_script),
-                '--name=anattagen',
+                f'--name={rj_proj}',
                 '--noconfirm',
                 '--clean',
                 '--windowed',
@@ -383,56 +491,108 @@ def run_gui(ini_path: Path) -> None:
                 cmd_main.append('--onedir')
                 
             if not skip_python:
-                if not skip_anattagen:
-                    log(f"Starting Main Build (anattagen)...\n")
+                if not skip_application:
+                    log(f"Starting Main Build (application)...\n")
                     if not run_cmd_sequence([cmd_main], cwd=project_root):
                         set_ui_busy(False)
                         proc_state['proc'] = None
                         return
                 else:
-                    log("Skipping Main Build (anattagen).\n")
+                    log("Skipping Main Build (application).\n")
 
                 # 2. Launcher Build
                 if proc_state['cancelled']:
                     set_ui_busy(False)
                     return
 
-                launcher_script = project_root / "Python" / "Launcher.py"
-                cmd_launcher = [
-                    sys.executable, '-m', 'PyInstaller',
-                    str(launcher_script),
-                    '--name=Launcher',
-                    '--noconfirm',
-                    '--clean',
-                    '--windowed',
-                    '--onefile',
-                    f'--distpath={dest}',
-                    f'--workpath={workpath}',
-                ]
+                # Get launcher build options
+                launcher_preset = build_vars['launcher_preset'].get()
+                launcher_modifiers = []
+                if build_vars['launcher_nocs'].get():
+                    launcher_modifiers.append('nocs')
+                if build_vars['launcher_nopd'].get():
+                    launcher_modifiers.append('nopd')
+                if build_vars['launcher_upx'].get():
+                    launcher_modifiers.append('upx')
                 
-                if platform.system() == 'Windows' and icon_path.exists():
-                    cmd_launcher.append(f'--icon={icon_path}')
-
-                log(f"\nStarting Launcher Build...\n")
-                if not run_cmd_sequence([cmd_launcher], cwd=project_root):
-                    set_ui_busy(False)
-                    proc_state['proc'] = None
-                    return
-
-                # 3. Copy Launcher
-                try:
-                    src = Path(dest) / "Launcher.exe"
-                    dst_dir = project_root / "bin"
-                    dst = dst_dir / "Launcher.python.exe"
+                # Use Build_PyLauncher.py script
+                build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
+                
+                if build_script.exists():
+                    cmd_launcher = [sys.executable, str(build_script), launcher_preset] + launcher_modifiers
                     
-                    if src.exists():
-                        dst_dir.mkdir(exist_ok=True)
-                        shutil.copy2(src, dst)
-                        log(f"\nCopied Launcher.exe to {dst}\n")
-                    else:
-                        log(f"\nError: Launcher.exe not found in {dest}\n")
-                except Exception as e:
-                    log(f"\nError copying launcher: {e}\n")
+                    log(f"\nStarting Launcher Build with preset '{launcher_preset}'")
+                    if launcher_modifiers:
+                        log(f" and modifiers: {', '.join(launcher_modifiers)}")
+                    log("...\n")
+                    
+                    if not run_cmd_sequence([cmd_launcher], cwd=project_root):
+                        set_ui_busy(False)
+                        proc_state['proc'] = None
+                        return
+                    
+                    # 3. Copy Launcher
+                    try:
+                        preset_name = {
+                            'full': 'Launcher_full',
+                            'minimal': 'Launcher_minimal',
+                            'standard': 'Launcher_standard',
+                            'portable': 'Launcher_portable',
+                            'debug': 'Launcher_debug'
+                        }.get(launcher_preset, 'Launcher_full')
+                        
+                        src = project_root / "dist" / f"{preset_name}.exe"
+                        dst_dir = project_root / "bin"
+                        dst = dst_dir / "Launcher.python.exe"
+                        
+                        if src.exists():
+                            dst_dir.mkdir(exist_ok=True)
+                            shutil.copy2(src, dst)
+                            log(f"\nCopied {preset_name}.exe to {dst}\n")
+                        else:
+                            log(f"\nError: {preset_name}.exe not found in dist/\n")
+                    except Exception as e:
+                        log(f"\nError copying launcher: {e}\n")
+                else:
+                    log(f"\nError: Build_PyLauncher.py not found at {build_script}\n")
+                    log("Falling back to legacy build method...\n")
+                    
+                    # Legacy fallback
+                    launcher_script = project_root / "Python" / "Launcher.py"
+                    cmd_launcher = [
+                        sys.executable, '-m', 'PyInstaller',
+                        str(launcher_script),
+                        '--name=Launcher',
+                        '--noconfirm',
+                        '--clean',
+                        '--windowed',
+                        '--onefile',
+                        f'--distpath={dest}',
+                        f'--workpath={workpath}',
+                    ]
+                    
+                    if platform.system() == 'Windows' and icon_path.exists():
+                        cmd_launcher.append(f'--icon={icon_path}')
+
+                    if not run_cmd_sequence([cmd_launcher], cwd=project_root):
+                        set_ui_busy(False)
+                        proc_state['proc'] = None
+                        return
+
+                    # Copy legacy launcher
+                    try:
+                        src = Path(dest) / "Launcher.exe"
+                        dst_dir = project_root / "bin"
+                        dst = dst_dir / "Launcher.python.exe"
+                        
+                        if src.exists():
+                            dst_dir.mkdir(exist_ok=True)
+                            shutil.copy2(src, dst)
+                            log(f"\nCopied Launcher.exe to {dst}\n")
+                        else:
+                            log(f"\nError: Launcher.exe not found in {dest}\n")
+                    except Exception as e:
+                        log(f"\nError copying launcher: {e}\n")
 
             # 4. Compile C Launcher
             if skip_c:
@@ -545,11 +705,11 @@ def run_gui(ini_path: Path) -> None:
                 return
 
             log("Calculating SHA1 of executable...\n")
-            exe_name = "anattagen.exe" if platform.system() == "Windows" else "anattagen"
+            exe_name = f"{rj_proj}.exe" if platform.system() == "Windows" else f"{rj_proj}"
             exe_path = None
-            for root, dirs, files in os.walk(dest_dir):
+            for dirpath, dirs, files in os.walk(dest_dir):
                 if exe_name in files:
-                    exe_path = Path(root) / exe_name
+                    exe_path = Path(dirpath) / exe_name
                     break
             
             sha1_hash = ""
@@ -676,18 +836,19 @@ def run_gui(ini_path: Path) -> None:
         open_log_window("Release Log")
         threading.Thread(target=worker, daemon=True).start()
 
-    # Consolidated Button Row
-    btn_row = ttk.Frame(frame, padding=(0, 10))
-    btn_row.grid(row=last_row+6, column=0, columnspan=2, sticky="ew")
+    # Button Row in build container
+    row += 1
+    btn_row = ttk.Frame(build_container, padding=(0, 4))
+    btn_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(2, 0))
     
-    ttk.Button(btn_row, text="Apply & Save", command=save_all).pack(side="left", padx=5)
-    ttk.Button(btn_row, text="Compile", command=run_build).pack(side="left", padx=5)
-    ttk.Button(btn_row, text="Compress & Release", command=run_release).pack(side="left", padx=5)
+    ttk.Button(btn_row, text="Apply & Save", command=save_all).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Compile", command=run_build).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Release", command=run_release).pack(side="left", padx=2)
     
     btn_cancel = ttk.Button(btn_row, text="Cancel", command=cancel_process, state='disabled')
-    btn_cancel.pack(side="left", padx=5)
+    btn_cancel.pack(side="left", padx=2)
     
-    ttk.Button(btn_row, text="Push to GitHub", command=run_git).pack(side="right", padx=5)
+    ttk.Button(btn_row, text="Push", command=run_git).pack(side="right", padx=2)
 
     def on_close():
         save_all()

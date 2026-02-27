@@ -24,7 +24,7 @@ extern void log_message(const char* level, const char* message);
 #define EDIT_WIDTH 400           // Increased from 380
 #define BUTTON_WIDTH 30
 #define DIALOG_WIDTH 650
-#define DIALOG_HEIGHT 440
+#define DIALOG_HEIGHT 490  // Increased by 50px for button footer
 #define SCROLL_WIDTH 20
 #define ACTION_BTN_WIDTH 50      // Width for action buttons
 #define ACTION_BTN_HEIGHT 25     // Height for action buttons

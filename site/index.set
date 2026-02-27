@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
-    <title>{{PROJECT_TITLE}}</title>
+    <title>{{RJ_PROJ}}</title>
     <style>
         @font-face {
             font-family: 'Anka/Coder';
@@ -673,9 +673,8 @@
                 <br>
                 <!-- <span class="tfnt">skeletonKeY</span>-->
                 <div id="msriv">
-                    <h1>{{PROJECT_TITLE}}</h1>
-                    <!--{{HTMLINJECTION}}-->
-                </div>
+                    <h1>{{RJ_PROJ}}</h1>
+                </div>  
                 <a id="DOWNLOAD"></a>
                 <p>{{TAGLINE}}</p>
                 <div align="left" id="outer">
@@ -692,7 +691,7 @@
                             </li>
                         </ul>
                         Installer<br> (recommended)<br>
-                        <strong>size:</strong>VERSION}}">Installer </a></h2>
+                        <strong>size:</strong>{{VERSION}}">Installer </a></h2>
                             </li>
                         </ul>
                         Installer<br> (recommended)<br>
@@ -707,14 +706,14 @@
                                 <h2><a href="{{PORTABLE}}">Portable Binary �</a></h2>
                             </li>
                         </ul>
-                        This is the compressed {{PROJECT_NAME}} executable.<br> Extract into a {{PROJECT_NAME}} directory.
+                        This is the compressed {{RJ_PROJ}} executable.<br> Extract into a {{RJ_PROJ}} directory.
                     </div>
                     <br>
                     <div id="inner">
                         <br>
-                        <strong>Developer Website:</strong> <a href="{{GIT_WEB}}/{{PROJECT_NAME}}/index.html" target="_top">https://{{GITUSER}}.{{GIT_WEB}}/{{PROJECT_NAME}}</a><br>
+                        <strong>Developer Website:</strong> <a href="{{GIT_WEB}}/{{RJ_PROJ}}/index.html" target="_top">{{GIT_WEB}}/{{RJ_PROJ}}/index.html</a><br>
                         <strong>Source code:</strong>
-                        <a id="COMMENT"></a> <a href="{{GIT_WEB}}/{{PROJECT_NAME}}">Github Page</a><br>
+                        <a id="COMMENT"></a> <a href="{{GIT_WEB}}/{{RJ_PROJ}}">Github Page</a><br>
                         <!-- <strong>Resources and Releases:</strong>
 					<a href="{{RELEASEPG}}">Release Page</a>
 					<br> -->
@@ -1373,6 +1372,7 @@
                                                     &bull; Reload button to apply changes without restarting<br>
                                                     &bull; Live validation of configuration values</p>
                                                     <p><strong>C Launcher:</strong> Opens Game.ini in Notepad for editing. After saving and closing Notepad, you'll be prompted to restart the launcher to apply changes.</p>
+                                                    <p><strong>C Launcher:</strong> Opens a native modal configuration window. This allows you to view and edit the Game.ini settings directly within the application.</p>
                                                     <br>
                                                 </div>
                                             </div>
@@ -1727,13 +1727,13 @@ class MyToolPlugin(ToolPlugin):
                 <br>
                 <div id="TUTS">
                     <div id="SectSeparate" align="center">
-                        <h1>Compiling & Running {{PROJECT_NAME}}</h1>
+                        <h1>Compiling & Running {{RJ_PROJ}}</h1>
                     </div>
                     <div align="left" id="outer">
                         <div id="inner" align="left">
 						<div>
 						<h3>Building from Source</h3>
-						<p>{{PROJECT_NAME}} can be run directly from source or compiled into standalone executables for distribution. The project consists of two main components: the Python-based main application and the C-based launcher executable.</p>
+						<p>{{RJ_PROJ}} can be run directly from source or compiled into standalone executables for distribution. The project consists of two main components: the Python-based main application and the C-based launcher executable.</p>
 						<p><strong>Development Setup:</strong> Run the application directly from source for development and testing. Requires Python 3.13+ and dependencies from requirements.txt.</p>
 						<p><strong>Production Build:</strong> Compile into standalone executables using PyInstaller (main app) and GCC/MinGW (launcher). Creates portable packages with all dependencies bundled.</p>
 						<p><strong>Platform Support:</strong>
@@ -1744,14 +1744,14 @@ class MyToolPlugin(ToolPlugin):
 						<h3>Windows</h3>
 						<p>
                             1. Install Python 3.13+ (e.g., <code>winget install -e --id Python.Python.3.13</code>)<br>
-                            2. Clone the repository: <code>git clone --recursive https://github.com/{{GIT_USER}}/{{RJ_PROJ}}</code><br>
+                            2. Clone the repository: <code>git clone --recursive https://github.com/{{GITUSER}}/{{RJ_PROJ}}</code><br>
                             3. Install requirements: <code>pip install -r requirements_win.txt</code><br>
                             4. Run the application: <code>python Python\main.py</code>
                         </p>
                         <h3>Linux (Ubuntu/Debian)</h3>
                         <p>
                             1. Install dependencies: <code>sudo apt install python3-venv python3-pip</code><br>
-                            2. Clone the repository: <code>git clone --recursive https://github.com/{{GIT_USER}}/{{RJ_PROJ}}</code><br>
+                            2. Clone the repository: <code>git clone --recursive https://github.com/{{GITUSER}}/{{RJ_PROJ}}</code><br>
                             3. Setup venv: <code>python3 -m venv .venv && source .venv/bin/activate</code><br>
                             4. Install requirements: <code>pip install -r requirements.txt</code><br>
                             5. Run the application: <code>python Python/main.py</code>
@@ -1760,6 +1760,40 @@ class MyToolPlugin(ToolPlugin):
 						<p>
                             Android compilation is currently experimental. Please refer to the project repository for the latest updates on mobile deployment.
                         </p>
+                        <ul class="accordion css-accordion" align="right">
+                            <li class="accordion-item">
+                                <input class="accordion-item-input" type="checkbox" name="accordion" id="item-compile-quickstart" />
+                                <label for="item-compile-quickstart" class="accordion-item-hd" align="right">? Quick Start Guide<span class="accordion-item-hd-cta">&#9650;</span></label>
+                                <div class="accordion-item-bd">
+                                    <div id="detailsdiv" align="left">
+                                        <div>
+                                            <h3>Windows</h3>
+                                            <p>
+                                                1. Install Python 3.13+ (e.g., <code>winget install -e --id Python.Python.3.13</code>)<br>
+                                                2. Clone the repository: <code>git clone --recursive https://github.com/{{GITUSER}}/{{RJ_PROJ}}</code><br>
+                                                3. Install requirements: <code>pip install -r requirements_win.txt</code><br>
+                                                4. Run the application: <code>python Python\main.py</code>
+                                            </p>
+                                            <h3>Linux (Ubuntu/Debian)</h3>
+                                            <p>
+                                                1. Install dependencies: <code>sudo apt install python3-venv python3-pip</code><br>
+                                                2. Clone the repository: <code>git clone --recursive https://github.com/{{GITUSER}}/{{RJ_PROJ}}</code><br>
+                                                3. Setup venv: <code>python3 -m venv .venv && source .venv/bin/activate</code><br>
+                                                4. Install requirements: <code>pip install -r requirements.txt</code><br>
+                                                5. Run the application: <code>python Python/main.py</code>
+                                            </p>
+                                            <h3>Android</h3>
+                                            <p>
+                                                Android compilation is currently experimental. Please refer to the project repository for the latest updates on mobile deployment.
+                                            </p>
+                                            <br>
+                                        </div>
+                                    </div>
+                                    <br>
+                                </div>
+                            </li>
+                        </ul>
+                        <br>
 						 <ul class="accordion css-accordion" align="right">
                              <li class="accordion-item">
                                 <input class="accordion-item-input" type="checkbox" name="accordion" id="item-compile-launcher" />
@@ -1907,7 +1941,7 @@ class MyToolPlugin(ToolPlugin):
                                 <p><strong>Question: Proton Support?</strong></p>
                                 <p><strong>Answer: </strong>eh....</span>
                                 <p><strong>Question: </strong> I'm having trouble with a feature. It's a bug?</p>
-                                <p><strong>Answer: </strong> <a href="{{GIT_WEB}}/{{PROJECT_NAME}}/issues" target="_self"> Create
+                                <p><strong>Answer: </strong> <a href="{{GIT_WEB}}/{{RJ_PROJ}}/issues" target="_self"> Create
 									an issue on Github.com</a> and I'll respond or
                                     <div align="right">
                                         <ul class="accordion css-accordion" align="right">

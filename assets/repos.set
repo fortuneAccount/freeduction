@@ -3,7 +3,7 @@ CLOUDLOC = [REMOTEDRIVE]
 HOSTINGURL = [SITE]
 EXTRACTLOC = $app_directory\bin\$ITEMNAME
 SOURCEHOST = https://github.com/oldtools
-ALTHOST = https://github.com/romjacket
+ALTHOST = https://github.com/
 EXHOST = https://github.com/fortuneAccount
 Version = [VERSION]
 UPDATEFILE = $SOURCEHOST/anattaGen/releases/download/portable/portable.zip
@@ -25,10 +25,10 @@ STEAMDBI = https://steamdb.info/app/
 
 
 [MAPPERS]
-antimicrox = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+antimicrox = https://github.com/AntiMicroX/antimicrox/releases/download/3.4.1/antimicrox-3.4.1-Windows-x86_64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 keysticks = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-ds4windows = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-ds4windowscmd = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ds4windows = https://github.com/Ryochan7/DS4Windows/releases/download/v3.3.3/DS4Windows_3.3.3_x64.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ds4windowscmd = https://github.com/Ryochan7/DS4Windows/releases/download/v3.3.3/DS4Windows_3.3.3_x64.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 
 [WINDOWING]
@@ -36,34 +36,37 @@ borderlessgaming = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLO
 borderless= $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 borderstripper = $SOURCEHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 fullscreenizer = $SOURCEHOST/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+magpie = https://github.com/Blinue/Magpie/releases/download/v0.12.1/Magpie-v0.12.1-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 
 [DISPLAY]
-multimonitortool = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+multimonitortool = https://www.nirsoft.net/utils/multimonitortool-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 displaychanger = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$dc2.exe|$EXTRACTLOC|dc64.exe|$EXTRACTLOC|dc64cmd.exe
+magpie = https://github.com/Blinue/Magpie/releases/download/v0.12.1/Magpie-v0.12.1-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+clickmonitorddc = https://github.com/chrismah/ClickMonitorDDC7.2/raw/refs/heads/master/files/ClickMonitorDDC_7_2.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+persistentwindows = https://github.com/kangyu-california/PersistentWindows/releases/download/5.75/PersistentWindows5.75.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 
 [SYNC]
-opencloudsave = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-rclone = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-ludusavi = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-syncthing = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-emusync = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+opencloudsave = https://github.com/DavidDeSimone/OpenCloudSaves/releases/download/v0.18.1/windows_opencloudsave_0.18.1_x86_64.msi<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+rclone = https://downloads.rclone.org/rclone-current-windows-amd64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+ludusavi = https://github.com/mtkennerly/ludusavi/releases/download/v0.26.0/ludusavi-v0.26.0-win64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+syncthing = https://github.com/syncthing/syncthing/releases/download/v1.29.2/syncthing-windows-amd64-v1.29.2.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+emusync = https://github.com/emu-sync/EmuSync/releases/download/v1.0.10/EmuSync-Win-x64.exe<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 [LOCAL_BACKUP]
-gamebackupmonitor = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|GBM.exe
-gamesavemanager = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER
-savestate = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+gamebackupmonitor = https://github.com/MikeMaximus/GameBackupMonitor/releases/download/1.4.4/GameBackupMonitor-1.4.4-Portable.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|GBM.exe
+gamesavemanager = https://www.gamesave-manager.com/file/02420ae5-85b8-4528-bf94-7853b1e5316b/GameSaveManager_3.1.571.0.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER
+savestate = https://github.com/Matteo842/SaveState/releases/download/v2.5.0/SaveState_v2.5.0_Win.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 
 [AUDIO]
-setsounddevice = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|SSD.exe
-syncthing = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-soundvolumeview = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+setsounddevice = https://www.nirsoft.net/utils/nircmd.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|SSD.exe
+soundvolumeview = https://www.nirsoft.net/utils/soundvolumeview-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 swre = $SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 
 [DISCS]
-wincdemu = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER:C:\Program Files\WinCDEmu\$ITEMNAME.exe
-osf = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAMEMount.exe
+wincdemu = https://github.com/sysprogs/WinCDEmu/releases/download/v4.1/WinCDEmu-4.1.exe<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe|INSTALLER:C:\Program Files\WinCDEmu\$ITEMNAME.exe
+osf = https://www.osforensics.com/downloads/osfmount.exe<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAMEMount.exe
 cdmage = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-imgdrive = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+imgdrive = https://www.yubsoft.com/imgdrive/ImgDrive_Portable.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe

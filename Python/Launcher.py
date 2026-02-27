@@ -15,7 +15,6 @@ import shutil
 import datetime
 import tempfile
 import signal
-import psutil
 import logging
 from pathlib import Path
 import shlex
@@ -24,13 +23,27 @@ import platform
 import argparse
 import glob
 
+# Optional heavy imports - only import if needed
+PSUTIL_AVAILABLE = False
+PYGAME_AVAILABLE = False
+WIN32_AVAILABLE = False
+
+try:
+    import psutil
+    PSUTIL_AVAILABLE = True
+except ImportError:
+    pass
+
 # Conditional imports for Windows
 if sys.platform == 'win32':
-    import winreg
-    import win32gui
-    import win32con
-    import win32process
-    import win32api
+    try:
+        import win32gui
+        import win32con
+        import win32process
+        import win32api
+        WIN32_AVAILABLE = True
+    except ImportError:
+        pass
 
 # Import the new sequence executor
 try:
@@ -39,124 +52,15 @@ except ImportError:
     from sequence_executor_v2 import SequenceExecutorV2
 
 class DynamicSplash:
-    """Handles a dynamic splash screen using Pygame and Win32GUI for transparency."""
+    """Stubbed splash screen for minimal build."""
     def __init__(self, base_dir):
-        self.base_dir = base_dir
-        self.image_path = None
-        self.mode = None  # 'fullscreen' or 'notification'
-        self.hwnd = None
         self.running = False
-        self._find_image()
-
-    def _find_image(self):
-        if not self.base_dir or not os.path.exists(self.base_dir):
-            return
-
-        extensions = ['jpg', 'jpeg', 'png', 'gif']
-        fs_names = ['Backdrop', 'background', 'fanart', 'wallpaper']
-        notif_names = ['box-art', 'boxart', 'coverart', 'cover-art']
-
-        # Helper to search case-insensitive
-        def search(names):
-            for name in names:
-                for ext in extensions:
-                    pattern = os.path.join(self.base_dir, f"{name}.{ext}")
-                    matches = glob.glob(pattern) # glob is case-insensitive on Windows usually
-                    if not matches:
-                        # Try explicit case variations if glob didn't catch it
-                        matches = glob.glob(os.path.join(self.base_dir, f"{name.lower()}.{ext}"))
-                    if matches:
-                        return matches[0]
-            return None
-
-        # Check Fullscreen first
-        self.image_path = search(fs_names)
-        if self.image_path:
-            self.mode = 'fullscreen'
-            return
-
-        # Check Notification area
-        self.image_path = search(notif_names)
-        if self.image_path:
-            self.mode = 'notification'
-
+        
     def show(self):
-        if not self.image_path:
-            return
-
-        try:
-            import pygame
-            pygame.init()
-            
-            # Load image
-            img = pygame.image.load(self.image_path)
-            info = pygame.display.Info()
-            screen_w, screen_h = info.current_w, info.current_h
-
-            if self.mode == 'fullscreen':
-                # Scale to fill screen
-                img = pygame.transform.scale(img, (screen_w, screen_h))
-                self.screen = pygame.display.set_mode((screen_w, screen_h), pygame.NOFRAME)
-            else:
-                # Notification mode: Scale to 0.6 screen height, maintain aspect
-                target_h = int(screen_h * 0.6)
-                rect = img.get_rect()
-                aspect = rect.width / rect.height
-                target_w = int(target_h * aspect)
-                img = pygame.transform.smoothscale(img, (target_w, target_h))
-                
-                # Position bottom right
-                x = screen_w - target_w - 20
-                y = screen_h - target_h - 40
-                os.environ['SDL_VIDEO_WINDOW_POS'] = f"{x},{y}"
-                self.screen = pygame.display.set_mode((target_w, target_h), pygame.NOFRAME)
-
-            # Get HWND for transparency
-            self.hwnd = pygame.display.get_wm_info()["window"]
-            
-            # Set layered window attributes for alpha blending the whole window
-            if platform.system() == 'Windows':
-                ex_style = win32gui.GetWindowLong(self.hwnd, win32con.GWL_EXSTYLE)
-                win32gui.SetWindowLong(self.hwnd, win32con.GWL_EXSTYLE, ex_style | win32con.WS_EX_LAYERED)
-                # Start fully transparent
-                win32gui.SetLayeredWindowAttributes(self.hwnd, 0, 0, win32con.LWA_ALPHA)
-            
-            self.screen.blit(img, (0, 0))
-            pygame.display.flip()
-            self.running = True
-            
-            # Fade In
-            self._fade(0, 255)
-            
-        except Exception as e:
-            logging.error(f"Failed to show dynamic splash: {e}")
-            self.running = False
-
+        pass
+    
     def close(self):
-        if self.running:
-            # Fade Out
-            self._fade(255, 0)
-            try:
-                import pygame
-                pygame.quit()
-            except:
-                pass
-            self.running = False
-
-    def _fade(self, start, end):
-        if platform.system() == 'Windows' and self.hwnd:
-            step = 5 if start < end else -5
-            for alpha in range(start, end + step, step):
-                # Clamp alpha
-                alpha = max(0, min(255, alpha))
-                win32gui.SetLayeredWindowAttributes(self.hwnd, 0, alpha, win32con.LWA_ALPHA)
-                # Pump events to keep window responsive
-                try:
-                    import pygame
-                    pygame.event.pump()
-                    pygame.time.delay(5)
-                except:
-                    break
+        pass
 
 class GameLauncher:
     def __init__(self):
@@ -242,37 +146,62 @@ class GameLauncher:
         # Initialize the sequence executor
         self.update_splash_progress(90, "Preparing execution sequences...")
         
-        # Initialize plugin manager if available
-        try:
-            from Python.managers.plugin_manager import PluginManager
-            self.plugin_manager = PluginManager()
-        except ImportError:
+        # Initialize plugin manager if available (optional for minimal build)
+        self.plugin_manager = None
+        if os.environ.get('LAUNCHER_MINIMAL') != '1':
             try:
-                from managers.plugin_manager import PluginManager
+                from Python.managers.plugin_manager import PluginManager
                 self.plugin_manager = PluginManager()
             except ImportError:
-                self.plugin_manager = None
-                logging.warning("Plugin manager not available")
+                try:
+                    from managers.plugin_manager import PluginManager
+                    self.plugin_manager = PluginManager()
+                except ImportError:
+                    logging.debug("Plugin manager not available")
         
         self.executor = SequenceExecutorV2(self)
         
-        # Initialize tray menu
+        # Initialize tray menu or hotkey handler (optional for minimal build)
         self.tray_menu = None
-        try:
-            from Python.tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
-            if TRAY_AVAILABLE:
-                self.tray_menu = LauncherTrayMenu(self)
-                self.tray_menu.start()
-                logging.info("Tray menu initialized")
-        except ImportError:
+        self.hotkey_handler = None
+        
+        if os.environ.get('LAUNCHER_MINIMAL') != '1':
+            # Full build: Try tray menu first
             try:
-                from tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
+                from Python.tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
                 if TRAY_AVAILABLE:
                     self.tray_menu = LauncherTrayMenu(self)
                     self.tray_menu.start()
                     logging.info("Tray menu initialized")
             except ImportError:
-                logging.warning("Tray menu not available")
+                try:
+                    from tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
+                    if TRAY_AVAILABLE:
+                        self.tray_menu = LauncherTrayMenu(self)
+                        self.tray_menu.start()
+                        logging.info("Tray menu initialized")
+                except ImportError:
+                    logging.debug("Tray menu not available")
+        
+        # If no tray menu, use hotkey handler as fallback
+        if not self.tray_menu:
+            try:
+                from Python.hotkey_handler import HotkeyHandler, HOTKEY_AVAILABLE
+                if HOTKEY_AVAILABLE:
+                    self.hotkey_handler = HotkeyHandler(self)
+                    self.hotkey_handler.start()
+                    logging.info("Hotkey handler initialized (Ctrl+Alt+F9 for help)")
+                    print("\n[INFO] Hotkey handler active. Press Ctrl+Alt+F9 for help.\n")
+            except ImportError:
+                try:
+                    from hotkey_handler import HotkeyHandler, HOTKEY_AVAILABLE
+                    if HOTKEY_AVAILABLE:
+                        self.hotkey_handler = HotkeyHandler(self)
+                        self.hotkey_handler.start()
+                        logging.info("Hotkey handler initialized (Ctrl+Alt+F9 for help)")
+                        print("\n[INFO] Hotkey handler active. Press Ctrl+Alt+F9 for help.\n")
+                except ImportError:
+                    logging.debug("Hotkey handler not available")
         
         # Close splash screen after initialization is done
         self.update_splash_progress(100, "Ready to launch!")
@@ -382,21 +311,24 @@ class GameLauncher:
                 
                 # Check if the process is still running
                 if instance_pid != 0 and instance_pid != self.current_pid:
-                    try:
-                        process = psutil.Process(instance_pid)
-                        if process.is_running():
-                            # Ask user if they want to terminate the running instance
-
-                            response = input("Would you like to terminate the running instance? (y/n): ")
-                            if response.lower() == 'y':
-                                process.terminate()
-                                time.sleep(1)
-                                if process.is_running():
-                                    process.kill()
-                            else:
-                                return False
-                    except psutil.NoSuchProcess:
-                        pass  # Process doesn't exist, continue
+                    if PSUTIL_AVAILABLE:
+                        try:
+                            process = psutil.Process(instance_pid)
+                            if process.is_running():
+                                # Ask user if they want to terminate the running instance
+                                response = input("Would you like to terminate the running instance? (y/n): ")
+                                if response.lower() == 'y':
+                                    process.terminate()
+                                    time.sleep(1)
+                                    if process.is_running():
+                                        process.kill()
+                                else:
+                                    return False
+                        except (psutil.NoSuchProcess, Exception):
+                            pass  # Process doesn't exist, continue
+                    else:
+                        # Without psutil, just log a warning
+                        logging.warning(f"Cannot check if PID {instance_pid} is running (psutil not available)")
             except Exception as e:
                 pass
         
@@ -665,29 +597,9 @@ class GameLauncher:
         return path
     
     def detect_joysticks(self):
-        """Detect connected joysticks"""
-        try:
-            import pygame
-            pygame.init()
-            pygame.joystick.init()
-            
-            self.joycount = pygame.joystick.get_count()
-            if self.joycount > 0:
-                self.joymessage = f"{self.joycount} joysticks detected"
-                
-                # Initialize each joystick
-                for i in range(self.joycount):
-                    joystick = pygame.joystick.Joystick(i)
-                    joystick.init()
-
-            else:
-                self.joymessage = "No joysticks detected"
-            
-            pygame.quit()
-        except ImportError:
-            self.joymessage = "Pygame not installed, joystick detection disabled"
-        except Exception as e:
-            self.joymessage = f"Error detecting joysticks: {e}"
+        """Detect connected joysticks - stubbed for minimal build"""
+        self.joycount = 0
+        self.joymessage = "Joystick detection disabled (minimal build)"
     
     def backup_save_files(self):
         """Backs up the saves directory if configured."""
@@ -1004,9 +916,11 @@ class GameLauncher:
         except Exception as e:
             self.show_message(f"Error: {e}")
         finally:
-            # Stop tray menu
+            # Stop tray menu or hotkey handler
             if self.tray_menu:
                 self.tray_menu.stop()
+            if self.hotkey_handler:
+                self.hotkey_handler.stop()
             
             # Final cleanup to ensure system state is restored
             self.executor.ensure_cleanup()
@@ -1089,14 +1003,19 @@ class GameLauncher:
     
     def _on_terminate(self, proc):
         """Callback for psutil.wait_procs to log terminated processes."""
-        self.show_message(f"  - Process {proc.name()} (PID: {proc.pid}) terminated.")
-        logging.info(f"Process {proc.name()} (PID: {proc.pid}) terminated.")
+        if PSUTIL_AVAILABLE:
+            self.show_message(f"  - Process {proc.name()} (PID: {proc.pid}) terminated.")
+            logging.info(f"Process {proc.name()} (PID: {proc.pid}) terminated.")
 
-    def terminate_process_tree(self, proc: psutil.Process, timeout: int = 3):
+    def terminate_process_tree(self, proc, timeout: int = 3):
         """
         Gracefully terminates a process and its entire process tree.
         Tries to terminate, waits for a timeout, then forcefully kills if necessary.
         """
+        if not PSUTIL_AVAILABLE:
+            logging.warning("Cannot terminate process tree (psutil not available)")
+            return
+            
         if not proc or not psutil.pid_exists(proc.pid):
             return
 
@@ -1137,6 +1056,17 @@ class GameLauncher:
 
     def kill_process_by_name(self, process_name: str, timeout: int = 3):
         """Finds and kills processes by exact name match."""
+        if not PSUTIL_AVAILABLE:
+            # Fallback to taskkill on Windows
+            if platform.system() == 'Windows':
+                try:
+                    subprocess.run(['taskkill', '/F', '/IM', process_name], 
+                                 capture_output=True, timeout=5)
+                    logging.info(f"Killed process {process_name} using taskkill")
+                except Exception as e:
+                    logging.error(f"Failed to kill {process_name}: {e}")
+            return
+            
         if platform.system() != 'Windows':
             return
         for proc in psutil.process_iter(['pid', 'name']):

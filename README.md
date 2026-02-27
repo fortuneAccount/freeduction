@@ -49,7 +49,7 @@ AntimicroX, keySticks, multimonitortool,  borderless-gaming,  borderless ,  rclo
 
 ## Installation
 
-99.56.36
+99.56.39
 
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
@@ -178,9 +178,6 @@ freeduction/
 
 ## Quick Start
 
-- **[TUTORIAL.md](TUTORIAL.md*)* - Complete tutorial for creating game launchers
-- **[QUICK_START_CLOUD_BACKUP.md](QUICK_START_CLOUD_BACKUP.md*)* - Get cloud backup working in 5 minutes!
-
 # Setup
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip
@@ -204,7 +201,7 @@ win
 ### Now you can clone or download the repo, and install the requirements via pip
 ```
 		cd %userprofile%/Downloads
-		git clone --recursive https://github.com/fortuneaccount/fortuneaccount/freeduction/
+		git clone --recursive https://github.com/fortuneaccount/fortuneAccount/freeduction/
 		cd freeduction
 		python -m pip install -r requirements_win.txt
 		python -m Python\main.py

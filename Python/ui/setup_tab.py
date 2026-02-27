@@ -26,7 +26,7 @@ class DownloadThread(QThread):
 
     def __init__(self, url, extract_dir, exe_name):
         super().__init__()
-        self.url = url
+        self.urls = url.split('<')
         self.extract_dir = extract_dir
         self.exe_name = exe_name
 
@@ -48,70 +48,186 @@ class DownloadThread(QThread):
 
     def run(self):
         try:
-            # Create extract directory
-            os.makedirs(self.extract_dir, exist_ok=True)
+            success = False
+            last_error = ""
             
-            # Determine filename from URL
-            filename = self.url.split('/')[-1]
-            save_path = os.path.join(self.extract_dir, filename)
-            
-            # Download
-            response = requests.get(self.url, stream=True)
-            response.raise_for_status()
-            total_length = response.headers.get('content-length')
+            # Suppress SSL warnings for the fallback strategy
+            try:
+                import urllib3
+                urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+            except ImportError:
+                pass
 
-            with open(save_path, 'wb') as f:
-                if total_length is None: # no content length header
-                    f.write(response.content)
-                else:
-                    dl = 0
-                    total_length = int(total_length)
-                    for data in response.iter_content(chunk_size=4096):
-                        dl += len(data)
-                        f.write(data)
-                        self.progress.emit(int(100 * dl / total_length))
-            
-            # Validate file size (prevent processing of 404 pages or small error files)
-            file_size = os.path.getsize(save_path)
-            if file_size < 1024:
-                with open(save_path, 'r', errors='ignore') as f:
-                    preview = f.read(100).strip()
-                os.remove(save_path)
-                raise Exception(f"Downloaded file is too small ({file_size} bytes). Likely an error page: {preview}")
-            
-            # Extract if it's a zip
-            if filename.lower().endswith('.zip'):
-                with zipfile.ZipFile(save_path, 'r') as zip_ref:
-                    zip_ref.extractall(self.extract_dir)
-                os.remove(save_path) # Clean up zip
-            elif filename.lower().endswith('.7z'):
-                # Try py7zr first (Pure Python)
+            for url in self.urls:
                 try:
-                    import py7zr
-                    with py7zr.SevenZipFile(save_path, mode='r') as z:
-                        z.extractall(path=self.extract_dir)
-                    os.remove(save_path)
-                except (ImportError, Exception):
-                    # Fallback to 7z.exe
-                    self._extract_with_7z(save_path)
-            elif filename.lower().endswith('.rar'):
-                self._extract_with_7z(save_path)
+                    url = url.strip()
+                    if not url: continue
+                    
+                    # Create extract directory
+                    os.makedirs(self.extract_dir, exist_ok=True)
+                    
+                    # Determine filename from URL
+                    filename = url.split('/')[-1]
+                    save_path = os.path.join(self.extract_dir, filename)
+                    
+                    # Download
+                    response = requests.get(url, stream=True, timeout=30)
+                    response.raise_for_status()
+                    total_length = response.headers.get('content-length')
+                url = url.strip()
+                if not url: continue
                 
-            # Construct result path
-            result_path = os.path.join(self.extract_dir, self.exe_name)
-            if not os.path.exists(result_path):
-                # Try to find it recursively if not found at root (case-insensitive)
-                exe_name_lower = self.exe_name.lower()
-                for root, dirs, files in os.walk(self.extract_dir):
-                    for file in files:
-                        if file.lower() == exe_name_lower:
-                            result_path = os.path.join(root, file)
-                            break
-                    if os.path.exists(result_path):
+                # Define retry strategies
+                strategies = [
+                    # 1. Standard request
+                    {'headers': {}, 'verify': True},
+                    # 2. User-Agent spoofing (common fix for 403 Forbidden on some hosts)
+                    {'headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'}, 'verify': True},
+                    # 3. No SSL verify (fix for certificate errors) + User-Agent
+                    {'headers': {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'}, 'verify': False}
+                ]
+
+                    with open(save_path, 'wb') as f:
+                        if total_length is None: # no content length header
+                            f.write(response.content)
+                        else:
+                            dl = 0
+                            total_length = int(total_length)
+                            for data in response.iter_content(chunk_size=4096):
+                                dl += len(data)
+                                f.write(data)
+                                self.progress.emit(int(100 * dl / total_length))
+                    
+                    # Validate file size (prevent processing of 404 pages or small error files)
+                    file_size = os.path.getsize(save_path)
+                    if file_size < 1024:
+                        with open(save_path, 'r', errors='ignore') as f:
+                            preview = f.read(100).strip()
+                        os.remove(save_path)
+                        raise Exception(f"Downloaded file is too small ({file_size} bytes). Likely an error page: {preview}")
+                    
+                    # Extract if it's a zip
+                    if filename.lower().endswith('.zip'):
+                        with zipfile.ZipFile(save_path, 'r') as zip_ref:
+                            zip_ref.extractall(self.extract_dir)
+                        os.remove(save_path) # Clean up zip
+                    elif filename.lower().endswith('.7z'):
+                        # Try py7zr first (Pure Python)
+                        try:
+                            import py7zr
+                            with py7zr.SevenZipFile(save_path, mode='r') as z:
+                                z.extractall(path=self.extract_dir)
+                for strategy in strategies:
+                    try:
+                        # Create extract directory
+                        os.makedirs(self.extract_dir, exist_ok=True)
+                        
+                        # Determine filename from URL
+                        filename = url.split('/')[-1]
+                        save_path = os.path.join(self.extract_dir, filename)
+                        
+                        # Download
+                        response = requests.get(
+                            url, 
+                            stream=True, 
+                            timeout=30, 
+                            headers=strategy['headers'], 
+                            verify=strategy['verify']
+                        )
+                        response.raise_for_status()
+                        total_length = response.headers.get('content-length')
+
+                        with open(save_path, 'wb') as f:
+                            if total_length is None: # no content length header
+                                f.write(response.content)
+                            else:
+                                dl = 0
+                                total_length = int(total_length)
+                                for data in response.iter_content(chunk_size=4096):
+                                    dl += len(data)
+                                    f.write(data)
+                                    self.progress.emit(int(100 * dl / total_length))
+                        
+                        # Validate file size (prevent processing of 404 pages or small error files)
+                        file_size = os.path.getsize(save_path)
+                        if file_size < 1024:
+                            with open(save_path, 'r', errors='ignore') as f:
+                                preview = f.read(100).strip()
+                            os.remove(save_path)
+                        except (ImportError, Exception):
+                            # Fallback to 7z.exe
+                            raise Exception(f"Downloaded file is too small ({file_size} bytes). Likely an error page: {preview}")
+                        
+                        # Extract if it's a zip
+                        if filename.lower().endswith('.zip'):
+                            with zipfile.ZipFile(save_path, 'r') as zip_ref:
+                                zip_ref.extractall(self.extract_dir)
+                            os.remove(save_path) # Clean up zip
+                        elif filename.lower().endswith('.7z'):
+                            # Try py7zr first (Pure Python)
+                            try:
+                                import py7zr
+                                with py7zr.SevenZipFile(save_path, mode='r') as z:
+                                    z.extractall(path=self.extract_dir)
+                                os.remove(save_path)
+                            except (ImportError, Exception):
+                                # Fallback to 7z.exe
+                                self._extract_with_7z(save_path)
+                        elif filename.lower().endswith('.rar'):
+                            self._extract_with_7z(save_path)
+                    elif filename.lower().endswith('.rar'):
+                        self._extract_with_7z(save_path)
+                            
+                        # Construct result path
+                        result_path = os.path.join(self.extract_dir, self.exe_name)
+                        if not os.path.exists(result_path):
+                            # Try to find it recursively if not found at root (case-insensitive)
+                            exe_name_lower = self.exe_name.lower()
+                            for root, dirs, files in os.walk(self.extract_dir):
+                                for file in files:
+                                    if file.lower() == exe_name_lower:
+                                        result_path = os.path.join(root, file)
+                                        break
+                                if os.path.exists(result_path):
+                                    break
+                        
+                    # Construct result path
+                    result_path = os.path.join(self.extract_dir, self.exe_name)
+                    if not os.path.exists(result_path):
+                        # Try to find it recursively if not found at root (case-insensitive)
+                        exe_name_lower = self.exe_name.lower()
+                        for root, dirs, files in os.walk(self.extract_dir):
+                            for file in files:
+                                if file.lower() == exe_name_lower:
+                                    result_path = os.path.join(root, file)
+                                    break
+                            if os.path.exists(result_path):
+                                break
+                    
+                    self.finished.emit(True, "Download complete", result_path)
+                    success = True
+                        self.finished.emit(True, "Download complete", result_path)
+                        success = True
                         break
+                    except Exception as e:
+                        last_error = str(e)
+                        # Clean up potential partial download
+                        if 'save_path' in locals() and os.path.exists(save_path):
+                            try:
+                                os.remove(save_path)
+                            except:
+                                pass
+                        continue
+                
+                if success:
+                    break
+                except Exception as e:
+                    last_error = str(e)
+                    continue
             
-            self.finished.emit(True, "Download complete", result_path)
-            
+            if not success:
+                raise Exception(f"All download attempts failed. Last error: {last_error}")
+                
         except Exception as e:
             self.finished.emit(False, str(e), "")
 
@@ -1004,7 +1120,7 @@ class SetupTab(QWidget):
         
         extract_dir = resolved_path
         exe_name = tool_data['exe_name']
-        url = tool_data['url']
+        url = tool_data['url'].split('<')[0] # Use first URL for filename determination
         
         exe_path = os.path.join(extract_dir, exe_name)
         zip_name = url.split('/')[-1]

@@ -1,4 +1,4 @@
-"""UI package for anattagen"""
+"""UI package for mainapp"""
 
 from .plugin_manager_dialog import PluginManagerDialog
 
