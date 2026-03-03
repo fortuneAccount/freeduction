@@ -113,6 +113,8 @@ class ConfigEditor:
         btn_frame = ttk.Frame(self.root, padding="10")
         btn_frame.pack(fill=tk.X)
         
+        ttk.Button(btn_frame, text="Import", command=self._import_config).pack(side="left", padx=5)
+        ttk.Button(btn_frame, text="Export", command=self._export_config).pack(side="left", padx=5)
         ttk.Button(btn_frame, text="Save", command=self._save).pack(side="right", padx=5)
         ttk.Button(btn_frame, text="Cancel", command=self.root.destroy).pack(side="right", padx=5)
         
@@ -136,6 +138,42 @@ class ConfigEditor:
         if path:
             var.set(path)
             
+    def _import_config(self):
+        path = filedialog.askopenfilename(filetypes=[("INI Files", "*.ini"), ("All Files", "*.*")])
+        if not path:
+            return
+            
+        try:
+            import_config = configparser.ConfigParser()
+            import_config.optionxform = str
+            import_config.read(path)
+            
+            for (section, key), var in self.entries.items():
+                if import_config.has_section(section) and import_config.has_option(section, key):
+                    var.set(import_config.get(section, key))
+            
+            messagebox.showinfo("Import", "Configuration imported successfully.")
+        except Exception as e:
+            messagebox.showerror("Import Error", f"Failed to import config: {e}")
+
+    def _export_config(self):
+        path = filedialog.asksaveasfilename(defaultextension=".ini", filetypes=[("INI Files", "*.ini"), ("All Files", "*.*")])
+        if not path:
+            return
+            
+        # Update config object with current UI values
+        for (section, key), var in self.entries.items():
+            if not self.config.has_section(section):
+                self.config.add_section(section)
+            self.config.set(section, key, var.get())
+            
+        try:
+            with open(path, 'w') as f:
+                self.config.write(f)
+            messagebox.showinfo("Export", "Configuration exported successfully.")
+        except Exception as e:
+            messagebox.showerror("Export Error", f"Failed to export config: {e}")
+
     def _save(self):
         for (section, key), var in self.entries.items():
             self.config.set(section, key, var.get())
