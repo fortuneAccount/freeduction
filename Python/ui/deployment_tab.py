@@ -218,7 +218,17 @@ class DeploymentTab(QWidget):
         # --- Creation Options Section ---
         creation_options_widget = QWidget()
         creation_options_layout = QVBoxLayout(creation_options_widget)
-        
+
+        # Consolidated creation options group
+        creation_group = QGroupBox("Creation Options")
+        creation_group_layout = QVBoxLayout(creation_group)
+
+        # Scroll area for all checkboxes
+        options_scroll = QScrollArea()
+        options_scroll.setWidgetResizable(True)
+        options_widget = QWidget()
+        options_layout = QVBoxLayout(options_widget)
+
         # Metadata & Artwork Options
         meta_group = QGroupBox("Metadata & Artwork")
         meta_layout = QGridLayout(meta_group)
@@ -229,7 +239,7 @@ class DeploymentTab(QWidget):
 
         self.download_pcgw_checkbox = QCheckBox("Download PcGamingWiki")
         self.overwrite_pcgw_checkbox = QCheckBox("Overwrite PcGamingWiki")
-        
+
         self.download_artwork_checkbox = QCheckBox("Download Artwork")
         self.download_artwork_checkbox.setToolTip("Downloads header and background images to the profile folder.")
         self.overwrite_artwork_checkbox = QCheckBox("Overwrite Artwork")
@@ -242,19 +252,17 @@ class DeploymentTab(QWidget):
         meta_layout.addWidget(self.download_artwork_checkbox, 2, 0)
         meta_layout.addWidget(self.overwrite_artwork_checkbox, 2, 1)
 
-        # Create button shows dynamic count of selected items
-        self.create_button = QPushButton()
+        options_layout.addWidget(meta_group)
 
-        # Layout for creation options
-        creation_content_layout = QVBoxLayout()
+        # Overwrite checkboxes for all items in a grid
+        overwrite_group = QGroupBox("File Overwrite Options")
+        overwrite_group.setToolTip("Right-click for bulk options")
+        overwrite_group.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        overwrite_group.customContextMenuRequested.connect(self.on_overwrite_options_context_menu)
 
-        # Overwrite checkboxes for all 18 items in a grid
-        overwrite_scroll = QScrollArea()
-        overwrite_scroll.setWidgetResizable(True)
-        overwrite_widget = QWidget()
-        overwrite_layout = QGridLayout(overwrite_widget)
-        overwrite_layout.setContentsMargins(0, 0, 0, 0)
-        
+        overwrite_layout = QGridLayout(overwrite_group)
+        overwrite_layout.setContentsMargins(5, 5, 5, 5)
+
         for i, key in enumerate(PATH_KEYS):
             label = PATH_LABELS.get(key, f"Overwrite {key}")
             cb = QCheckBox(f"{label}")
@@ -266,18 +274,18 @@ class DeploymentTab(QWidget):
             cb.stateChanged.connect(self.config_changed.emit)
             self.overwrite_checkboxes[key] = cb
             overwrite_layout.addWidget(cb, i // 2, i % 2)
-            
-        overwrite_scroll.setWidget(overwrite_widget)
-        creation_content_layout.addWidget(overwrite_scroll)
 
-        # Bottom controls
-        bottom_controls = QHBoxLayout()
-        bottom_controls.addWidget(meta_group)
-        bottom_controls.addWidget(self.create_button)
-        
-        creation_content_layout.addLayout(bottom_controls)
+        options_layout.addWidget(overwrite_group)
+        options_layout.addStretch()
 
-        creation_options_layout.addLayout(creation_content_layout)
+        options_scroll.setWidget(options_widget)
+        creation_group_layout.addWidget(options_scroll)
+
+        creation_options_layout.addWidget(creation_group)
+
+        # Create button shows dynamic count of selected items
+        self.create_button = QPushButton()
+        creation_options_layout.addWidget(self.create_button)
 
         # --- Accordion Setup ---
         # Rename General Options to Database Indexing
@@ -317,6 +325,56 @@ class DeploymentTab(QWidget):
         # Initialize and connect to editor tab data changes
         self.update_create_button_count()
         self.update_steam_status()
+
+    def on_overwrite_options_context_menu(self, position):
+        """Show a context menu for the overwrite options group box."""
+        menu = QMenu(self)
+
+        check_all_action = menu.addAction("Check All")
+        uncheck_all_action = menu.addAction("Uncheck All")
+        toggle_checked_action = menu.addAction("Toggle Checked")
+        menu.addSeparator()
+        enable_active_action = menu.addAction("Enable Overwrite for Active Options")
+        disable_inactive_action = menu.addAction("Disable Overwrite for Inactive Options")
+
+        # The `mapToGlobal` is needed to show the menu at the cursor position
+        # The sender() is the overwrite_group QGroupBox
+        action = menu.exec(self.sender().mapToGlobal(position))
+
+        if action == check_all_action:
+            self._set_all_overwrite_checkboxes(True)
+        elif action == uncheck_all_action:
+            self._set_all_overwrite_checkboxes(False)
+        elif action == toggle_checked_action:
+            self._toggle_all_overwrite_checkboxes()
+        elif action == enable_active_action:
+            self._set_overwrite_for_active_options(True)
+        elif action == disable_inactive_action:
+            self._set_overwrite_for_active_options(False)
+
+    def _set_all_overwrite_checkboxes(self, checked):
+        """Check or uncheck all overwrite checkboxes."""
+        for cb in self.overwrite_checkboxes.values():
+            cb.setChecked(checked)
+
+    def _toggle_all_overwrite_checkboxes(self):
+        """Toggle the state of all overwrite checkboxes."""
+        for cb in self.overwrite_checkboxes.values():
+            cb.setChecked(not cb.isChecked())
+
+    def _set_overwrite_for_active_options(self, enable_for_active):
+        """Enable or disable overwrite checkboxes based on whether their corresponding option in the Setup tab is active."""
+        config = self.main_window.config
+        for key, cb in self.overwrite_checkboxes.items():
+            is_active = False
+            path_value = getattr(config, key, "")
+            enabled_key = f"{key}_enabled"
+            is_enabled = True if key == "launcher_executable" else config.defaults.get(enabled_key, True)
+            is_active = is_enabled if key in ["profiles_dir", "launchers_dir"] else bool(path_value) and is_enabled
+            if enable_for_active and is_active:
+                cb.setChecked(True)
+            elif not enable_for_active and not is_active:
+                cb.setChecked(False)
 
     def set_indexing_state(self, active):
         """Update UI state based on indexing status."""
