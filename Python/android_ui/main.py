@@ -67,7 +67,7 @@ def run_android_app():
             )
 
 
-    class AnattagenKivyApp(App):
+    class AndroidKivyApp(App):
         """Main Kivy application class."""
 
         def build(self):
@@ -98,4 +98,4 @@ def run_android_app():
 
             return tp
 
-    AnattagenKivyApp().run()
+    AndroidKivyApp().run()

@@ -4,7 +4,7 @@ import logging
 import argparse
 from importlib import import_module
 
-# Add the parent directory (anattagen) to the Python path
+# Add the parent directory (application) to the Python path
 script_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(script_dir)
 if project_root not in sys.path:
@@ -12,9 +12,9 @@ if project_root not in sys.path:
 
 
 def setup_logging():
-    """Set up logging to file and console. Honor ANATTAGEN_LOG_LEVEL environment variable for verbosity."""
+    """Set up logging to file and console. Honor APPLICATION_LOG_LEVEL environment variable for verbosity."""
     log_file = os.path.join(project_root, 'app.log')
-    level_name = os.environ.get('ANATTAGEN_LOG_LEVEL', 'INFO').upper()
+    level_name = os.environ.get('APPLICATION_LOG_LEVEL', 'INFO').upper()
     level = getattr(logging, level_name, logging.INFO)
     logging.basicConfig(
         level=level,

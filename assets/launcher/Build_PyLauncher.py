@@ -12,20 +12,16 @@ Available presets:
   - portable  : Portable build optimized for distribution (15-20 MB)
   - debug     : Debug build with console and verbose logging
 
-Optional modifiers:
-  - nocs      : Exclude cloud sync utilities (saves ~1-2 MB)
-  - nopd      : Exclude path discovery/PCGW templates (saves ~1-2 MB)
-  - upx       : Enable UPX compression (reduces size by 30-40%)
-
 Examples:
   python Build_PyLauncher.py minimal
-  python Build_PyLauncher.py standard nocs nopd upx
-  python Build_PyLauncher.py portable upx
+  python Build_PyLauncher.py standard
+  python Build_PyLauncher.py portable
 """
 
 import sys
 import os
 import argparse
+import shutil
 from pathlib import Path
 
 # Add parent directory to path to import PyInstaller
@@ -43,72 +39,34 @@ except ImportError:
 # ============================================================================
 
 PRESETS = {
-    'full': {
-        'name': 'Launcher_full',
-        'description': 'Full-featured build with all dependencies',
-        'console': False,
-        'env_vars': {},
-        'excluded_modules': [
-            'matplotlib', 'numpy', 'pandas', 'scipy', 'tensorflow', 'torch',
-        ],
-        'extra_args': [],
-        'expected_size': '50+ MB',
-    },
-    
-    'minimal': {
-        'name': 'Launcher_minimal',
-        'description': 'Minimal build with hotkeys only',
-        'console': False,
-        'env_vars': {'LAUNCHER_MINIMAL': '1'},
-        'excluded_modules': [
-            'pygame', 'PIL', 'tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
-            'psutil', 'win32gui', 'win32con', 'win32process', 'win32api',
-            'pywintypes', 'win32com', 'matplotlib', 'numpy', 'pandas',
-            'Python.managers.plugin_manager', 'Python.managers.plugin_loader',
-            'Python.plugins', 'Python.marketplace', 'Python.tray_menu',
-            'pystray', 'infi.systray',
-        ],
-        'extra_args': ['--strip'],
-        'expected_size': '10-15 MB',
-    },
-    
-    'standard': {
+   'standard': {
         'name': 'Launcher_standard',
-        'description': 'Standard build without heavy GUI',
+        'description': 'Standard build with tray menu and process management',
         'console': False,
         'env_vars': {},
         'excluded_modules': [
-            'pygame', 'PIL', 'tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
-            'matplotlib', 'numpy', 'pandas', 'Python.tray_menu', 'pystray',
+            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
+            'matplotlib', 'numpy', 'pandas', 'scipy', 'tensorflow', 'torch',
+            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
         ],
         'extra_args': [],
         'expected_size': '20-25 MB',
     },
     
-    'portable': {
-        'name': 'Launcher_portable',
-        'description': 'Portable build optimized for distribution',
+    'minimal': {
+        'name': 'Launcher_minimal',
+        'description': 'Minimal build with tray menu',
         'console': False,
-        'env_vars': {},
+        'env_vars': {'LAUNCHER_MINIMAL': '1'},
         'excluded_modules': [
-            'pygame', 'tkinter', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
-            'matplotlib', 'numpy', 'pandas', 'Python.managers.plugin_manager',
-            'Python.marketplace',
+            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
+            'psutil', 'matplotlib', 'numpy', 'pandas', 'Python.hotkey_handler',
+            'Python.managers.plugin_manager',
+            'Python.plugins', 'Python.marketplace',
+            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
         ],
-        'extra_args': ['--strip'],
-        'expected_size': '15-20 MB',
-    },
-    
-    'debug': {
-        'name': 'Launcher_debug',
-        'description': 'Debug build with console and verbose logging',
-        'console': True,
-        'env_vars': {'LAUNCHER_DEBUG': '1'},
-        'excluded_modules': [
-            'matplotlib', 'numpy', 'pandas',
-        ],
-        'extra_args': ['--debug=all'],
-        'expected_size': '50+ MB',
+        'extra_args': [],
+        'expected_size': '10-15 MB',
     },
 }
 
@@ -118,19 +76,35 @@ PRESETS = {
 # ============================================================================
 
 def get_project_root():
-    """Get the project root directory (2 levels up from this script)"""
-    return Path(__file__).parent.parent.parent
+    """Get the project root directory.
+    
+    Returns the project root whether script is run from:
+    - Project root: python assets/launcher/Build_PyLauncher.py
+    - assets/launcher directory: cd assets/launcher && python Build_PyLauncher.py
+    """
+    script_path = Path(__file__).resolve()
+    
+    # If script is in assets/launcher directory, go up 2 levels
+    if script_path.parent.name == 'launcher' and script_path.parent.parent.name == 'assets':
+        return script_path.parent.parent.parent
+    else:
+        # Try to find project root by looking for common project markers
+        current = script_path.parent
+        while current != current.parent:  # Stop at root
+            # Check for project markers
+            if (current / 'Python').exists() and (current / 'assets').exists():
+                return current
+            current = current.parent
+        
+        # Fallback: assume script is in assets/launcher
+        return script_path.parent.parent.parent
 
-def build_launcher(preset_name='full', modifiers=None):
+def build_launcher(preset_name='full'):
     """Build the launcher with the specified preset and optional modifiers
     
     Args:
         preset_name: Name of the preset to use
-        modifiers: List of modifier flags (nocs, nopd, upx)
     """
-    
-    if modifiers is None:
-        modifiers = []
     
     if preset_name not in PRESETS:
         print(f"ERROR: Unknown preset '{preset_name}'")
@@ -140,47 +114,18 @@ def build_launcher(preset_name='full', modifiers=None):
     preset = PRESETS[preset_name].copy()  # Make a copy to avoid modifying original
     project_root = get_project_root()
     
-    # Apply modifiers
     excluded_modules = list(preset['excluded_modules'])  # Copy the list
     extra_args = list(preset['extra_args'])  # Copy the list
-    size_reduction = []
-    
-    if 'nocs' in modifiers:
-        # Exclude cloud sync utilities
-        excluded_modules.extend([
-            'Python.utils.cloud_path_utils',
-            'Python.managers.cloud_sync',
-        ])
-        size_reduction.append('cloud sync (~1-2 MB)')
-    
-    if 'nopd' in modifiers:
-        # Exclude path discovery and PCGW templates
-        excluded_modules.extend([
-            'Python.utils.path_discovery',
-            'Python.managers.pcgw_manager',
-        ])
-        size_reduction.append('path discovery (~1-2 MB)')
-    
-    if 'upx' in modifiers:
-        # Enable UPX compression
-        if '--noupx' in extra_args:
-            extra_args.remove('--noupx')
-        # Note: UPX must be installed and in PATH
-        size_reduction.append('UPX compression (~30-40%)')
     
     preset['excluded_modules'] = excluded_modules
     preset['extra_args'] = extra_args
     
     print("=" * 70)
     print(f"Building Launcher with preset: {preset_name}")
-    if modifiers:
-        print(f"Modifiers: {', '.join(modifiers)}")
     print("=" * 70)
     print(f"Description: {preset['description']}")
     print(f"Output name: {preset['name']}.exe")
     print(f"Expected size: {preset['expected_size']}")
-    if size_reduction:
-        print(f"Size reduction: {', '.join(size_reduction)}")
     print(f"Console mode: {'Yes' if preset['console'] else 'No'}")
     print(f"Excluded modules: {len(preset['excluded_modules'])}")
     print()
@@ -225,8 +170,8 @@ def build_launcher(preset_name='full', modifiers=None):
     # Add extra arguments from preset
     args.extend(preset['extra_args'])
     
-    # Add UPX disable if not using upx modifier
-    if 'upx' not in modifiers and '--noupx' not in args:
+    # Always disable UPX to prevent issues
+    if '--noupx' not in args:
         args.append('--noupx')
     
     print("PyInstaller arguments:")
@@ -247,8 +192,6 @@ def build_launcher(preset_name='full', modifiers=None):
         print("=" * 70)
         print(f"Output: dist/{preset['name']}.exe")
         print(f"Expected size: {preset['expected_size']}")
-        if size_reduction:
-            print(f"Size reduction applied: {', '.join(size_reduction)}")
         print()
         
         # Show next steps based on preset
@@ -263,12 +206,6 @@ def build_launcher(preset_name='full', modifiers=None):
             print("  - Console window will be visible")
             print("  - Verbose logging enabled")
             print("  - Check launcher.log for detailed output")
-            print()
-        
-        if 'upx' in modifiers:
-            print("UPX compression notes:")
-            print("  - Make sure UPX is installed and in your PATH")
-            print("  - Download from: https://upx.github.io/")
             print()
         
     except Exception as e:
@@ -295,11 +232,47 @@ def list_presets():
         print(f"{'':12}   Excluded: {len(preset['excluded_modules'])} modules")
         print()
     
-    print("Optional Modifiers:")
-    print("  nocs  - Exclude cloud sync utilities (saves ~1-2 MB)")
-    print("  nopd  - Exclude path discovery/PCGW templates (saves ~1-2 MB)")
-    print("  upx   - Enable UPX compression (reduces size by 30-40%)")
+def clean_artifacts():
+    """Remove build artifacts (dist, build, spec files)"""
+    project_root = get_project_root()
+    
+    # Directories to clean
+    dirs_to_clean = [
+        project_root / 'dist',
+        project_root / 'build',
+        Path('dist').absolute(),
+        Path('build').absolute(),
+    ]
+    
+    # Spec files to clean
+    specs_to_clean = []
+    for preset in PRESETS.values():
+        name = preset['name']
+        specs_to_clean.append(project_root / f"{name}.spec")
+        specs_to_clean.append(Path(f"{name}.spec").absolute())
+
+    print("=" * 70)
+    print("Cleaning build artifacts...")
+    print("=" * 70)
+    
+    for d in set(dirs_to_clean):
+        if d.exists():
+            try:
+                shutil.rmtree(d)
+                print(f"Removed directory: {d}")
+            except Exception as e:
+                print(f"Error removing {d}: {e}")
+    
+    for s in set(specs_to_clean):
+        if s.exists():
+            try:
+                os.remove(s)
+                print(f"Removed file: {s}")
+            except Exception as e:
+                print(f"Error removing {s}: {e}")
+    
     print()
+    print("Clean complete.")
 
 def main():
     """Main entry point"""
@@ -310,8 +283,8 @@ def main():
 Examples:
   python Build_PyLauncher.py              # Build with 'full' preset (default)
   python Build_PyLauncher.py minimal      # Build minimal version
-  python Build_PyLauncher.py standard nocs nopd upx  # Standard without cloud sync, path discovery, with UPX
   python Build_PyLauncher.py --list       # List all available presets
+  python Build_PyLauncher.py --clean      # Clean build artifacts
   
 Presets:
   full      - Full-featured build (50+ MB)
@@ -319,11 +292,6 @@ Presets:
   standard  - Standard build without GUI (20-25 MB)
   portable  - Portable optimized build (15-20 MB)
   debug     - Debug build with console (50+ MB)
-
-Optional Modifiers:
-  nocs      - Exclude cloud sync utilities (saves ~1-2 MB)
-  nopd      - Exclude path discovery/PCGW templates (saves ~1-2 MB)
-  upx       - Enable UPX compression (reduces size by 30-40%)
         """
     )
     
@@ -336,16 +304,15 @@ Optional Modifiers:
     )
     
     parser.add_argument(
-        'modifiers',
-        nargs='*',
-        choices=['nocs', 'nopd', 'upx'],
-        help='Optional modifiers: nocs (no cloud sync), nopd (no path discovery), upx (UPX compression)'
-    )
-    
-    parser.add_argument(
         '--list',
         action='store_true',
         help='List all available presets and exit'
+    )
+    
+    parser.add_argument(
+        '--clean',
+        action='store_true',
+        help='Clean build artifacts (dist, build, spec files) and exit'
     )
     
     args = parser.parse_args()
@@ -354,7 +321,11 @@ Optional Modifiers:
         list_presets()
         sys.exit(0)
     
-    build_launcher(args.preset, args.modifiers)
+    if args.clean:
+        clean_artifacts()
+        sys.exit(0)
+    
+    build_launcher(args.preset)
 
 if __name__ == '__main__':
     main()

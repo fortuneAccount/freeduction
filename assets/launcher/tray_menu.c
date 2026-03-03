@@ -325,11 +325,11 @@ void tray_exit_launcher() {
     // Stop game first
     tray_stop_game();
     
-    // Cleanup
+    // Cleanup tray icon itself
     tray_cleanup();
     
-    // Exit
-    ExitProcess(0);
+    // Post a quit message to the main message loop to allow graceful shutdown
+    PostQuitMessage(0);
 }
 
 /**

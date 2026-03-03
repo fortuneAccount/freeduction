@@ -11,8 +11,15 @@ import threading
 import logging
 import configparser
 import subprocess
+import platform
 from pathlib import Path
 from typing import Optional, Callable
+
+try:
+    import tkinter as tk
+    from tkinter import ttk, messagebox, filedialog
+except ImportError:
+    pass
 
 try:
     from PIL import Image
@@ -23,173 +30,125 @@ except ImportError:
     TRAY_AVAILABLE = False
     logging.warning("pystray not available - tray menu disabled")
 
-try:
-    from PyQt6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                                  QLineEdit, QPushButton, QTextEdit, QFileDialog,
-                                  QFormLayout, QGroupBox, QScrollArea, QWidget)
-    from PyQt6.QtCore import Qt
-    QT_AVAILABLE = True
+class ConfigEditor:
+    """Tkinter-based configuration editor for Game.ini"""
     
-    # Import advanced config editor
-    try:
-        from Python.config_editor_dialog import AdvancedConfigEditor
-        ADVANCED_EDITOR_AVAILABLE = True
-    except ImportError:
-        try:
-            from config_editor_dialog import AdvancedConfigEditor
-            ADVANCED_EDITOR_AVAILABLE = True
-        except ImportError:
-            ADVANCED_EDITOR_AVAILABLE = False
-            logging.warning("Advanced config editor not available")
-except ImportError:
-    QT_AVAILABLE = False
-    ADVANCED_EDITOR_AVAILABLE = False
-    logging.warning("PyQt6 not available - GUI dialogs disabled")
-
-
-class ConfigEditorDialog(QDialog):
-    """Modal dialog for editing Game.ini configuration"""
-    
-    def __init__(self, ini_path: str, on_reload: Callable):
-        super().__init__()
+    def __init__(self, ini_path, on_save_callback=None):
         self.ini_path = ini_path
-        self.on_reload = on_reload
+        self.on_save_callback = on_save_callback
         self.config = configparser.ConfigParser()
         self.config.optionxform = str  # Preserve case
-        self.config.read(ini_path)
+        self.root = None
+        self.entries = {}
         
-        self.setWindowTitle(f"Edit Configuration - {Path(ini_path).name}")
-        self.setMinimumSize(800, 600)
-        self.setup_ui()
-        
-    def setup_ui(self):
-        layout = QVBoxLayout()
-        
-        # Scroll area for config sections
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll_widget = QWidget()
-        scroll_layout = QVBoxLayout(scroll_widget)
-        
-        self.field_widgets = {}
-        
-        # Create sections
-        for section in self.config.sections():
-            group = QGroupBox(section)
-            form = QFormLayout()
+    def show(self):
+        if not os.path.exists(self.ini_path):
+            logging.error(f"Config file not found: {self.ini_path}")
+            return
             
-            for key in self.config.options(section):
-                value = self.config.get(section, key)
-                
-                # Create appropriate widget based on key name
-                if 'path' in key.lower() or 'app' in key.lower() or 'profile' in key.lower():
-                    # File/folder picker
-                    h_layout = QHBoxLayout()
-                    line_edit = QLineEdit(value)
-                    browse_btn = QPushButton("Browse...")
-                    browse_btn.clicked.connect(
-                        lambda checked, le=line_edit, k=key: self.browse_file(le, k)
-                    )
-                    h_layout.addWidget(line_edit)
-                    h_layout.addWidget(browse_btn)
-                    form.addRow(key, h_layout)
-                    self.field_widgets[f"{section}.{key}"] = line_edit
-                else:
-                    # Regular text field
-                    line_edit = QLineEdit(value)
-                    form.addRow(key, line_edit)
-                    self.field_widgets[f"{section}.{key}"] = line_edit
-            
-            group.setLayout(form)
-            scroll_layout.addWidget(group)
-        
-        scroll.setWidget(scroll_widget)
-        layout.addWidget(scroll)
-        
-        # Buttons
-        button_layout = QHBoxLayout()
-        save_btn = QPushButton("Save")
-        save_btn.clicked.connect(self.save_config)
-        reload_btn = QPushButton("Reload")
-        reload_btn.clicked.connect(self.reload_config)
-        cancel_btn = QPushButton("Cancel")
-        cancel_btn.clicked.connect(self.reject)
-        
-        button_layout.addWidget(save_btn)
-        button_layout.addWidget(reload_btn)
-        button_layout.addStretch()
-        button_layout.addWidget(cancel_btn)
-        
-        layout.addLayout(button_layout)
-        self.setLayout(layout)
-    
-    def browse_file(self, line_edit: QLineEdit, key: str):
-        """Open file browser"""
-        current = line_edit.text()
-        if 'directory' in key.lower() or 'folder' in key.lower():
-            path = QFileDialog.getExistingDirectory(self, f"Select {key}", current)
-        else:
-            path, _ = QFileDialog.getOpenFileName(self, f"Select {key}", current)
-        
-        if path:
-            # Normalize path to use forward slashes
-            path = path.replace('\\', '/')
-            line_edit.setText(path)
-    
-    def save_config(self):
-        """Save configuration to file"""
-        for full_key, widget in self.field_widgets.items():
-            section, key = full_key.split('.', 1)
-            value = widget.text()
-            self.config.set(section, key, value)
-        
-        with open(self.ini_path, 'w') as f:
-            self.config.write(f)
-        
-        logging.info(f"Configuration saved to {self.ini_path}")
-        self.accept()
-    
-    def reload_config(self):
-        """Reload configuration and notify launcher"""
-        self.save_config()
-        if self.on_reload:
-            self.on_reload()
-
-
-class DisplayConfigDialog(QDialog):
-    """Modal dialog for displaying current configuration"""
-    
-    def __init__(self, ini_path: str):
-        super().__init__()
-        self.ini_path = ini_path
-        
-        self.setWindowTitle(f"Current Configuration - {Path(ini_path).name}")
-        self.setMinimumSize(700, 500)
-        self.setup_ui()
-    
-    def setup_ui(self):
-        layout = QVBoxLayout()
-        
-        # Read and display config
-        text_edit = QTextEdit()
-        text_edit.setReadOnly(True)
-        text_edit.setFontFamily("Courier New")
-        
         try:
-            with open(self.ini_path, 'r') as f:
-                text_edit.setPlainText(f.read())
+            self.config.read(self.ini_path)
         except Exception as e:
-            text_edit.setPlainText(f"Error reading config: {e}")
-        
-        layout.addWidget(text_edit)
-        
-        # Close button
-        close_btn = QPushButton("Close")
-        close_btn.clicked.connect(self.accept)
-        layout.addWidget(close_btn)
-        
-        self.setLayout(layout)
+            logging.error(f"Failed to read config: {e}")
+            return
 
+        # Create main window
+        self.root = tk.Tk()
+        self.root.title("Configuration Editor")
+        self.root.geometry("700x600")
+        
+        # Main container
+        main_frame = ttk.Frame(self.root, padding="10")
+        main_frame.pack(fill=tk.BOTH, expand=True)
+        
+        # Scrollable area
+        canvas = tk.Canvas(main_frame)
+        scrollbar = ttk.Scrollbar(main_frame, orient="vertical", command=canvas.yview)
+        scrollable_frame = ttk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        canvas.pack(side="left", fill="both", expand=True)
+        scrollbar.pack(side="right", fill="y")
+        
+        # Mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1 * (event.delta / 120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # Populate fields
+        row = 0
+        for section in self.config.sections():
+            # Section Header
+            ttk.Label(scrollable_frame, text=f"[{section}]", font=("Segoe UI", 10, "bold")).grid(
+                row=row, column=0, columnspan=3, sticky="w", pady=(10, 5))
+            row += 1
+            
+            for key, value in self.config.items(section):
+                # Label
+                ttk.Label(scrollable_frame, text=key).grid(row=row, column=0, sticky="w", padx=5, pady=2)
+                
+                # Entry
+                var = tk.StringVar(value=value)
+                entry = ttk.Entry(scrollable_frame, textvariable=var, width=50)
+                entry.grid(row=row, column=1, sticky="ew", padx=5, pady=2)
+                
+                self.entries[(section, key)] = var
+                
+                # Browse button for paths
+                if "path" in key.lower() or "executable" in key.lower() or "directory" in key.lower() or "profile" in key.lower():
+                    btn = ttk.Button(scrollable_frame, text="...", width=3, 
+                                   command=lambda v=var, k=key: self._browse(v, k))
+                    btn.grid(row=row, column=2, padx=2)
+                
+                row += 1
+        
+        # Button Bar
+        btn_frame = ttk.Frame(self.root, padding="10")
+        btn_frame.pack(fill=tk.X)
+        
+        ttk.Button(btn_frame, text="Save", command=self._save).pack(side="right", padx=5)
+        ttk.Button(btn_frame, text="Cancel", command=self.root.destroy).pack(side="right", padx=5)
+        
+        # Center window
+        self.root.update_idletasks()
+        width = self.root.winfo_width()
+        height = self.root.winfo_height()
+        x = (self.root.winfo_screenwidth() // 2) - (width // 2)
+        y = (self.root.winfo_screenheight() // 2) - (height // 2)
+        self.root.geometry(f'{width}x{height}+{x}+{y}')
+        
+        self.root.mainloop()
+        
+    def _browse(self, var, key):
+        val = var.get()
+        if "directory" in key.lower() or "folder" in key.lower():
+            path = filedialog.askdirectory(initialdir=val)
+        else:
+            path = filedialog.askopenfilename(initialdir=os.path.dirname(val) if val else ".")
+            
+        if path:
+            var.set(path)
+            
+    def _save(self):
+        for (section, key), var in self.entries.items():
+            self.config.set(section, key, var.get())
+            
+        try:
+            with open(self.ini_path, 'w') as f:
+                self.config.write(f)
+            messagebox.showinfo("Success", "Configuration saved successfully.")
+            if self.on_save_callback:
+                self.on_save_callback()
+            self.root.destroy()
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to save config: {e}")
 
 class LauncherTrayMenu:
     """System tray menu for the game launcher"""
@@ -351,33 +310,22 @@ class LauncherTrayMenu:
             logging.error(f"Failed to kill processes: {e}")
     
     def display_config(self, icon=None, item=None):
-        """Display current configuration in a modal window"""
+        """Display current configuration (opens file)"""
         logging.info("Display config requested from tray menu")
-        
-        if not QT_AVAILABLE:
-            logging.warning("Qt not available - cannot display config dialog")
-            return
-        
-        ini_path = getattr(self.launcher, 'ini_path', None)
-        if not ini_path or not os.path.exists(ini_path):
-            logging.warning("No config file found")
-            return
-        
-        try:
-            from PyQt6.QtWidgets import QApplication
-            app = QApplication.instance() or QApplication(sys.argv)
-            dialog = DisplayConfigDialog(ini_path)
-            dialog.exec()
-        except Exception as e:
-            logging.error(f"Failed to display config: {e}")
+        self._open_config_file()
     
     def change_config(self, icon=None, item=None):
-        """Open configuration editor"""
-        logging.info("Change config requested from tray menu")
+        """Open configuration editor (opens file)"""
+        logging.info("Change config requested from tray menu (GUI)")
+        ini_path = getattr(self.launcher, 'ini_path', None)
+        if ini_path:
+            editor = ConfigEditor(ini_path, on_save_callback=self.reload_config)
+            editor.show()
+        else:
+            self._open_config_file()
         
-        if not QT_AVAILABLE:
-            logging.warning("Qt not available - cannot open config editor")
-            return
+    def _open_config_file(self):
+        """Open the config file in the default editor"""
         
         ini_path = getattr(self.launcher, 'ini_path', None)
         if not ini_path or not os.path.exists(ini_path):
@@ -385,19 +333,15 @@ class LauncherTrayMenu:
             return
         
         try:
-            from PyQt6.QtWidgets import QApplication
-            app = QApplication.instance() or QApplication(sys.argv)
-            
-            # Use advanced editor if available, otherwise fall back to basic
-            if ADVANCED_EDITOR_AVAILABLE:
-                dialog = AdvancedConfigEditor(ini_path, self.reload_config)
+            if sys.platform == 'win32':
+                os.startfile(ini_path)
+            elif sys.platform == 'darwin':
+                subprocess.Popen(['open', ini_path])
             else:
-                dialog = ConfigEditorDialog(ini_path, self.reload_config)
-            
-            if dialog.exec():
-                logging.info("Configuration updated")
+                subprocess.Popen(['xdg-open', ini_path])
+            logging.info(f"Opened config file: {ini_path}")
         except Exception as e:
-            logging.error(f"Failed to open config editor: {e}")
+            logging.error(f"Failed to open config file: {e}")
     
     def reload_config(self):
         """Reload configuration in the launcher"""

@@ -162,47 +162,43 @@ class GameLauncher:
         self.executor = SequenceExecutorV2(self)
         
         # Initialize tray menu or hotkey handler (optional for minimal build)
-        self.tray_menu = None
         self.hotkey_handler = None
+        self.tray_menu = None 
         
-        if os.environ.get('LAUNCHER_MINIMAL') != '1':
-            # Full build: Try tray menu first
+        # Try to initialize tray menu for all builds
+        try:
+            from Python.tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
+            if TRAY_AVAILABLE:
+                self.tray_menu = LauncherTrayMenu(self)
+                self.tray_menu.start()
+                logging.info("Tray menu initialized")
+        except ImportError:
             try:
-                from Python.tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
+                from tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
                 if TRAY_AVAILABLE:
                     self.tray_menu = LauncherTrayMenu(self)
                     self.tray_menu.start()
                     logging.info("Tray menu initialized")
             except ImportError:
-                try:
-                    from tray_menu import LauncherTrayMenu, TRAY_AVAILABLE
-                    if TRAY_AVAILABLE:
-                        self.tray_menu = LauncherTrayMenu(self)
-                        self.tray_menu.start()
-                        logging.info("Tray menu initialized")
-                except ImportError:
-                    logging.debug("Tray menu not available")
+                logging.debug("Tray menu not available")
         
-        # If no tray menu, use hotkey handler as fallback
-        if not self.tray_menu:
+        # If tray menu failed, fall back to hotkey handler (but not for minimal build)
+        if not self.tray_menu and os.environ.get('LAUNCHER_MINIMAL') != '1':
             try:
                 from Python.hotkey_handler import HotkeyHandler, HOTKEY_AVAILABLE
                 if HOTKEY_AVAILABLE:
                     self.hotkey_handler = HotkeyHandler(self)
                     self.hotkey_handler.start()
-                    logging.info("Hotkey handler initialized (Ctrl+Alt+F9 for help)")
+                    logging.info("Hotkey handler initialized (Ctrl+Alt+F9 for help)") 
                     print("\n[INFO] Hotkey handler active. Press Ctrl+Alt+F9 for help.\n")
             except ImportError:
                 try:
                     from hotkey_handler import HotkeyHandler, HOTKEY_AVAILABLE
                     if HOTKEY_AVAILABLE:
                         self.hotkey_handler = HotkeyHandler(self)
-                        self.hotkey_handler.start()
-                        logging.info("Hotkey handler initialized (Ctrl+Alt+F9 for help)")
-                        print("\n[INFO] Hotkey handler active. Press Ctrl+Alt+F9 for help.\n")
                 except ImportError:
                     logging.debug("Hotkey handler not available")
-        
+
         # Close splash screen after initialization is done
         self.update_splash_progress(100, "Ready to launch!")
         self.close_splash()

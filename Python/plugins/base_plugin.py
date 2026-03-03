@@ -42,7 +42,7 @@ class ToolPlugin(ABC):
     """
     Abstract base class for all tool plugins.
     
-    Plugins represent external tools that can be integrated into anattaGen.
+    Plugins represent external tools that can be integrated into mainApp.
     Each plugin defines how to discover, configure, and execute its tool.
     """
     

@@ -21,22 +21,18 @@ extern void log_message(const char* level, const char* message);
 #define CONTROL_HEIGHT 20        // Reduced from 24 for compact layout
 #define CONTROL_SPACING 2        // Minimal spacing between controls
 #define LABEL_WIDTH 100          // Reduced from 110
-#define EDIT_WIDTH 400           // Increased from 380
+#define EDIT_WIDTH 420           // Increased from 380
 #define BUTTON_WIDTH 30
-#define DIALOG_WIDTH 650
-#define DIALOG_HEIGHT 490  // Increased by 50px for button footer
+#define CLIENT_WIDTH 650
+#define CLIENT_HEIGHT 550
 #define SCROLL_WIDTH 20
-#define ACTION_BTN_WIDTH 50      // Width for action buttons
-#define ACTION_BTN_HEIGHT 25     // Height for action buttons
+#define ACTION_BTN_WIDTH 80      // Width for action buttons
+#define ACTION_BTN_HEIGHT 30     // Height for action buttons
 
 // Control IDs - New button bar
 #define IDC_IMPORT_BTN 2001
 #define IDC_RESET_BTN 2002
-#define IDC_RELOAD_BTN 2003
-#define IDC_SAVE_BTN 2004
 #define IDC_EXPORT_BTN 2005
-#define IDC_OK_BTN 2006
-#define IDC_CANCEL_BTN 2007
 #define IDC_SCROLL_VERT 2010
 #define IDC_CONTROL_BASE 3000
 
@@ -76,6 +72,7 @@ typedef struct {
     int content_height;
     int scroll_pos;
     BOOL modified;  // Track if changes have been made
+    BOOL saved;     // Track if changes were saved/confirmed
 } ConfigEditorData;
 
 // Key type definitions
@@ -274,6 +271,7 @@ static const KeyAbbrev KEY_ABBREVS[] = {
 };
 
 // Forward declarations
+LRESULT CALLBACK ConfigEditorDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam);
 LRESULT CALLBACK content_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp);
 static int config_ini_handler(void* user, const char* sec, const char* name, const char* val);
 void create_control(ConfigEditorData* data, const char* sec, const char* key, const char* val);
@@ -288,7 +286,6 @@ int CALLBACK browse_cb(HWND hwnd, UINT msg, LPARAM lp, LPARAM data);
 // Phase 1: New button handlers
 void import_config(ConfigEditorData* data);
 void reset_config(ConfigEditorData* data);
-void reload_apps(ConfigEditorData* data);
 void export_config(ConfigEditorData* data);
 void clear_controls(ConfigEditorData* data);
 void reload_ini_file(ConfigEditorData* data, const char* ini_path);
@@ -309,7 +306,7 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
     if (!g_class_registered) {
         WNDCLASSEXA wc = {0};
         wc.cbSize = sizeof(WNDCLASSEXA);
-        wc.lpfnWndProc = content_proc;
+        wc.lpfnWndProc = content_proc; // This is for the inner content pane
         wc.hInstance = GetModuleHandle(NULL);
         wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
         wc.lpszClassName = CONTENT_CLASS;
@@ -325,7 +322,7 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
     if (!dialog_class_registered) {
         WNDCLASSEXA wc = {0};
         wc.cbSize = sizeof(WNDCLASSEXA);
-        wc.lpfnWndProc = DefDlgProcA;
+        wc.lpfnWndProc = ConfigEditorDlgProc; // Use our custom dialog proc
         wc.hInstance = GetModuleHandle(NULL);
         wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
         wc.lpszClassName = "ConfigEditorDialog";
@@ -337,20 +334,26 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
         }
     }
     
-    // Create dialog window manually
-    int x = (GetSystemMetrics(SM_CXSCREEN) - DIALOG_WIDTH) / 2;
-    int y = (GetSystemMetrics(SM_CYSCREEN) - DIALOG_HEIGHT) / 2;
+    // Calculate required window size based on client area
+    RECT rc = {0, 0, CLIENT_WIDTH, CLIENT_HEIGHT};
+    DWORD style = WS_POPUP | WS_CAPTION | WS_SYSMENU;
+    DWORD exStyle = WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_WINDOWEDGE;
+    AdjustWindowRectEx(&rc, style, FALSE, exStyle);
+    int window_width = rc.right - rc.left;
+    int window_height = rc.bottom - rc.top;
+    
+    // Center window
+    int x = (GetSystemMetrics(SM_CXSCREEN) - window_width) / 2;
+    int y = (GetSystemMetrics(SM_CYSCREEN) - window_height) / 2;
     
     HWND hwnd = CreateWindowExA(
-        WS_EX_DLGMODALFRAME | WS_EX_TOPMOST | WS_EX_WINDOWEDGE,
-        "ConfigEditorDialog",
+        exStyle, "ConfigEditorDialog",
         "Edit Configuration",
-        WS_POPUP | WS_CAPTION | WS_SYSMENU,
-        x, y, DIALOG_WIDTH, DIALOG_HEIGHT,
+        style, x, y, window_width, window_height,
         parent,
         NULL,
-        GetModuleHandle(NULL),
-        NULL
+        GetModuleHandle(NULL), // hInstance
+        data                   // Pass data to WM_CREATE
     );
     
     if (!hwnd) {
@@ -363,15 +366,14 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
     
     // Initialize dialog
     data->dialog = hwnd;
-    data->modified = FALSE;
+    data->saved = FALSE;
     strncpy(data->original_ini_path, ini_path, MAX_PATH_LEN - 1);
-    SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)data);
     
     // Create content area
     data->content_area = CreateWindowExA(
         WS_EX_CLIENTEDGE, CONTENT_CLASS, NULL,
-        WS_CHILD | WS_VISIBLE | WS_VSCROLL,
-        10, 10, DIALOG_WIDTH - 40, DIALOG_HEIGHT - 60,
+        WS_CHILD | WS_VISIBLE, // Scrollbar is handled by content_proc
+        10, 10, CLIENT_WIDTH - 20, CLIENT_HEIGHT - 60,
         hwnd, NULL, GetModuleHandle(NULL), data
     );
     
@@ -386,88 +388,131 @@ BOOL show_config_editor(HWND parent, const char* ini_path) {
     si.fMask = SIF_RANGE | SIF_PAGE;
     si.nMin = 0;
     si.nMax = data->content_height;
-    si.nPage = DIALOG_HEIGHT - 60;
+    si.nPage = CLIENT_HEIGHT - 60;
     SetScrollInfo(data->content_area, SB_VERT, &si, TRUE);
     
-    // Create 6 action buttons (left-aligned, compact)
-    int btn_y = DIALOG_HEIGHT - 40;
+    // Create action buttons
+    int btn_y = CLIENT_HEIGHT - 40;
     int btn_x = 10;
     int btn_spacing = 5;
     
-    CreateWindowExA(0, "BUTTON", "Imprt",
+    CreateWindowExA(0, "BUTTON", "Import",
         WS_CHILD | WS_VISIBLE,
         btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
         hwnd, (HMENU)IDC_IMPORT_BTN, GetModuleHandle(NULL), NULL);
     btn_x += ACTION_BTN_WIDTH + btn_spacing;
     
-    CreateWindowExA(0, "BUTTON", "Reset",
-        WS_CHILD | WS_VISIBLE,
-        btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
-        hwnd, (HMENU)IDC_RESET_BTN, GetModuleHandle(NULL), NULL);
-    btn_x += ACTION_BTN_WIDTH + btn_spacing;
-    
-    CreateWindowExA(0, "BUTTON", "Reload",
-        WS_CHILD | WS_VISIBLE,
-        btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
-        hwnd, (HMENU)IDC_RELOAD_BTN, GetModuleHandle(NULL), NULL);
-    btn_x += ACTION_BTN_WIDTH + btn_spacing;
-    
-    CreateWindowExA(0, "BUTTON", "Save",
-        WS_CHILD | WS_VISIBLE,
-        btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
-        hwnd, (HMENU)IDC_SAVE_BTN, GetModuleHandle(NULL), NULL);
-    btn_x += ACTION_BTN_WIDTH + btn_spacing;
-    
-    CreateWindowExA(0, "BUTTON", "Exprt",
+    CreateWindowExA(0, "BUTTON", "Export",
         WS_CHILD | WS_VISIBLE,
         btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
         hwnd, (HMENU)IDC_EXPORT_BTN, GetModuleHandle(NULL), NULL);
     btn_x += ACTION_BTN_WIDTH + btn_spacing;
-    
-    CreateWindowExA(0, "BUTTON", "Ok",
-        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+
+    CreateWindowExA(0, "BUTTON", "Reset",
+        WS_CHILD | WS_VISIBLE,
         btn_x, btn_y, ACTION_BTN_WIDTH, ACTION_BTN_HEIGHT,
-        hwnd, (HMENU)IDC_OK_BTN, GetModuleHandle(NULL), NULL);
+        hwnd, (HMENU)IDC_RESET_BTN, GetModuleHandle(NULL), NULL);
+
+    // Main buttons on the right
+    CreateWindowExA(0, "BUTTON", "OK",
+        WS_CHILD | WS_VISIBLE | BS_DEFPUSHBUTTON,
+        CLIENT_WIDTH - 180, btn_y, 80, ACTION_BTN_HEIGHT,
+        hwnd, (HMENU)IDOK, GetModuleHandle(NULL), NULL);
+
+    CreateWindowExA(0, "BUTTON", "Cancel",
+        WS_CHILD | WS_VISIBLE,
+        CLIENT_WIDTH - 90, btn_y, 80, ACTION_BTN_HEIGHT,
+        hwnd, (HMENU)IDCANCEL, GetModuleHandle(NULL), NULL);
     
     // Show and update window
     ShowWindow(hwnd, SW_SHOW);
     UpdateWindow(hwnd);
-    SetForegroundWindow(hwnd);
     
     // Message loop
     MSG msg;
-    BOOL result = FALSE;
     
-    while (GetMessage(&msg, NULL, 0, 0)) {
-        if (msg.message == WM_COMMAND && msg.hwnd == hwnd) {
-            int id = LOWORD(msg.wParam);
-            
-            if (id == IDC_SAVE_BTN) {
-                save_config(data);
-                result = TRUE;
-                break;
-            } else if (id == IDC_OK_BTN) {
-                // OK button - save and close
-                save_config(data);
-                result = TRUE;
-                break;
-            }
-        } else if (msg.message == WM_CLOSE && msg.hwnd == hwnd) {
-            result = FALSE;
-            break;
-        }
-        
+    while (IsWindow(hwnd) && GetMessage(&msg, NULL, 0, 0)) {
         if (!IsDialogMessage(hwnd, &msg)) {
             TranslateMessage(&msg);
             DispatchMessage(&msg);
         }
     }
     
-    DestroyWindow(hwnd);
+    BOOL result = data->saved;
     free(data);
     return result;
 }
 
+/**
+ * Dialog window procedure
+ */
+LRESULT CALLBACK ConfigEditorDlgProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+    ConfigEditorData* data = (ConfigEditorData*)GetWindowLongPtrA(hwnd, GWLP_USERDATA);
+
+    switch (msg) {
+        case WM_CREATE: {
+            CREATESTRUCTA* cs = (CREATESTRUCTA*)lParam;
+            data = (ConfigEditorData*)cs->lpCreateParams;
+            SetWindowLongPtrA(hwnd, GWLP_USERDATA, (LONG_PTR)data);
+            data->dialog = hwnd;
+            data->modified = FALSE;
+            return 0;
+        }
+
+        case WM_CLOSE: {
+            if (data && data->modified) {
+                int res = MessageBoxA(hwnd, "You have unsaved changes. Save before closing?", "Unsaved Changes", MB_YESNOCANCEL | MB_ICONWARNING);
+                if (res == IDYES) {
+                    save_config(data);
+                    data->saved = TRUE;
+                    DestroyWindow(hwnd);
+                } else if (res == IDNO) {
+                    DestroyWindow(hwnd);
+                }
+                // else CANCEL: do nothing
+            } else {
+                DestroyWindow(hwnd);
+            }
+            return 0;
+        }
+
+        case WM_DESTROY: {
+            return 0;
+        }
+
+        case WM_COMMAND: {
+            if (!data) break;
+            int id = LOWORD(wParam);
+
+            // Set modified flag on any user interaction that changes data
+            if (HIWORD(wParam) == EN_CHANGE || HIWORD(wParam) == BN_CLICKED || HIWORD(wParam) == CBN_SELCHANGE || HIWORD(wParam) == CBN_EDITCHANGE) {
+                if (id >= IDC_CONTROL_BASE) data->modified = TRUE;
+            }
+
+            switch (id) {
+                case IDC_IMPORT_BTN:
+                    import_config(data);
+                    break;
+                case IDC_EXPORT_BTN:
+                    export_config(data);
+                    break;
+                case IDC_RESET_BTN:
+                    reset_config(data);
+                    break;
+                case IDOK:
+                    if (data->modified) save_config(data);
+                    data->saved = TRUE;
+                    DestroyWindow(hwnd);
+                    break;
+                case IDCANCEL:
+                    SendMessage(hwnd, WM_CLOSE, 0, 0);
+                    break;
+            }
+            return 0;
+        }
+    }
+    return DefWindowProcA(hwnd, msg, wParam, lParam);
+}
 /**
  * Content window procedure
  */
@@ -483,20 +528,21 @@ LRESULT CALLBACK content_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         
         case WM_COMMAND: {
             if (!data) break;
-            
+
             int id = LOWORD(wp);
             int notify = HIWORD(wp);
-            
+
+            // Handle specific actions for content controls
             if (id >= IDC_CONTROL_BASE) {
                 int ctrl_idx = (id - IDC_CONTROL_BASE) / 10;
                 int action = (id - IDC_CONTROL_BASE) % 10;
-                
+
                 if (ctrl_idx < data->control_count) {
                     ConfigControl* ctrl = &data->controls[ctrl_idx];
-                    
+
                     if (action == 1 && notify == BN_CLICKED) {
                         // Browse button
-                        browse_path(GetParent(hwnd), ctrl->edit, 
+                        browse_path(GetParent(hwnd), ctrl->edit,
                                   ctrl->type == CTRL_PATH_FOLDER);
                     } else if (action == 2 && notify == BN_CLICKED) {
                         // Add button
@@ -507,7 +553,9 @@ LRESULT CALLBACK content_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
                     }
                 }
             }
-            break;
+
+            // Forward the message to the parent dialog for generic handling (like setting 'modified' flag)
+            return SendMessage(GetParent(hwnd), msg, wp, lp);
         }
         
         case WM_VSCROLL: {
@@ -551,6 +599,7 @@ LRESULT CALLBACK content_proc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp) {
         case WM_CTLCOLORSTATIC:
         case WM_CTLCOLOREDIT:
             return (LRESULT)GetStockObject(WHITE_BRUSH);
+
     }
     return DefWindowProcA(hwnd, msg, wp, lp);
 }
@@ -607,7 +656,7 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
         case CTRL_LIST: {
             ctrl->combo = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "",
                 WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
-                x_edit, y, EDIT_WIDTH - 70, 200,
+                x_edit, y, EDIT_WIDTH - 70, 200, // Make space for buttons
                 data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             
@@ -636,13 +685,13 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             // Add/Remove buttons
             ctrl->add_btn = CreateWindowExA(0, "BUTTON", "+",
                 WS_CHILD | WS_VISIBLE,
-                x_edit + EDIT_WIDTH - 65, y, 30, 20,
+                x_edit + EDIT_WIDTH - 65, y, BUTTON_WIDTH, 20,
                 data->content_area, (HMENU)(INT_PTR)(ctrl->id + 2),
                 GetModuleHandle(NULL), NULL);
             
             ctrl->del_btn = CreateWindowExA(0, "BUTTON", "-",
                 WS_CHILD | WS_VISIBLE,
-                x_edit + EDIT_WIDTH - 30, y, 30, 20,
+                x_edit + EDIT_WIDTH - 30, y, BUTTON_WIDTH, 20,
                 data->content_area, (HMENU)(INT_PTR)(ctrl->id + 3),
                 GetModuleHandle(NULL), NULL);
             break;
@@ -652,13 +701,13 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
         case CTRL_PATH_FOLDER: {
             ctrl->edit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", val,
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
-                x_edit, y, EDIT_WIDTH - 35, 20,
+                x_edit, y, EDIT_WIDTH - 35, 20, // Make space for button
                 data->content_area, (HMENU)(INT_PTR)(ctrl->id),
                 GetModuleHandle(NULL), NULL);
             
             ctrl->button = CreateWindowExA(0, "BUTTON", "...",
                 WS_CHILD | WS_VISIBLE,
-                x_edit + EDIT_WIDTH - 30, y, 30, 20,
+                x_edit + EDIT_WIDTH - 30, y, BUTTON_WIDTH, 20,
                 data->content_area, (HMENU)(INT_PTR)(ctrl->id + 1),
                 GetModuleHandle(NULL), NULL);
             break;
@@ -681,8 +730,8 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
 /**
  * Save configuration
  */
-void save_config(ConfigEditorData* data) {
-    FILE* f = fopen(data->ini_path, "w");
+void save_config_internal(ConfigEditorData* data, const char* path) {
+    FILE* f = fopen(path, "w");
     if (!f) return;
     
     // Group by section
@@ -702,13 +751,21 @@ void save_config(ConfigEditorData* data) {
         
         switch (ctrl->type) {
             case CTRL_BOOL: {
-                LRESULT checked = SendMessage(ctrl->button, BM_GETCHECK, 0, 0);
-                strcpy(value, (checked == BST_CHECKED) ? "True" : "False");
+                if (ctrl->button) {
+                    LRESULT checked = SendMessage(ctrl->button, BM_GETCHECK, 0, 0);
+                    strcpy(value, (checked == BST_CHECKED) ? "True" : "False");
+                }
                 break;
             }
             
             case CTRL_LIST: {
-                int count = SendMessage(ctrl->combo, CB_GETCOUNT, 0, 0);
+                if (!ctrl->combo) break;
+                // Check if there is text in the edit box part of the combobox
+                char current_text[256];
+                GetWindowTextA(ctrl->combo, current_text, sizeof(current_text));
+                SendMessageA(ctrl->combo, CB_ADDSTRING, 0, (LPARAM)current_text);
+
+                int count = SendMessageA(ctrl->combo, CB_GETCOUNT, 0, 0);
                 value[0] = '\0';
                 for (int j = 0; j < count; j++) {
                     char item[256];
@@ -732,6 +789,11 @@ void save_config(ConfigEditorData* data) {
     }
     
     fclose(f);
+}
+
+void save_config(ConfigEditorData* data) {
+    save_config_internal(data, data->ini_path);
+    data->modified = FALSE;
 }
 
 /**
@@ -824,6 +886,103 @@ void browse_path(HWND parent, HWND edit, BOOL folder) {
             }
             SetWindowTextA(edit, path);
         }
+    }
+}
+
+/**
+ * Clear all controls
+ */
+void clear_controls(ConfigEditorData* data) {
+    for (int i = 0; i < data->control_count; i++) {
+        ConfigControl* ctrl = &data->controls[i];
+        if (ctrl->label) DestroyWindow(ctrl->label);
+        if (ctrl->edit) DestroyWindow(ctrl->edit);
+        if (ctrl->button) DestroyWindow(ctrl->button);
+        if (ctrl->combo) DestroyWindow(ctrl->combo);
+        if (ctrl->add_btn) DestroyWindow(ctrl->add_btn);
+        if (ctrl->del_btn) DestroyWindow(ctrl->del_btn);
+    }
+    data->control_count = 0;
+    data->content_height = 10;
+    data->scroll_pos = 0;
+    
+    // Reset scrollbar
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_POS;
+    si.nPos = 0;
+    SetScrollInfo(data->content_area, SB_VERT, &si, TRUE);
+}
+
+/**
+ * Reload INI file
+ */
+void reload_ini_file(ConfigEditorData* data, const char* ini_path) {
+    SendMessage(data->content_area, WM_SETREDRAW, FALSE, 0);
+    
+    clear_controls(data);
+    ini_parse(ini_path, config_ini_handler, data);
+    
+    // Update scrollbar range
+    SCROLLINFO si = {0};
+    si.cbSize = sizeof(SCROLLINFO);
+    si.fMask = SIF_RANGE | SIF_PAGE;
+    si.nMin = 0;
+    si.nMax = data->content_height;
+    si.nPage = CLIENT_HEIGHT - 60;
+    SetScrollInfo(data->content_area, SB_VERT, &si, TRUE);
+    
+    SendMessage(data->content_area, WM_SETREDRAW, TRUE, 0);
+    InvalidateRect(data->content_area, NULL, TRUE);
+}
+
+/**
+ * Import configuration
+ */
+void import_config(ConfigEditorData* data) {
+    char path[MAX_PATH_LEN] = "";
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = data->dialog;
+    ofn.lpstrFile = path;
+    ofn.nMaxFile = MAX_PATH_LEN;
+    ofn.lpstrFilter = "INI Files\0*.ini\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+    
+    if (GetOpenFileNameA(&ofn)) {
+        reload_ini_file(data, path);
+        data->modified = TRUE;
+    }
+}
+
+/**
+ * Reset configuration
+ */
+void reset_config(ConfigEditorData* data) {
+    if (MessageBoxA(data->dialog, "Discard all changes and reset to original?", "Reset Configuration", MB_YESNO | MB_ICONQUESTION) == IDYES) {
+        reload_ini_file(data, data->original_ini_path);
+        data->modified = FALSE;
+    }
+}
+
+/**
+ * Export configuration
+ */
+void export_config(ConfigEditorData* data) {
+    char path[MAX_PATH_LEN] = "";
+    OPENFILENAMEA ofn = {0};
+    ofn.lStructSize = sizeof(ofn);
+    ofn.hwndOwner = data->dialog;
+    ofn.lpstrFile = path;
+    ofn.nMaxFile = MAX_PATH_LEN;
+    ofn.lpstrFilter = "INI Files\0*.ini\0All Files\0*.*\0";
+    ofn.nFilterIndex = 1;
+    ofn.Flags = OFN_OVERWRITEPROMPT;
+    
+    if (GetSaveFileNameA(&ofn)) {
+        save_config_internal(data, path);
+        MessageBoxA(data->dialog, "Configuration exported successfully.", "Export", MB_OK | MB_ICONINFORMATION);
     }
 }
 

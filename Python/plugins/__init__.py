@@ -1,5 +1,5 @@
 """
-Plugin system for anattaGen
+Plugin system for mainApp
 
 This package provides a modular plugin architecture for integrating external tools.
 """

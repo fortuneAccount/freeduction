@@ -1,4 +1,4 @@
-"""Utility modules for anattagen."""
+"""Utility modules for mainapp."""
 
 from .path_discovery import PathDiscovery, discover_and_update_paths
 from .cloud_path_utils import (

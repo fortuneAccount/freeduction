@@ -1,5 +1,5 @@
 """
-Built-in plugins for anattaGen
+Built-in plugins for mainApp
 """
 
 from .antimicrox_plugin import AntiMicroXPlugin

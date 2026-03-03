@@ -196,20 +196,15 @@ def run_gui(ini_path: Path) -> None:
             cfg["values"][k] = sv.get()
         
         # Save build vars
-        if 'onefile' in build_vars:
-            cfg["build"]["onefile"] = str(build_vars['onefile'].get())
-            cfg["build"]["dest"] = build_vars['dest'].get()
-            cfg["build"]["workpath"] = build_vars['workpath'].get()
-            cfg["build"]["commit_msg"] = build_vars['commit_msg'].get()
-            cfg["build"]["skip_python"] = str(build_vars['skip_python'].get())
-            cfg["build"]["skip_c"] = str(build_vars['skip_c'].get())
-            cfg["build"]["skip_application"] = str(build_vars['skip_application'].get())
-            
-            # Save launcher build options
-            cfg["launcher_build"]["preset"] = build_vars['launcher_preset'].get()
-            cfg["launcher_build"]["nocs"] = str(build_vars['launcher_nocs'].get())
-            cfg["launcher_build"]["nopd"] = str(build_vars['launcher_nopd'].get())
-            cfg["launcher_build"]["upx"] = str(build_vars['launcher_upx'].get())
+        cfg["build"]["dest"] = build_vars['dest'].get()
+        cfg["build"]["workpath"] = build_vars['workpath'].get()
+        cfg["build"]["commit_msg"] = build_vars['commit_msg'].get()
+        cfg["build"]["skip_python"] = str(build_vars['skip_python'].get())
+        cfg["build"]["skip_c"] = str(build_vars['skip_c'].get())
+        cfg["build"]["skip_application"] = str(build_vars['skip_application'].get())
+        
+        # Save launcher build options
+        cfg["launcher_build"]["preset"] = build_vars['launcher_preset'].get()
             
         save_ini(ini_path, cfg)
         apply_replacements({k: cfg["values"].get(k, "") for k in tags})
@@ -253,7 +248,6 @@ def run_gui(ini_path: Path) -> None:
     build_container.grid_columnconfigure(1, weight=1)
     
     build_vars = {
-        'onefile': tk.BooleanVar(value=cfg.getboolean('build', 'onefile', fallback=False)),
         'dest': tk.StringVar(value=cfg.get('build', 'dest', fallback=str(Path("dist").absolute()))),
         'workpath': tk.StringVar(value=cfg.get('build', 'workpath', fallback=str(Path("build").absolute()))),
         'commit_msg': tk.StringVar(value=cfg.get('build', 'commit_msg', fallback="Update")),
@@ -262,9 +256,6 @@ def run_gui(ini_path: Path) -> None:
         'skip_application': tk.BooleanVar(value=cfg.getboolean('build', 'skip_application', fallback=False)),
         # Launcher build options
         'launcher_preset': tk.StringVar(value=cfg.get('launcher_build', 'preset', fallback='full')),
-        'launcher_nocs': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'nocs', fallback=False)),
-        'launcher_nopd': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'nopd', fallback=False)),
-        'launcher_upx': tk.BooleanVar(value=cfg.getboolean('launcher_build', 'upx', fallback=False)),
     }
     
     # Build options grid layout
@@ -274,7 +265,6 @@ def run_gui(ini_path: Path) -> None:
     ctl_frame = ttk.Frame(build_container)
     ctl_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
     
-    ttk.Checkbutton(ctl_frame, text="Onefile", variable=build_vars['onefile']).pack(side="left", padx=2)
     ttk.Label(ctl_frame, text="Dest:").pack(side="left", padx=2)
     ttk.Entry(ctl_frame, textvariable=build_vars['dest'], width=35).pack(side="left", fill="x", expand=True)
     
@@ -320,7 +310,6 @@ def run_gui(ini_path: Path) -> None:
     
     # Launcher options in two columns
     launcher_frame.grid_columnconfigure(0, weight=1)
-    launcher_frame.grid_columnconfigure(1, weight=1)
     
     # Left column: Preset selection
     preset_frame = ttk.Frame(launcher_frame)
@@ -348,18 +337,6 @@ def run_gui(ini_path: Path) -> None:
         preset_desc_label.config(text=preset_descriptions.get(build_vars['launcher_preset'].get(), ''))
     
     build_vars['launcher_preset'].trace_add('write', update_preset_desc)
-    
-    # Right column: Modifiers
-    modifier_frame = ttk.Frame(launcher_frame)
-    modifier_frame.grid(row=0, column=1, sticky="e", padx=2, pady=2)
-    
-    ttk.Label(modifier_frame, text="Mods:").pack(side="left", padx=2)
-    ttk.Checkbutton(modifier_frame, text="nocs", 
-                    variable=build_vars['launcher_nocs']).pack(side="left", padx=2)
-    ttk.Checkbutton(modifier_frame, text="nopd", 
-                    variable=build_vars['launcher_nopd']).pack(side="left", padx=2)
-    ttk.Checkbutton(modifier_frame, text="upx", 
-                    variable=build_vars['launcher_upx']).pack(side="left", padx=2)
     
     from tkinter import scrolledtext
     
@@ -445,7 +422,7 @@ def run_gui(ini_path: Path) -> None:
         import platform
         import shutil
         
-        onefile = build_vars['onefile'].get()
+        onefile = True # Always use onefile
         dest = build_vars['dest'].get()
         workpath = build_vars['workpath'].get()
         skip_python = build_vars['skip_python'].get()
@@ -485,11 +462,12 @@ def run_gui(ini_path: Path) -> None:
             if platform.system() == 'Windows' and icon_path.exists():
                 cmd_main.append(f'--icon={icon_path}')
             
-            if onefile:
-                cmd_main.append('--onefile')
-            else:
-                cmd_main.append('--onedir')
-                
+            # Always use onefile
+            cmd_main.append('--onefile')
+            
+            # Explicitly disable UPX to prevent LoadLibrary errors
+            cmd_main.append('--noupx')
+            
             if not skip_python:
                 if not skip_application:
                     log(f"Starting Main Build (application)...\n")
@@ -507,23 +485,14 @@ def run_gui(ini_path: Path) -> None:
 
                 # Get launcher build options
                 launcher_preset = build_vars['launcher_preset'].get()
-                launcher_modifiers = []
-                if build_vars['launcher_nocs'].get():
-                    launcher_modifiers.append('nocs')
-                if build_vars['launcher_nopd'].get():
-                    launcher_modifiers.append('nopd')
-                if build_vars['launcher_upx'].get():
-                    launcher_modifiers.append('upx')
                 
                 # Use Build_PyLauncher.py script
                 build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
                 
                 if build_script.exists():
-                    cmd_launcher = [sys.executable, str(build_script), launcher_preset] + launcher_modifiers
+                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
                     
                     log(f"\nStarting Launcher Build with preset '{launcher_preset}'")
-                    if launcher_modifiers:
-                        log(f" and modifiers: {', '.join(launcher_modifiers)}")
                     log("...\n")
                     
                     if not run_cmd_sequence([cmd_launcher], cwd=project_root):
@@ -541,7 +510,7 @@ def run_gui(ini_path: Path) -> None:
                             'debug': 'Launcher_debug'
                         }.get(launcher_preset, 'Launcher_full')
                         
-                        src = project_root / "dist" / f"{preset_name}.exe"
+                        src = dest / f"{preset_name}.exe"
                         dst_dir = project_root / "bin"
                         dst = dst_dir / "Launcher.python.exe"
                         
@@ -569,6 +538,7 @@ def run_gui(ini_path: Path) -> None:
                         '--onefile',
                         f'--distpath={dest}',
                         f'--workpath={workpath}',
+                        '--noupx',
                     ]
                     
                     if platform.system() == 'Windows' and icon_path.exists():

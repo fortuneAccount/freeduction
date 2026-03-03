@@ -8,7 +8,7 @@ APP_ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 ASSETS_DIR = os.path.join(APP_ROOT_DIR, "assets")
 
 # --- Asset File Paths ---
-APP_ICON = os.path.join(ASSETS_DIR, "anattagen.ico")
+APP_ICON = os.path.join(ASSETS_DIR, "logo.ico")
 REPOS_SET = os.path.join(ASSETS_DIR, "repos.set")
 LAUNCHER_EXECUTABLE = os.path.join(APP_ROOT_DIR, "bin", "Launcher.exe")
 RELEASE_GROUPS_SET = os.path.join(ASSETS_DIR, "release_groups.set")

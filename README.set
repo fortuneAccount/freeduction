@@ -185,7 +185,7 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 ```
 		sudo apt install python3-venv python3-pip
 		cd ~
-		git clone --recursive https://{{GIT_SOURCE}}/{{RJ_PROJ}}.git
+		git clone --recursive {{GIT_SOURCE}}/{{GITUSER}}/{{RJ_PROJ}}.git
 		cd {{RJ_PROJ}}
 		python3 -m venv .venv
 		source .venv/bin/activate
@@ -201,7 +201,7 @@ win
 ### Now you can clone or download the repo, and install the requirements via pip
 ```
 		cd %userprofile%/Downloads
-		git clone --recursive https://{{GIT_SOURCE}}/{{GIT_USER}}/{{RJ_PROJ}}/
+		git clone --recursive {{GIT_SOURCE}}/{{GITUSER}}/{{RJ_PROJ}}/
 		cd {{RJ_PROJ}}
 		python -m pip install -r requirements_win.txt
 		python -m Python\main.py
