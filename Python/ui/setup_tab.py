@@ -339,6 +339,17 @@ class SetupTab(QWidget):
         source_config_layout.setColumnStretch(0, 1)
         source_config_layout.setColumnStretch(1, 1)
 
+        # Directories Group (moved from Core tab)
+        directories_group = QGroupBox("Directories")
+        directories_layout = QFormLayout(directories_group)
+        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
+        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"]) # No options/args for dirs
+        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
+        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"]) # No options/args for dirs
+        source_config_layout.addWidget(directories_group, 3, 0, 1, 2)
+
         source_config_section = AccordionSection("SOURCES AND INDEXING", source_config_widget, start_expanded=True)
 
         # --- Section 2: Paths & Profiles ---
@@ -348,7 +359,6 @@ class SetupTab(QWidget):
         paths_tabs = QTabWidget()
         paths_layout.addWidget(paths_tabs)
 
-        # Core Paths Tab
         # Prepare repo items for generic lists (All except GLOBAL)
         all_tools = {}
         # Add Mount DISC option at the top
@@ -358,27 +368,7 @@ class SetupTab(QWidget):
             if section != "GLOBAL":
                 all_tools.update(items)
 
-        core_paths_widget = QWidget()
-        core_paths_layout = QVBoxLayout(core_paths_widget)
-        
-        # Directories Group
-        directories_group = QGroupBox("Directories")
-        directories_layout = QFormLayout(directories_group)
-        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
-        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"]) # No options/args for dirs
-        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
-        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"]) # No options/args for dirs
-        core_paths_layout.addWidget(directories_group)
-
-        # Launcher Configuration Group
-        launcher_group = QGroupBox("Launcher Configuration")
-        launcher_layout = QFormLayout(launcher_group)
-        self.path_rows["launcher_executable"] = PathConfigRow("launcher_executable", is_directory=False, add_enabled=False, add_cen_lc=True, use_combobox=True)
-        self._add_path_row(launcher_layout, "Launcher Executable:", "launcher_executable", self.path_rows["launcher_executable"])
-
-        # Moved checkboxes from Deployment Tab
+        # Moved checkboxes from Deployment Tab (will be used in Applications tab)
         self.run_as_admin_checkbox = QCheckBox("Run As Admin")
         self.use_kill_list_checkbox = QCheckBox("Use Kill List")
         self.hide_taskbar_checkbox = QCheckBox("Hide Taskbar")
@@ -391,73 +381,81 @@ class SetupTab(QWidget):
         cb_layout.addWidget(self.use_kill_list_checkbox, 0, 1)
         cb_layout.addWidget(self.hide_taskbar_checkbox, 1, 0)
         cb_layout.addWidget(self.terminate_bw_on_exit_checkbox, 1, 1)
-        launcher_layout.addRow(cb_container)
-        
-        core_paths_layout.addWidget(launcher_group)
-        core_paths_layout.addStretch()
-
-        paths_tabs.addTab(core_paths_widget, "   CORE   ")
 
         # Application Paths Tab
         app_paths_widget = QWidget()
-        app_paths_layout = QFormLayout(app_paths_widget)
-        self.path_rows["disc_mount_path"] = PathConfigRow("disc_mount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
-        self.path_rows["disc_mount_path"].enabled_cb.setToolTip("Overwrite Mounting")
-        self._add_path_row(app_paths_layout, "Disc-Mount:", "disc_mount_path", self.path_rows["disc_mount_path"])
-        self.path_rows["disc_unmount_path"] = PathConfigRow("disc_unmount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
-        self.path_rows["disc_unmount_path"].enabled_cb.setToolTip("Overwrite Unmounting")
-        self._add_path_row(app_paths_layout, "Disc-Unmount:", "disc_unmount_path", self.path_rows["disc_unmount_path"])
+        app_paths_layout = QVBoxLayout(app_paths_widget)
         
+        # Add Launcher Configuration at the top (left-aligned in a group)
+        launcher_group = QGroupBox("Launcher Configuration")
+        launcher_layout = QFormLayout(launcher_group)
+        self.path_rows["launcher_executable"] = PathConfigRow("launcher_executable", is_directory=False, add_enabled=False, add_cen_lc=True, use_combobox=True)
+        self._add_path_row(launcher_layout, "Launcher Executable:", "launcher_executable", self.path_rows["launcher_executable"])
+        launcher_layout.addRow(cb_container)
+        app_paths_layout.addWidget(launcher_group)
+        
+        # Mapper Group (Controller Mapper + Player Profiles)
+        mapper_group = QGroupBox("Mapper")
+        mapper_layout = QFormLayout(mapper_group)
         self.path_rows["controller_mapper_path"] = PathConfigRow("controller_mapper_path", add_run_wait=True, repo_items=self.repos.get("MAPPERS"))
         self.path_rows["controller_mapper_path"].enabled_cb.setToolTip("Enable Controller Mapper")
-        self._add_path_row(app_paths_layout, "Controller Mapper:", "controller_mapper_path", self.path_rows["controller_mapper_path"])
-        self.path_rows["borderless_gaming_path"] = PathConfigRow("borderless_gaming_path", add_run_wait=True, repo_items=self.repos.get("WINDOWING"))
-        self.path_rows["borderless_gaming_path"].enabled_cb.setToolTip("Enable Borderless Windowing")
-        self._add_path_row(app_paths_layout, "Borderless Windowing:", "borderless_gaming_path", self.path_rows["borderless_gaming_path"])
+        self._add_path_row(mapper_layout, "Controller Mapper:", "controller_mapper_path", self.path_rows["controller_mapper_path"])
+        self.path_rows["p1_profile_path"] = PathConfigRow("p1_profile_path", add_enabled=True)
+        mapper_layout.addRow("    Player 1 Profile:", self.path_rows["p1_profile_path"])
+        self.path_rows["p2_profile_path"] = PathConfigRow("p2_profile_path", add_enabled=True)
+        mapper_layout.addRow("    Player 2 Profile:", self.path_rows["p2_profile_path"])
+        self.path_rows["mediacenter_profile_path"] = PathConfigRow("mediacenter_profile_path", add_enabled=True)
+        mapper_layout.addRow("    Media Center Profile:", self.path_rows["mediacenter_profile_path"])
+        app_paths_layout.addWidget(mapper_group)
+        
+        # Display Group (Multi-Monitor App + Configs + Borderless Windowing)
+        display_group = QGroupBox("Display")
+        display_layout = QFormLayout(display_group)
         self.path_rows["multi_monitor_tool_path"] = PathConfigRow("multi_monitor_tool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"))
         self.path_rows["multi_monitor_tool_path"].enabled_cb.setToolTip("Enable Multi-Monitor Tool")
-        self._add_path_row(app_paths_layout, "Multi-Monitor App:", "multi_monitor_tool_path", self.path_rows["multi_monitor_tool_path"])
-        self.path_rows["just_after_launch_path"] = PathConfigRow("just_after_launch_path", add_run_wait=True, repo_items=all_tools)
-        self.path_rows["just_after_launch_path"].enabled_cb.setToolTip("Enable Just After Launch App")
-        self._add_path_row(app_paths_layout, "Just After Launch:", "just_after_launch_path", self.path_rows["just_after_launch_path"])
-        self.path_rows["just_before_exit_path"] = PathConfigRow("just_before_exit_path", add_run_wait=True, repo_items=all_tools)
-        self.path_rows["just_before_exit_path"].enabled_cb.setToolTip("Enable Just Before Exit App")
-        self._add_path_row(app_paths_layout, "Just Before Exit:", "just_before_exit_path", self.path_rows["just_before_exit_path"])
+        self._add_path_row(display_layout, "Multi-Monitor App:", "multi_monitor_tool_path", self.path_rows["multi_monitor_tool_path"])
+        self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
+        display_layout.addRow("    MM Gaming Config:", self.path_rows["multimonitor_gaming_path"])
+        self.path_rows["multimonitor_media_path"] = PathConfigRow("multimonitor_media_path", add_enabled=True)
+        display_layout.addRow("    MM Desktop Config:", self.path_rows["multimonitor_media_path"])
+        self.path_rows["borderless_gaming_path"] = PathConfigRow("borderless_gaming_path", add_run_wait=True, repo_items=self.repos.get("WINDOWING"))
+        self.path_rows["borderless_gaming_path"].enabled_cb.setToolTip("Enable Borderless Windowing")
+        self._add_path_row(display_layout, "Borderless Windowing:", "borderless_gaming_path", self.path_rows["borderless_gaming_path"])
+        app_paths_layout.addWidget(display_group)
         
+        # Save/State/Config Group (Cloud Sync + Local Backup)
+        save_config_group = QGroupBox("Save/State/Config")
+        save_config_layout = QFormLayout(save_config_group)
         # Cloud Backup / Sync Tools (Unified)
         cloud_sync_tools = {}
         if "SYNC" in self.repos:
             cloud_sync_tools.update(self.repos["SYNC"])
-        
         self.path_rows["cloud_sync_path"] = PathConfigRow("cloud_sync_path", add_run_wait=True, add_cen_lc=True, add_enabled=True, repo_items=cloud_sync_tools)
         self.path_rows["cloud_sync_path"].enabled_cb.setToolTip("Enable Cloud Sync/Backup")
-        self._add_path_row(app_paths_layout, "Cloud Sync:", "cloud_sync_path", self.path_rows["cloud_sync_path"])
-        
+        self._add_path_row(save_config_layout, "Cloud Sync:", "cloud_sync_path", self.path_rows["cloud_sync_path"])
         # Local Backup Tools (Unified)
         local_backup_tools = {}
         if "LOCAL_BACKUP" in self.repos:
             local_backup_tools.update(self.repos["LOCAL_BACKUP"])
-        
         self.path_rows["local_backup_path"] = PathConfigRow("local_backup_path", add_run_wait=True, add_cen_lc=True, add_enabled=True, repo_items=local_backup_tools)
         self.path_rows["local_backup_path"].enabled_cb.setToolTip("Enable Local Backup")
-        self._add_path_row(app_paths_layout, "Local Backup:", "local_backup_path", self.path_rows["local_backup_path"])
+        self._add_path_row(save_config_layout, "Local Backup:", "local_backup_path", self.path_rows["local_backup_path"])
+        app_paths_layout.addWidget(save_config_group)
+        
+        # Disc Mount/Unmount Group (at the bottom)
+        disc_group = QGroupBox("Disc Mount/Unmount")
+        disc_layout = QFormLayout(disc_group)
+        self.path_rows["disc_mount_path"] = PathConfigRow("disc_mount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
+        self.path_rows["disc_mount_path"].enabled_cb.setToolTip("Overwrite Mounting")
+        self._add_path_row(disc_layout, "Disc-Mount:", "disc_mount_path", self.path_rows["disc_mount_path"])
+        self.path_rows["disc_unmount_path"] = PathConfigRow("disc_unmount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
+        self.path_rows["disc_unmount_path"].enabled_cb.setToolTip("Overwrite Unmounting")
+        self._add_path_row(disc_layout, "Disc-Unmount:", "disc_unmount_path", self.path_rows["disc_unmount_path"])
+        app_paths_layout.addWidget(disc_group)
+        
+        app_paths_layout.addStretch()
         
         paths_tabs.addTab(app_paths_widget, "APPLICATIONS")
-
-        # Profile Paths Tab
-        profile_paths_widget = QWidget()
-        profile_paths_layout = QFormLayout(profile_paths_widget)
-        self.path_rows["p1_profile_path"] = PathConfigRow("p1_profile_path", add_enabled=True)
-        profile_paths_layout.addRow("Player 1 Profile:", self.path_rows["p1_profile_path"])
-        self.path_rows["p2_profile_path"] = PathConfigRow("p2_profile_path", add_enabled=True)
-        profile_paths_layout.addRow("Player 2 Profile:", self.path_rows["p2_profile_path"])
-        self.path_rows["mediacenter_profile_path"] = PathConfigRow("mediacenter_profile_path", add_enabled=True)
-        profile_paths_layout.addRow("MediaCenter Profile:", self.path_rows["mediacenter_profile_path"])
-        self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
-        profile_paths_layout.addRow("MM Gaming Config:", self.path_rows["multimonitor_gaming_path"])
-        self.path_rows["multimonitor_media_path"] = PathConfigRow("multimonitor_media_path", add_enabled=True)
-        profile_paths_layout.addRow("MM Desktop Config:", self.path_rows["multimonitor_media_path"])
-        paths_tabs.addTab(profile_paths_widget, "   PROFILES   ")
 
         # Cloud Backup Configuration Tab
         cloud_backup_widget = QWidget()
@@ -581,6 +579,15 @@ class SetupTab(QWidget):
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)
             self.path_rows[key].enabled_cb.setToolTip(f"Enable Pre-Launch App {i}")
             self._add_path_row(script_paths_layout, f"Pre-Launch App {i}:", key, self.path_rows[key])
+        
+        # Just After Launch and Just Before Exit (moved from Applications tab, indented)
+        self.path_rows["just_after_launch_path"] = PathConfigRow("just_after_launch_path", add_run_wait=True, repo_items=all_tools)
+        self.path_rows["just_after_launch_path"].enabled_cb.setToolTip("Enable Just After Launch App")
+        self._add_path_row(script_paths_layout, "    Just After Launch:", "just_after_launch_path", self.path_rows["just_after_launch_path"])
+        self.path_rows["just_before_exit_path"] = PathConfigRow("just_before_exit_path", add_run_wait=True, repo_items=all_tools)
+        self.path_rows["just_before_exit_path"].enabled_cb.setToolTip("Enable Just Before Exit App")
+        self._add_path_row(script_paths_layout, "    Just Before Exit:", "just_before_exit_path", self.path_rows["just_before_exit_path"])
+        
         for i in range(1, 4):
             key = f"post{i}_path"
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)

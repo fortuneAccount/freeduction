@@ -205,11 +205,17 @@ class DeploymentTab(QWidget):
 
         self.view_log_button = QPushButton("View Log")
         self.view_log_button.clicked.connect(self.show_log_viewer)
+        self.view_log_button.setFixedWidth(35)
 
         right_layout.addWidget(self.index_sources_button)
         right_layout.addWidget(self.indexing_progress)
-        right_layout.addWidget(self.view_log_button)
         right_layout.addStretch()
+        
+        # Bottom-right aligned View Log button
+        view_log_layout = QHBoxLayout()
+        view_log_layout.addStretch()
+        view_log_layout.addWidget(self.view_log_button)
+        right_layout.addLayout(view_log_layout)
 
         # Add columns to main layout
         database_indexing_layout.addWidget(left_col, 1)
@@ -220,7 +226,7 @@ class DeploymentTab(QWidget):
         creation_options_layout = QVBoxLayout(creation_options_widget)
 
         # Consolidated creation options group
-        creation_group = QGroupBox("Creation Options")
+        creation_group = QGroupBox("Creation Options ▼")
         creation_group_layout = QVBoxLayout(creation_group)
 
         # Scroll area for all checkboxes
@@ -230,7 +236,7 @@ class DeploymentTab(QWidget):
         options_layout = QVBoxLayout(options_widget)
 
         # Metadata & Artwork Options
-        meta_group = QGroupBox("Metadata & Artwork")
+        meta_group = QGroupBox("Metadata & Artwork ▼")
         meta_layout = QGridLayout(meta_group)
 
         self.download_game_json_checkbox = QCheckBox("Download Steam's Game.json")
@@ -255,7 +261,7 @@ class DeploymentTab(QWidget):
         options_layout.addWidget(meta_group)
 
         # Overwrite checkboxes for all items in a grid
-        overwrite_group = QGroupBox("File Overwrite Options")
+        overwrite_group = QGroupBox("File Overwrite Options ▼")
         overwrite_group.setToolTip("Right-click for bulk options")
         overwrite_group.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         overwrite_group.customContextMenuRequested.connect(self.on_overwrite_options_context_menu)
@@ -292,7 +298,7 @@ class DeploymentTab(QWidget):
         general_options_section = AccordionSection("DATABASE INDEXING", database_indexing_widget, start_expanded=True)
         general_options_section.content_height += 75
         creation_section = AccordionSection("CREATION", creation_options_widget)
-        creation_section.content_height += 75
+        creation_section.content_height += 150
 
         main_layout.addWidget(general_options_section)
         main_layout.addWidget(creation_section)
