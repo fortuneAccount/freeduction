@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\Python\\main.py'],
+    ['C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\python\\main.py'],
     pathex=[],
     binaries=[],
     datas=[('C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\site', 'site'), ('C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\assets', 'assets')],
@@ -26,7 +26,7 @@ exe = EXE(
     debug=False,
     bootloader_ignore_signals=False,
     strip=False,
-    upx=True,
+    upx=False,
     upx_exclude=[],
     runtime_tmpdir=None,
     console=False,

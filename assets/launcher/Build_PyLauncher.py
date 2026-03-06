@@ -6,11 +6,9 @@ Supports multiple build presets with different feature sets and sizes.
 Usage: python Build_PyLauncher.py [preset] [modifiers...]
 
 Available presets:
-  - full      : Full-featured build with all dependencies (default)
   - minimal   : Minimal build with hotkeys only (10-15 MB)
   - standard  : Standard build without heavy GUI (20-25 MB)
-  - portable  : Portable build optimized for distribution (15-20 MB)
-  - debug     : Debug build with console and verbose logging
+
 
 Examples:
   python Build_PyLauncher.py minimal
@@ -99,7 +97,7 @@ def get_project_root():
         # Fallback: assume script is in assets/launcher
         return script_path.parent.parent.parent
 
-def build_launcher(preset_name='full'):
+def build_launcher(preset_name='stadard'):
     """Build the launcher with the specified preset and optional modifiers
     
     Args:
@@ -201,12 +199,6 @@ def build_launcher(preset_name='full'):
             print("  - No splash screen or tray menu")
             print("  - Process management uses taskkill fallback")
             print()
-        elif preset_name == 'debug':
-            print("Debug build notes:")
-            print("  - Console window will be visible")
-            print("  - Verbose logging enabled")
-            print("  - Check launcher.log for detailed output")
-            print()
         
     except Exception as e:
         print("-" * 70)
@@ -281,26 +273,24 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  python Build_PyLauncher.py              # Build with 'full' preset (default)
+  python Build_PyLauncher.py              # Build with 'standard' preset (default)
   python Build_PyLauncher.py minimal      # Build minimal version
   python Build_PyLauncher.py --list       # List all available presets
   python Build_PyLauncher.py --clean      # Clean build artifacts
   
 Presets:
-  full      - Full-featured build (50+ MB)
   minimal   - Minimal build with hotkeys (10-15 MB)
   standard  - Standard build without GUI (20-25 MB)
-  portable  - Portable optimized build (15-20 MB)
-  debug     - Debug build with console (50+ MB)
+
         """
     )
     
     parser.add_argument(
         'preset',
         nargs='?',
-        default='full',
+        default='standard',
         choices=list(PRESETS.keys()),
-        help='Build preset to use (default: full)'
+        help='Build preset to use (default: standard)'
     )
     
     parser.add_argument(

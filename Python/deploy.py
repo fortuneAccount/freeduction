@@ -117,6 +117,7 @@ def run_gui(ini_path: Path) -> None:
         from tkinter import ttk
         from tkinter import filedialog
         from tkinter import messagebox
+        from tkinter import scrolledtext
     except Exception as e:
         print("Tkinter not available:", e)
         print("Use --apply or --init-ini instead.")
@@ -255,7 +256,7 @@ def run_gui(ini_path: Path) -> None:
         'skip_c': tk.BooleanVar(value=cfg.getboolean('build', 'skip_c', fallback=False)),
         'skip_application': tk.BooleanVar(value=cfg.getboolean('build', 'skip_application', fallback=False)),
         # Launcher build options
-        'launcher_preset': tk.StringVar(value=cfg.get('launcher_build', 'preset', fallback='full')),
+        'launcher_preset': tk.StringVar(value=cfg.get('launcher_build', 'preset', fallback='standard')),
     }
     
     # Build options grid layout
@@ -317,17 +318,14 @@ def run_gui(ini_path: Path) -> None:
     
     ttk.Label(preset_frame, text="Preset:").pack(side="left", padx=2)
     preset_combo = ttk.Combobox(preset_frame, textvariable=build_vars['launcher_preset'], 
-                                 values=['full', 'minimal', 'standard', 'portable', 'debug'],
+                                 values=['minimal', 'standard'],
                                  state='readonly', width=10)
     preset_combo.pack(side="left", padx=2)
     
     # Preset descriptions
     preset_descriptions = {
-        'full': 'Full',
         'minimal': 'Minimal',
         'standard': 'Standard',
-        'portable': 'Portable',
-        'debug': 'Debug'
     }
     
     preset_desc_label = ttk.Label(preset_frame, text=preset_descriptions.get(build_vars['launcher_preset'].get(), ''))
@@ -337,8 +335,6 @@ def run_gui(ini_path: Path) -> None:
         preset_desc_label.config(text=preset_descriptions.get(build_vars['launcher_preset'].get(), ''))
     
     build_vars['launcher_preset'].trace_add('write', update_preset_desc)
-    
-    from tkinter import scrolledtext
     
     # Global reference for the log window and widget
     log_window_ref = {'win': None, 'widget': None}
@@ -416,202 +412,32 @@ def run_gui(ini_path: Path) -> None:
                 return False
         return True
 
-    def run_build():
+    def run_build_and_release():
         import threading
         import subprocess
         import platform
         import shutil
+
+        # Get all vars from UI
+        save_all()
         
-        onefile = True # Always use onefile
-        dest = build_vars['dest'].get()
+        version = vars.get('VERSION', tk.StringVar(value="")).get()
+        git_user = vars.get('GITUSER', tk.StringVar(value="")).get()
+        rj_proj = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
+        dest_dir_str = build_vars['dest'].get()
+        dest_dir = Path(dest_dir_str)
         workpath = build_vars['workpath'].get()
+        commit_msg = build_vars['commit_msg'].get()
         skip_python = build_vars['skip_python'].get()
         skip_c = build_vars['skip_c'].get()
         skip_application = build_vars['skip_application'].get()
-        rj_proj = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
         
         def worker():
             set_ui_busy(True)
             proc_state['cancelled'] = False
-            sep = ';' if platform.system() == 'Windows' else ':'
-            script_dir = Path(__file__).parent.absolute()
-            project_root = script_dir.parent if script_dir.name == "Python" else script_dir
-            
-            if skip_python and skip_c:
-                log("Skipping all builds as requested.\n")
-                set_ui_busy(False)
-                return
+            log("\n>>> Starting Build & Release Process <<<\n")
 
-            # 1. Main Application Build
-            main_script = project_root / "Python" / "main.py"
-            icon_path = project_root / "assets" / "Joystick.ico"
-            
-            cmd_main = [
-                sys.executable, '-m', 'PyInstaller',
-                str(main_script),
-                f'--name={rj_proj}',
-                '--noconfirm',
-                '--clean',
-                '--windowed',
-                f'--distpath={dest}',
-                f'--workpath={workpath}',
-                f'--add-data={project_root / "site"}{sep}site',
-                f'--add-data={project_root / "assets"}{sep}assets',
-            ]
-            
-            if platform.system() == 'Windows' and icon_path.exists():
-                cmd_main.append(f'--icon={icon_path}')
-            
-            # Always use onefile
-            cmd_main.append('--onefile')
-            
-            # Explicitly disable UPX to prevent LoadLibrary errors
-            cmd_main.append('--noupx')
-            
-            if not skip_python:
-                if not skip_application:
-                    log(f"Starting Main Build (application)...\n")
-                    if not run_cmd_sequence([cmd_main], cwd=project_root):
-                        set_ui_busy(False)
-                        proc_state['proc'] = None
-                        return
-                else:
-                    log("Skipping Main Build (application).\n")
-
-                # 2. Launcher Build
-                if proc_state['cancelled']:
-                    set_ui_busy(False)
-                    return
-
-                # Get launcher build options
-                launcher_preset = build_vars['launcher_preset'].get()
-                
-                # Use Build_PyLauncher.py script
-                build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
-                
-                if build_script.exists():
-                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
-                    
-                    log(f"\nStarting Launcher Build with preset '{launcher_preset}'")
-                    log("...\n")
-                    
-                    if not run_cmd_sequence([cmd_launcher], cwd=project_root):
-                        set_ui_busy(False)
-                        proc_state['proc'] = None
-                        return
-                    
-                    # 3. Copy Launcher
-                    try:
-                        preset_name = {
-                            'full': 'Launcher_full',
-                            'minimal': 'Launcher_minimal',
-                            'standard': 'Launcher_standard',
-                            'portable': 'Launcher_portable',
-                            'debug': 'Launcher_debug'
-                        }.get(launcher_preset, 'Launcher_full')
-                        
-                        src = dest / f"{preset_name}.exe"
-                        dst_dir = project_root / "bin"
-                        dst = dst_dir / "Launcher.python.exe"
-                        
-                        if src.exists():
-                            dst_dir.mkdir(exist_ok=True)
-                            shutil.copy2(src, dst)
-                            log(f"\nCopied {preset_name}.exe to {dst}\n")
-                        else:
-                            log(f"\nError: {preset_name}.exe not found in dist/\n")
-                    except Exception as e:
-                        log(f"\nError copying launcher: {e}\n")
-                else:
-                    log(f"\nError: Build_PyLauncher.py not found at {build_script}\n")
-                    log("Falling back to legacy build method...\n")
-                    
-                    # Legacy fallback
-                    launcher_script = project_root / "Python" / "Launcher.py"
-                    cmd_launcher = [
-                        sys.executable, '-m', 'PyInstaller',
-                        str(launcher_script),
-                        '--name=Launcher',
-                        '--noconfirm',
-                        '--clean',
-                        '--windowed',
-                        '--onefile',
-                        f'--distpath={dest}',
-                        f'--workpath={workpath}',
-                        '--noupx',
-                    ]
-                    
-                    if platform.system() == 'Windows' and icon_path.exists():
-                        cmd_launcher.append(f'--icon={icon_path}')
-
-                    if not run_cmd_sequence([cmd_launcher], cwd=project_root):
-                        set_ui_busy(False)
-                        proc_state['proc'] = None
-                        return
-
-                    # Copy legacy launcher
-                    try:
-                        src = Path(dest) / "Launcher.exe"
-                        dst_dir = project_root / "bin"
-                        dst = dst_dir / "Launcher.python.exe"
-                        
-                        if src.exists():
-                            dst_dir.mkdir(exist_ok=True)
-                            shutil.copy2(src, dst)
-                            log(f"\nCopied Launcher.exe to {dst}\n")
-                        else:
-                            log(f"\nError: Launcher.exe not found in {dest}\n")
-                    except Exception as e:
-                        log(f"\nError copying launcher: {e}\n")
-
-            # 4. Compile C Launcher
-            if skip_c:
-                log("Skipping C Launcher Build.\n")
-                set_ui_busy(False)
-                proc_state['proc'] = None
-                return
-
-            if proc_state['cancelled']:
-                set_ui_busy(False)
-                return
-
-            log(f"\nStarting C Launcher Build...\n")
-            launcher_src_dir = project_root / "assets" / "launcher"
-            
-            if platform.system() == 'Windows':
-                build_script = launcher_src_dir / "Build.bat"
-                cmd_c_build = ["cmd", "/c", str(build_script)]
-            else:
-                build_script = launcher_src_dir / "build.sh"
-                cmd_c_build = ["sh", str(build_script), "--linux"]
-
-            if build_script.exists():
-                if run_cmd_sequence([cmd_c_build], cwd=launcher_src_dir):
-                    log("C Launcher Build Completed.\n")
-            else:
-                log(f"Build script not found: {build_script}\n")
-
-            log("Build Sequence Completed Successfully.\n")
-            set_ui_busy(False)
-            proc_state['proc'] = None
-
-        open_log_window("Build Log")
-        threading.Thread(target=worker, daemon=True).start()
-
-    def run_git():
-        import threading
-        
-        # Save and apply replacements before pushing
-        save_all()
-        
-        msg = build_vars['commit_msg'].get()
-        version = vars.get('VERSION', tk.StringVar(value="")).get()
-        
-        def worker():
-            set_ui_busy(True)
-            proc_state['cancelled'] = False
-            
-            # Check GitHub version
+            # 1. Check GitHub version
             if version:
                 log(f"Checking if version {version} exists on GitHub...\n")
                 try:
@@ -622,12 +448,7 @@ def run_gui(ini_path: Path) -> None:
                         log(f"Version {version} already exists.\n")
                         
                         def show_error_and_increment():
-                            messagebox.showerror("Version Conflict", f"Version {version} already exists on GitHub.\nAuto-incrementing version.")
-                            new_ver = increment_version(version)
-                            if 'VERSION' in vars:
-                                vars['VERSION'].set(new_ver)
-                                save_all()
-                            log(f"Version auto-incremented to {new_ver}.\n")
+                            messagebox.showerror("Version Conflict", f"Version {version} already exists on GitHub.\nPlease increment the version and try again.")
                         
                         root.after(0, show_error_and_increment)
                         set_ui_busy(False)
@@ -636,174 +457,194 @@ def run_gui(ini_path: Path) -> None:
                     log("GH CLI not found, skipping version check.\n")
                 except Exception as e:
                     log(f"Version check failed: {e}\n")
+            
+            if proc_state['cancelled']: set_ui_busy(False); return
 
-            commands = [
-                ["git", "add", "."],
-                ["git", "commit", "-m", msg],
-                ["git", "push", "-f", "-u", "origin", "main"]
-            ]
+            # 2. Run Build
+            sep = ';' if platform.system() == 'Windows' else ':'
+            script_dir = Path(__file__).parent.absolute()
+            project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
             
-            log(f"\nStarting Git Push sequence...\n")
-            if run_cmd_sequence(commands, cwd=Path.cwd()):
-                log("Git sequence completed successfully.\n")
-            
-            set_ui_busy(False)
-            proc_state['proc'] = None
-            
-        open_log_window("Git Push Log")
-        threading.Thread(target=worker, daemon=True).start()
+            if not skip_python:
+                # Main Application Build
+                if not skip_application:
+                    log(f"Starting Main Build (application)...\n")
+                    main_script = script_dir / "main.py"
+                    icon_path = project_root / "assets" / "Joystick.ico"
+                    cmd_main = [
+                        sys.executable, '-m', 'PyInstaller', str(main_script),
+                        f'--name={rj_proj}', '--noconfirm', '--clean', '--windowed',
+                        f'--distpath={dest_dir_str}', f'--workpath={workpath}',
+                        f'--add-data={project_root / "site"}{sep}site',
+                        f'--add-data={project_root / "assets"}{sep}assets',
+                        '--onefile', '--noupx'
+                    ]
+                    if platform.system() == 'Windows' and icon_path.exists():
+                        cmd_main.append(f'--icon={icon_path}')
+                    
+                    if not run_cmd_sequence([cmd_main], cwd=project_root):
+                        set_ui_busy(False); proc_state['proc'] = None; return
+                else:
+                    log("Skipping Main Build (application).\n")
 
-    def run_release():
-        import threading
-        import subprocess
-        import shutil
-        
-        version = vars.get('VERSION', tk.StringVar(value="")).get()
-        git_user = vars.get('GITUSER', tk.StringVar(value="")).get()
-        rj_proj = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
-        dest_dir = Path(build_vars['dest'].get())
-        msg = build_vars['commit_msg'].get()
-        
-        def worker():
-            set_ui_busy(True)
-            proc_state['cancelled'] = False
-            log("\nStarting Release sequence...\n")
-            
-            # 0. Calculate SHA1 of Executable (Pre-compression)
-            if proc_state['cancelled']: 
-                set_ui_busy(False)
-                return
+                if proc_state['cancelled']: set_ui_busy(False); return
 
+                # Launcher Build
+                launcher_preset = build_vars['launcher_preset'].get()
+                build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
+                if build_script.exists():
+                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
+                    log(f"\nStarting Launcher Build with preset '{launcher_preset}'...\n")
+                    if not run_cmd_sequence([cmd_launcher], cwd=project_root):
+                        set_ui_busy(False); proc_state['proc'] = None; return
+                    
+                    # Copy Launcher
+                    try:
+                        preset_name = {'minimal': 'Launcher_minimal', 'standard': 'Launcher_standard'}.get(launcher_preset, 'Launcher_standard')
+                        src = dest_dir / f"{preset_name}.exe"
+                        dst_dir_bin = project_root / "bin"
+                        dst = dst_dir_bin / "Launcher.python.exe"
+                        if src.exists():
+                            dst_dir_bin.mkdir(exist_ok=True)
+                            shutil.copy2(src, dst)
+                            log(f"\nCopied {preset_name}.exe to {dst}\n")
+                        else:
+                            log(f"\nError: {preset_name}.exe not found in {dest_dir_str}\n")
+                    except Exception as e:
+                        log(f"\nError copying launcher: {e}\n")
+                else:
+                    log(f"\nError: Build_PyLauncher.py not found. Cannot build launcher.\n")
+            else:
+                log("Skipping Python builds.\n")
+
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # Compile C Launcher
+            if not skip_c:
+                log(f"\nStarting C Launcher Build...\n")
+                launcher_src_dir = project_root / "assets" / "launcher"
+                if platform.system() == 'Windows':
+                    build_script_c = launcher_src_dir / "Build.bat"
+                    cmd_c_build = ["cmd", "/c", str(build_script_c)]
+                else:
+                    build_script_c = launcher_src_dir / "build.sh"
+                    cmd_c_build = ["sh", str(build_script_c), "--linux"]
+                
+                if build_script_c.exists():
+                    if run_cmd_sequence([cmd_c_build], cwd=launcher_src_dir):
+                        log("C Launcher Build Completed.\n")
+                else:
+                    log(f"Build script not found: {build_script_c}\n")
+            else:
+                log("Skipping C Launcher build.\n")
+
+            log("Build phase completed.\n")
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # 3. Package and Release
+            log("\nStarting Packaging and Release phase...\n")
+
+            # Calculate SHA1
             log("Calculating SHA1 of executable...\n")
             exe_name = f"{rj_proj}.exe" if platform.system() == "Windows" else f"{rj_proj}"
             exe_path = None
-            for dirpath, dirs, files in os.walk(dest_dir):
+            for dirpath, _, files in os.walk(dest_dir):
                 if exe_name in files:
                     exe_path = Path(dirpath) / exe_name
                     break
             
             sha1_hash = ""
             if exe_path and exe_path.exists():
-                log(f"Found executable: {exe_path}\n")
+                log(f"Found executable at: {exe_path}\n")
                 sha1 = hashlib.sha1()
                 with open(exe_path, 'rb') as f:
-                    while True:
-                        data = f.read(65536)
-                        if not data: break
-                        sha1.update(data)
+                    while chunk := f.read(65536):
+                        sha1.update(chunk)
                 sha1_hash = sha1.hexdigest()
                 log(f"Executable SHA1: {sha1_hash}\n")
             else:
-                log(f"Executable {exe_name} not found in {dest_dir}. Skipping SHA1.\n")
-            
-            # 1. Compress
-            if proc_state['cancelled']: 
+                log(f"Executable '{exe_name}' not found in '{dest_dir_str}'. Build might have failed. Aborting release.\n")
                 set_ui_busy(False)
                 return
 
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # Compress
             archive_name = "portable.7z"
             archive_path = Path.cwd() / archive_name
-            
-            # Find 7z.exe
-            script_dir = Path(__file__).parent.absolute()
-            project_root = script_dir.parent if script_dir.name == "Python" else script_dir
             seven_z = project_root / "bin" / "7z.exe"
             
             if seven_z.exists() and dest_dir.exists():
                 log(f"Compressing {dest_dir} to {archive_name}...\n")
-                # Remove existing
-                if archive_path.exists():
-                    archive_path.unlink()
-                    
-                cmd = [str(seven_z), "a", str(archive_path), f"{dest_dir}\\*"]
-                try:
-                    # Use Popen to allow cancellation
-                    proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                    proc_state['proc'] = proc
-                    proc.wait()
-                    if proc.returncode != 0: raise Exception("7z returned non-zero")
-                    log("Compression complete.\n")
-                except Exception as e:
-                    log(f"Compression failed: {e}\n")
-                    set_ui_busy(False)
-                    return
+                if archive_path.exists(): archive_path.unlink()
+                
+                cmd_7z = [str(seven_z), "a", str(archive_path), f"{dest_dir_str}\\*"]
+                if not run_cmd_sequence([cmd_7z]):
+                    set_ui_busy(False); return
+                log("Compression complete.\n")
             else:
-                log("7z.exe or dist directory not found.\n")
-                set_ui_busy(False)
-                return
+                log("7z.exe or dist directory not found. Cannot create archive.\n")
+                set_ui_busy(False); return
 
-            # 2. Calculate Size
-            if proc_state['cancelled']:
-                set_ui_busy(False)
-                return
-            
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # Calculate Size and update UI
             size_mb = os.path.getsize(archive_path) / (1024 * 1024)
             
-            # 3. Update GUI vars (thread-safe update)
-            def update_ui():
+            def update_ui_for_release():
                 if 'RSHA1' in vars and sha1_hash: vars['RSHA1'].set(sha1_hash)
                 if 'RSIZE' in vars: vars['RSIZE'].set(f"{size_mb:.2f}")
                 if 'PORTABLE' in vars and git_user and rj_proj and version:
-                    url = f"https://github.com/{git_user}/{rj_proj}/releases/download/Portable/{archive_name}"
+                    url = f"https://github.com/{git_user}/{rj_proj}/releases/download/{version}/{archive_name}"
                     vars['PORTABLE'].set(url)
-                save_all() # Save INI and apply replacements
-            root.after(0, update_ui)
+                save_all()
+            root.after(0, update_ui_for_release)
             
-            # 4. Git Push & Release
-            # We wait a bit for UI update to save files
             import time
             time.sleep(1)
-            
-            # Trigger existing git push logic
-            if proc_state['cancelled']: 
-                set_ui_busy(False)
-                return
 
-            commands = [
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # Git Push & Release
+            log("Committing changes and pushing to Git...\n")
+            git_commands = [
                 ["git", "add", "."],
-                ["git", "commit", "-m", msg],
+                ["git", "commit", "-m", commit_msg],
                 ["git", "push", "-f", "-u", "origin", "main"]
             ]
-            if not run_cmd_sequence(commands, cwd=Path.cwd()):
-                set_ui_busy(False)
-                return
-            
-            log("Replacing GitHub Release...\n")
+            if not run_cmd_sequence(git_commands, cwd=Path.cwd()):
+                set_ui_busy(False); return
+
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            log("Creating GitHub Release...\n")
             try:
-                if proc_state['cancelled']: raise Exception("Cancelled")
+                release_cmd = ["gh", "release", "create", version, str(archive_path), "--title", version, "--notes", "Automated release"]
+                if not run_cmd_sequence([release_cmd], cwd=Path.cwd()):
+                    log("GitHub release creation failed.\n")
+                    set_ui_busy(False); return
                 
-                # Check if release exists
-                check_cmd = ["gh", "release", "view", version]
-                check_proc = subprocess.run(check_cmd, cwd=str(Path.cwd()), stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                
-                if check_proc.returncode == 0:
-                    log(f"Release {version} exists. Deleting...\n")
-                    subprocess.run(["gh", "release", "delete", version, "-y"], cwd=str(Path.cwd()), stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                else:
-                    log(f"Release {version} does not exist. Creating new...\n")
-                
-                # Create new release
-                subprocess.run(["gh", "release", "create", version, str(archive_path), "--title", version, "--notes", "Automated release"], cwd=str(Path.cwd()), check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-                log(f"Release {version} uploaded successfully.\n")
+                log(f"Release {version} created successfully.\n")
                 
                 # Auto-increment version
                 new_ver = increment_version(version)
                 if new_ver != version:
-                    def update_ver():
+                    def update_ver_ui():
                         if 'VERSION' in vars:
                             vars['VERSION'].set(new_ver)
                             save_all()
                             log(f"Version auto-incremented to {new_ver}\n")
-                    root.after(0, update_ver)
+                    root.after(0, update_ver_ui)
             except FileNotFoundError:
                 log("GH CLI not found. Skipping upload.\n")
             except Exception as e:
                 log(f"Release upload failed: {e}\n")
             finally:
+                log("\n>>> Build & Release Process Completed <<<\n")
                 set_ui_busy(False)
                 proc_state['proc'] = None
 
-        open_log_window("Release Log")
+        open_log_window("Build & Release Log")
         threading.Thread(target=worker, daemon=True).start()
 
     # Button Row in build container
@@ -812,13 +653,10 @@ def run_gui(ini_path: Path) -> None:
     btn_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(2, 0))
     
     ttk.Button(btn_row, text="Apply & Save", command=save_all).pack(side="left", padx=2)
-    ttk.Button(btn_row, text="Compile", command=run_build).pack(side="left", padx=2)
-    ttk.Button(btn_row, text="Release", command=run_release).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Build & Release", command=run_build_and_release).pack(side="left", padx=2)
     
     btn_cancel = ttk.Button(btn_row, text="Cancel", command=cancel_process, state='disabled')
     btn_cancel.pack(side="left", padx=2)
-    
-    ttk.Button(btn_row, text="Push", command=run_git).pack(side="right", padx=2)
 
     def on_close():
         save_all()

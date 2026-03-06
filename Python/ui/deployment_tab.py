@@ -203,7 +203,7 @@ class DeploymentTab(QWidget):
         self.index_sources_button.clicked.connect(self.index_sources_requested.emit)
         self.index_sources_button.setMinimumHeight(40)
 
-        self.view_log_button = QPushButton("View Log")
+        self.view_log_button = QPushButton("Log")
         self.view_log_button.clicked.connect(self.show_log_viewer)
         self.view_log_button.setFixedWidth(35)
 
