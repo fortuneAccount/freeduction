@@ -13,7 +13,6 @@ Available presets:
 Examples:
   python Build_PyLauncher.py minimal
   python Build_PyLauncher.py standard
-  python Build_PyLauncher.py portable
 """
 
 import sys
@@ -21,6 +20,7 @@ import os
 import argparse
 import shutil
 from pathlib import Path
+import configparser
 
 # Add parent directory to path to import PyInstaller
 sys.path.insert(0, str(Path(__file__).parent.parent.parent))
@@ -33,44 +33,7 @@ except ImportError:
 
 
 # ============================================================================
-# BUILD PRESETS
-# ============================================================================
-
-PRESETS = {
-   'standard': {
-        'name': 'Launcher_standard',
-        'description': 'Standard build with tray menu and process management',
-        'console': False,
-        'env_vars': {},
-        'excluded_modules': [
-            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
-            'matplotlib', 'numpy', 'pandas', 'scipy', 'tensorflow', 'torch',
-            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
-        ],
-        'extra_args': [],
-        'expected_size': '20-25 MB',
-    },
-    
-    'minimal': {
-        'name': 'Launcher_minimal',
-        'description': 'Minimal build with tray menu',
-        'console': False,
-        'env_vars': {'LAUNCHER_MINIMAL': '1'},
-        'excluded_modules': [
-            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
-            'psutil', 'matplotlib', 'numpy', 'pandas', 'Python.hotkey_handler',
-            'Python.managers.plugin_manager',
-            'Python.plugins', 'Python.marketplace',
-            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
-        ],
-        'extra_args': [],
-        'expected_size': '10-15 MB',
-    },
-}
-
-
-# ============================================================================
-# BUILD FUNCTIONS
+# CONFIGURATION
 # ============================================================================
 
 def get_project_root():
@@ -96,6 +59,65 @@ def get_project_root():
         
         # Fallback: assume script is in assets/launcher
         return script_path.parent.parent.parent
+
+project_root = get_project_root()
+config_path = project_root / 'deploy_ui.ini'
+
+# Default paths
+dest_dir_str = str(project_root / 'dist')
+workpath = str(project_root / 'build')
+
+if config_path.exists():
+    cfg = configparser.ConfigParser()
+    cfg.read(config_path)
+    if 'build' in cfg:
+        dest_dir_str = cfg['build'].get('dest', dest_dir_str)
+        workpath = cfg['build'].get('workpath', workpath)
+
+# ============================================================================
+# BUILD PRESETS
+# ============================================================================
+
+PRESETS = {
+   'standard': {
+        'name': 'Launcher_standard',
+        'description': 'Standard build with tray menu and process management',
+        'console': False,
+        'env_vars': {},
+        'excluded_modules': [
+            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
+            'matplotlib', 'numpy', 'pandas', 'scipy', 'tensorflow', 'torch',
+            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
+        ],
+        'extra_args': [
+            f'--distpath={dest_dir_str}', f'--workpath={workpath}'
+        ],
+        'expected_size': '20-25 MB',
+    },
+    
+    'minimal': {
+        'name': 'Launcher_minimal',
+        'description': 'Minimal build with tray menu',
+        'console': False,
+        'env_vars': {'LAUNCHER_MINIMAL': '1'},
+        'excluded_modules': [
+            'pygame', 'PyQt5', 'PyQt6', 'PySide2', 'PySide6', 'wx',
+            'psutil', 'matplotlib', 'numpy', 'pandas', 'Python.hotkey_handler',
+            'Python.managers.plugin_manager',
+            'Python.plugins', 'Python.marketplace',
+            'test', 'unittest', 'pydoc', 'email', 'http', 'xml', 'distutils',
+        ],
+        'extra_args': [
+            f'--distpath={dest_dir_str}', f'--workpath={workpath}'
+        ],
+        'expected_size': '10-15 MB',
+    },
+}
+
+
+# ============================================================================
+# BUILD FUNCTIONS
+# ============================================================================
 
 def build_launcher(preset_name='stadard'):
     """Build the launcher with the specified preset and optional modifiers

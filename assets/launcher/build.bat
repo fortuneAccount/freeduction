@@ -1,13 +1,23 @@
 REM @echo off
 setlocal enabledelayedexpansion
 
+for /f "delims=" %%a in ('cygpath -m /') do (
+	if "%%~a" == "" break
+	set "MSYS2=%%~a"
+	"%MSYS2%\msys2_shell.cmd"  -defterm -where "%CD%" -no-start -mingw64 -shell bash -c 'Build.sh --windows'
+)
+if "%MSYS2%" NEQ "" exit /b
+
+
+
 if not defined VSCMD_VER (
 	for /f "delims=" %%a in ('dir /b/a-d/s "%programfiles%\Microsoft Visual Studio\*vcvars64.bat"') do (
-		set VSCMD_VER=%%~a
+		set VSCMD_VER=%%~a -defterm -where "C:\users\jesse\documents\
+github\freeduction" -no-start -mingw64
 		break
 	)
 )
-if not defined VSCMD_VER (
+if not defined  -shell bash -c 'your_command_here'VSCMD_VER (
 	for /f "delims=" %%a in ('dir /b/a-d/s "%programfiles% (x86)\Microsoft Visual Studio\*vcvars64.bat"') do (
 		set VSCMD_VER=%%~a
 		break
