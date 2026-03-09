@@ -203,6 +203,8 @@ def run_gui(ini_path: Path) -> None:
         cfg["build"]["skip_python"] = str(build_vars['skip_python'].get())
         cfg["build"]["skip_c"] = str(build_vars['skip_c'].get())
         cfg["build"]["skip_application"] = str(build_vars['skip_application'].get())
+        cfg["build"]["clean_build"] = str(build_vars['clean_build'].get())
+        cfg["build"]["default_launcher"] = build_vars['default_launcher'].get()
         
         # Save launcher build options
         cfg["launcher_build"]["preset"] = build_vars['launcher_preset'].get()
@@ -255,6 +257,8 @@ def run_gui(ini_path: Path) -> None:
         'skip_python': tk.BooleanVar(value=cfg.getboolean('build', 'skip_python', fallback=False)),
         'skip_c': tk.BooleanVar(value=cfg.getboolean('build', 'skip_c', fallback=False)),
         'skip_application': tk.BooleanVar(value=cfg.getboolean('build', 'skip_application', fallback=False)),
+        'clean_build': tk.BooleanVar(value=cfg.getboolean('build', 'clean_build', fallback=True)),
+        'default_launcher': tk.StringVar(value=cfg.get('build', 'default_launcher', fallback='C')),
         # Launcher build options
         'launcher_preset': tk.StringVar(value=cfg.get('launcher_build', 'preset', fallback='standard')),
     }
@@ -302,12 +306,22 @@ def run_gui(ini_path: Path) -> None:
     ttk.Checkbutton(skip_frame, text="Skip Python", variable=build_vars['skip_python']).pack(side="left", padx=2)
     ttk.Checkbutton(skip_frame, text="Skip App", variable=build_vars['skip_application']).pack(side="left", padx=2)
     ttk.Checkbutton(skip_frame, text="Skip C", variable=build_vars['skip_c']).pack(side="left", padx=2)
+    ttk.Checkbutton(skip_frame, text="Clean Build", variable=build_vars['clean_build']).pack(side="left", padx=2)
     
     row += 1
     
     # Launcher Build Options
     launcher_frame = ttk.LabelFrame(build_container, text="Launcher Options", padding=4)
     launcher_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(0, 2))
+    row += 1
+
+    # Default Launcher Executable
+    launcher_type_frame = ttk.LabelFrame(build_container, text="Default Launcher Executable", padding=4)
+    launcher_type_frame.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(2, 2))
+    ttk.Radiobutton(launcher_type_frame, text="C Launcher", variable=build_vars['default_launcher'], value='C').pack(side="left", padx=10)
+    ttk.Radiobutton(launcher_type_frame, text="Python Launcher", variable=build_vars['default_launcher'], value='Python').pack(side="left", padx=10)
+
+    row += 1
     
     # Launcher options in two columns
     launcher_frame.grid_columnconfigure(0, weight=1)
@@ -431,11 +445,41 @@ def run_gui(ini_path: Path) -> None:
         skip_python = build_vars['skip_python'].get()
         skip_c = build_vars['skip_c'].get()
         skip_application = build_vars['skip_application'].get()
+        clean_build = build_vars['clean_build'].get()
+        default_launcher = build_vars['default_launcher'].get()
         
         def worker():
             set_ui_busy(True)
             proc_state['cancelled'] = False
             log("\n>>> Starting Build & Release Process <<<\n")
+
+            # 0. Clean directories if requested
+            if clean_build:
+                log("Cleaning previous build artifacts...\n")
+                archive_path_to_clean = Path.cwd() / "portable.7z"
+                
+                if dest_dir.exists() and dest_dir.is_dir():
+                    log(f"Removing destination directory: {dest_dir}\n")
+                    try:
+                        shutil.rmtree(dest_dir)
+                    except Exception as e:
+                        log(f"Could not remove destination directory: {e}\n")
+                
+                workpath_path = Path(workpath)
+                if workpath_path.exists() and workpath_path.is_dir():
+                    log(f"Removing work directory: {workpath_path}\n")
+                    try:
+                        shutil.rmtree(workpath_path)
+                    except Exception as e:
+                        log(f"Could not remove work directory: {e}\n")
+                
+                if archive_path_to_clean.exists():
+                    log(f"Removing previous archive: {archive_path_to_clean}\n")
+                    try:
+                        archive_path_to_clean.unlink()
+                    except Exception as e:
+                        log(f"Could not remove previous archive: {e}\n")
+                log("Cleaning complete.\n")
 
             # 1. Check GitHub version
             if version:
@@ -465,6 +509,8 @@ def run_gui(ini_path: Path) -> None:
             script_dir = Path(__file__).parent.absolute()
             project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
             
+            python_launcher_built_path = None
+            
             if not skip_python:
                 # Main Application Build
                 if not skip_application:
@@ -493,25 +539,19 @@ def run_gui(ini_path: Path) -> None:
                 launcher_preset = build_vars['launcher_preset'].get()
                 build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
                 if build_script.exists():
-                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
                     log(f"\nStarting Launcher Build with preset '{launcher_preset}'...\n")
+                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
                     if not run_cmd_sequence([cmd_launcher], cwd=project_root):
                         set_ui_busy(False); proc_state['proc'] = None; return
                     
-                    # Copy Launcher
-                    try:
-                        preset_name = {'minimal': 'Launcher_minimal', 'standard': 'Launcher_standard'}.get(launcher_preset, 'Launcher_standard')
-                        src = dest_dir / f"{preset_name}.exe"
-                        dst_dir_bin = project_root / "bin"
-                        dst = dst_dir_bin / "Launcher.python.exe"
-                        if src.exists():
-                            dst_dir_bin.mkdir(exist_ok=True)
-                            shutil.copy2(src, dst)
-                            log(f"\nCopied {preset_name}.exe to {dst}\n")
-                        else:
-                            log(f"\nError: {preset_name}.exe not found in {dest_dir_str}\n")
-                    except Exception as e:
-                        log(f"\nError copying launcher: {e}\n")
+                    # Store path to the built python launcher for later
+                    preset_name = {'minimal': 'Launcher_minimal', 'standard': 'Launcher_standard'}.get(launcher_preset, 'Launcher_standard')
+                    src = dest_dir / f"{preset_name}.exe"
+                    if src.exists():
+                        python_launcher_built_path = src
+                        log(f"Python launcher built successfully at: {src}\n")
+                    else:
+                        log(f"\nError: {preset_name}.exe not found in {dest_dir_str} after build.\n")
                 else:
                     log(f"\nError: Build_PyLauncher.py not found. Cannot build launcher.\n")
             else:
@@ -520,9 +560,10 @@ def run_gui(ini_path: Path) -> None:
             if proc_state['cancelled']: set_ui_busy(False); return
 
             # Compile C Launcher
+            c_launcher_built = False
+            launcher_src_dir = project_root / "assets" / "launcher"
             if not skip_c:
                 log(f"\nStarting C Launcher Build...\n")
-                launcher_src_dir = project_root / "assets" / "launcher"
                 if platform.system() == 'Windows':
                     build_script_c = launcher_src_dir / "Build.bat"
                     cmd_c_build = ["cmd", "/c", str(build_script_c)]
@@ -531,12 +572,63 @@ def run_gui(ini_path: Path) -> None:
                     cmd_c_build = ["sh", str(build_script_c), "--linux"]
                 
                 if build_script_c.exists():
-                    if run_cmd_sequence([cmd_c_build], cwd=launcher_src_dir):
+                    if run_cmd_sequence([cmd_c_build], cwd=launcher_src_dir): # This returns False on failure
                         log("C Launcher Build Completed.\n")
+                        c_launcher_built = True
+                    else:
+                        log("\nC Launcher build failed. Halting process.\n")
+                        set_ui_busy(False); proc_state['proc'] = None; return
                 else:
                     log(f"Build script not found: {build_script_c}\n")
             else:
                 log("Skipping C Launcher build.\n")
+
+            # Manage Launcher Executables
+            log("\nManaging launcher executables...\n")
+            bin_dir = project_root / "bin"
+            bin_dir.mkdir(exist_ok=True)
+            c_launcher_src_path = launcher_src_dir / "Launcher.exe"
+
+            # Define final destinations
+            c_launcher_final_default = bin_dir / "Launcher.exe"
+            c_launcher_final_alt = bin_dir / "Launcher.c.exe"
+            py_launcher_final_default = bin_dir / "Launcher.exe"
+            py_launcher_final_alt = bin_dir / "Launcher.py.exe"
+
+            # Clean up previous versions in bin to avoid conflicts
+            for p in [c_launcher_final_default, c_launcher_final_alt, py_launcher_final_alt]:
+                if p.exists():
+                    try:
+                        p.unlink()
+                    except OSError as e:
+                        log(f"Could not remove old launcher {p}: {e}\n")
+
+            if default_launcher == 'C':
+                log("Setting C Launcher as default.\n")
+                if c_launcher_built and c_launcher_src_path.exists():
+                    shutil.move(str(c_launcher_src_path), str(c_launcher_final_default))
+                    log(f"  - C Launcher set as default: {c_launcher_final_default}\n")
+                else:
+                    log("  - C Launcher source not found or build skipped/failed.\n")
+                
+                if python_launcher_built_path and python_launcher_built_path.exists():
+                    shutil.copy2(str(python_launcher_built_path), str(py_launcher_final_alt))
+                    log(f"  - Python Launcher set as alternate: {py_launcher_final_alt}\n")
+                else:
+                    log("  - Python Launcher source not found or build skipped/failed.\n")
+            else:  # Python is default
+                log("Setting Python Launcher as default.\n")
+                if python_launcher_built_path and python_launcher_built_path.exists():
+                    shutil.copy2(str(python_launcher_built_path), str(py_launcher_final_default))
+                    log(f"  - Python Launcher set as default: {py_launcher_final_default}\n")
+                else:
+                    log("  - Python Launcher source not found or build skipped/failed.\n")
+
+                if c_launcher_built and c_launcher_src_path.exists():
+                    shutil.move(str(c_launcher_src_path), str(c_launcher_final_alt))
+                    log(f"  - C Launcher set as alternate: {c_launcher_final_alt}\n")
+                else:
+                    log("  - C Launcher source not found or build skipped/failed.\n")
 
             log("Build phase completed.\n")
             if proc_state['cancelled']: set_ui_busy(False); return
@@ -648,7 +740,6 @@ def run_gui(ini_path: Path) -> None:
         threading.Thread(target=worker, daemon=True).start()
 
     # Button Row in build container
-    row += 1
     btn_row = ttk.Frame(build_container, padding=(0, 4))
     btn_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(2, 0))
     

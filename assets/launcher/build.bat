@@ -1,10 +1,18 @@
 REM @echo off
 setlocal enabledelayedexpansion
 
+for /f "delims=" %%a in ('echo."%CD%"') do (
+	set "msystring=%%~a"
+	set "msystring=!msystring:\=/!"
+	set "clean=!msystring::=!"
+	set "mstring=/!clean!"
+)
 for /f "delims=" %%a in ('cygpath -m /') do (
-	if "%%~a" == "" break
+	if "%%~a" == "" (
+		break
+	)
 	set "MSYS2=%%~a"
-	"%MSYS2%\msys2_shell.cmd"  -defterm -where "%CD%" -no-start -mingw64 -shell bash -c 'Build.sh --windows'
+	"!MSYS2!msys2_shell.cmd" -mingw64 -defterm -no-start -here -c "%mstring%/Build.sh --windows"
 )
 if "%MSYS2%" NEQ "" exit /b
 
