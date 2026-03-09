@@ -64,15 +64,18 @@ project_root = get_project_root()
 config_path = project_root / 'deploy_ui.ini'
 
 # Default paths
-dest_dir_str = str(project_root / 'dist')
 workpath = str(project_root / 'build')
 
 if config_path.exists():
     cfg = configparser.ConfigParser()
     cfg.read(config_path)
     if 'build' in cfg:
-        dest_dir_str = cfg['build'].get('dest', dest_dir_str)
         workpath = cfg['build'].get('workpath', workpath)
+
+# Define a dedicated output path for the python launcher inside the main build folder
+# This prevents it from being included in the main application's dist folder and final archive.
+py_launcher_dist_path = Path(workpath) / 'py_launcher_dist'
+dest_dir_str = str(py_launcher_dist_path)
 
 # ============================================================================
 # BUILD PRESETS

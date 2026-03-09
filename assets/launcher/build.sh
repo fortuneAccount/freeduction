@@ -62,11 +62,3 @@ $CC $CFLAGS \
     $LDFLAGS
 
 echo "Built $OUT"
-if [ "$MODE" = "windows" ]; then
-    mv -f launcher.exe ../../bin/Launcher.exe
-elif [ "$MODE" = "linux" ]; then
-    mv -f launcher ../../bin/Launcher
-else
-    # auto
-    echo "Move the launcher into the /../bin directory"
-fi

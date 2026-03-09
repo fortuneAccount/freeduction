@@ -545,13 +545,16 @@ def run_gui(ini_path: Path) -> None:
                         set_ui_busy(False); proc_state['proc'] = None; return
                     
                     # Store path to the built python launcher for later
+                    # It is built into a dedicated directory to avoid being in the main dist folder.
                     preset_name = {'minimal': 'Launcher_minimal', 'standard': 'Launcher_standard'}.get(launcher_preset, 'Launcher_standard')
-                    src = dest_dir / f"{preset_name}.exe"
+                    py_launcher_dist_path = Path(workpath) / 'py_launcher_dist'
+                    src = py_launcher_dist_path / f"{preset_name}.exe"
+
                     if src.exists():
                         python_launcher_built_path = src
                         log(f"Python launcher built successfully at: {src}\n")
                     else:
-                        log(f"\nError: {preset_name}.exe not found in {dest_dir_str} after build.\n")
+                        log(f"\nError: {preset_name}.exe not found in {py_launcher_dist_path} after build.\n")
                 else:
                     log(f"\nError: Build_PyLauncher.py not found. Cannot build launcher.\n")
             else:
@@ -663,7 +666,9 @@ def run_gui(ini_path: Path) -> None:
 
             # Compress
             archive_name = "portable.7z"
-            archive_path = Path.cwd() / archive_name
+            # Place the archive in the parent of the dist directory.
+            # This allows the user to place build artifacts outside the git repo.
+            archive_path = dest_dir.parent / archive_name
             seven_z = project_root / "bin" / "7z.exe"
             
             if seven_z.exists() and dest_dir.exists():

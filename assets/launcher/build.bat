@@ -58,5 +58,3 @@ if errorlevel 1 (
 )
 
 echo Build succeeded
-
-move /y Launcher.exe ..\..\bin\Launcher.exe
