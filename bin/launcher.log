@@ -1,0 +1,116 @@
+2026-03-03 00:05:09,732 - INFO - Launcher started. Home directory: C:\Users\jesse\Documents\gitHub\freeduction\bin
+2026-03-03 00:05:09,741 - WARNING - The environment does not allow connecting to the splash screen. Did bootloader fail to initialize it?
+Traceback (most recent call last):
+  File "pyi_splash.py", line 108, in <module>
+  File "<frozen os>", line 714, in __getitem__
+KeyError: '_PYI_SPLASH_IPC'
+2026-03-03 00:05:09,742 - INFO - Progress 10%: Initializing...
+2026-03-03 00:05:09,742 - INFO - Progress 20%: Parsing arguments...
+2026-03-03 00:05:09,742 - INFO - Launching: C:\Users\jesse\Documents\gitHub\freeduction\Profiles\Microvania\Microvania.lnk
+2026-03-03 00:05:09,742 - INFO - Progress 30%: Checking permissions...
+2026-03-03 00:05:09,742 - INFO - Progress 40%: Checking instances...
+2026-03-03 00:05:09,742 - WARNING - Cannot check if PID 6848 is running (psutil not available)
+2026-03-03 00:05:09,742 - INFO - Progress 50%: Loading configuration...
+2026-03-03 00:05:09,808 - INFO - Progress 70%: Detecting input devices...
+2026-03-03 00:05:09,808 - INFO - Progress 90%: Preparing execution sequences...
+2026-03-03 00:05:15,107 - INFO - Tray menu started
+2026-03-03 00:05:15,107 - INFO - Tray menu initialized
+2026-03-03 00:05:15,108 - INFO - Progress 100%: Ready to launch!
+2026-03-03 00:05:15,115 - INFO - Executing launch_sequence...
+2026-03-03 00:05:15,115 - INFO - Executing sequence: launch_sequence
+2026-03-03 00:05:15,116 - INFO -   - Running: Cloud-Sync
+2026-03-03 00:05:15,117 - INFO -   - Action: Cloud-Sync
+2026-03-03 00:05:15,117 - INFO -   - Unknown action: Cloud-Sync
+2026-03-03 00:05:15,118 - WARNING - Unknown action in sequence: Cloud-Sync
+2026-03-03 00:05:15,118 - INFO -   - Running: mount-disc
+2026-03-03 00:05:15,118 - INFO -   - Action: mount-disc
+2026-03-03 00:05:15,118 - INFO -   - Running: Kill-Game
+2026-03-03 00:05:15,119 - INFO -   - Action: Kill-Game
+2026-03-03 00:05:15,119 - INFO - Killing game process: Microvania_Win.exe
+2026-03-03 00:05:20,674 - ERROR - Failed to kill Microvania_Win.exe: Command '['taskkill', '/F', '/IM', 'Microvania_Win.exe']' timed out after 5 seconds
+2026-03-03 00:05:20,675 - INFO -   - Running: Kill-List
+2026-03-03 00:05:20,675 - INFO -   - Action: Kill-List
+2026-03-03 00:05:20,675 - INFO -   - Running: Controller-Mapper
+2026-03-03 00:05:20,675 - INFO -   - Action: Controller-Mapper
+2026-03-03 00:05:20,675 - INFO -   - Unknown action: Controller-Mapper
+2026-03-03 00:05:20,675 - WARNING - Unknown action in sequence: Controller-Mapper
+2026-03-03 00:05:20,676 - INFO -   - Running: Monitor-Config
+2026-03-03 00:05:20,676 - INFO -   - Action: Monitor-Config
+2026-03-03 00:05:20,676 - INFO -   - Unknown action: Monitor-Config
+2026-03-03 00:05:20,677 - WARNING - Unknown action in sequence: Monitor-Config
+2026-03-03 00:05:20,677 - INFO -   - Running: No-TB
+2026-03-03 00:05:20,677 - INFO -   - Action: No-TB
+2026-03-03 00:05:20,677 - INFO -   - Running: Pre1
+2026-03-03 00:05:20,677 - INFO -   - Action: Pre1
+2026-03-03 00:05:20,677 - INFO -   - Running: Borderless
+2026-03-03 00:05:20,677 - INFO -   - Action: Borderless
+2026-03-03 00:05:20,678 - INFO -   - Unknown action: Borderless
+2026-03-03 00:05:20,678 - WARNING - Unknown action in sequence: Borderless
+2026-03-03 00:05:20,678 - INFO -   - Running: Pre2
+2026-03-03 00:05:20,678 - INFO -   - Action: Pre2
+2026-03-03 00:05:20,678 - INFO -   - Running: Pre3
+2026-03-03 00:05:20,678 - INFO -   - Action: Pre3
+2026-03-03 00:05:20,679 - INFO -   - Running: Cloud-Sync
+2026-03-03 00:05:20,679 - INFO -   - Action: Cloud-Sync
+2026-03-03 00:05:20,679 - INFO -   - Unknown action: Cloud-Sync
+2026-03-03 00:05:20,679 - WARNING - Unknown action in sequence: Cloud-Sync
+2026-03-03 00:05:20,679 - INFO - Launching game: Microvania
+2026-03-03 00:05:20,680 - INFO - Executing: "Microvania_Win.exe"
+2026-03-03 00:05:38,223 - INFO - Change config requested from tray menu (GUI)
+2026-03-03 00:05:50,893 - INFO - Kill all requested from tray menu
+2026-03-03 00:05:50,894 - INFO - Game process killed
+2026-03-03 00:05:50,894 - INFO - Ensuring cleanup...
+2026-03-03 00:05:50,894 - INFO - Cleaning up background processes...
+2026-03-03 00:05:50,894 - INFO - Cleaning up background processes...
+2026-03-03 00:05:50,896 - ERROR - An error occurred when calling message handler
+Traceback (most recent call last):
+  File "pystray\_win32.py", line 412, in _dispatcher
+  File "pystray\_win32.py", line 224, in _on_notify
+  File "pystray\_base.py", line 328, in inner
+  File "pystray\_base.py", line 453, in __call__
+  File "Python\tray_menu.py", line 346, in kill_all
+SystemExit: 0
+2026-03-03 00:05:51,259 - INFO - Executing exit_sequence...
+2026-03-03 00:05:51,259 - INFO - Executing sequence: exit_sequence
+2026-03-03 00:05:51,259 - INFO -   - Running: Kill-Game
+2026-03-03 00:05:51,259 - INFO -   - Action: Kill-Game
+2026-03-03 00:05:51,259 - INFO - Killing game process: Microvania_Win.exe
+2026-03-03 00:05:53,876 - INFO - Killed process Microvania_Win.exe using taskkill
+2026-03-03 00:05:53,876 - INFO -   - Running: Kill-List
+2026-03-03 00:05:53,876 - INFO -   - Action: Kill-List
+2026-03-03 00:05:53,876 - INFO -   - Running: Monitor-Config
+2026-03-03 00:05:53,876 - INFO -   - Action: Monitor-Config
+2026-03-03 00:05:53,877 - INFO -   - Unknown action: Monitor-Config
+2026-03-03 00:05:53,877 - WARNING - Unknown action in sequence: Monitor-Config
+2026-03-03 00:05:53,877 - INFO -   - Running: Taskbar
+2026-03-03 00:05:53,877 - INFO -   - Action: Taskbar
+2026-03-03 00:05:53,877 - INFO - Showing Taskbar
+2026-03-03 00:05:53,879 - INFO -   - Running: Post1
+2026-03-03 00:05:53,879 - INFO -   - Action: Post1
+2026-03-03 00:05:53,879 - INFO -   - Running: Controller-Mapper
+2026-03-03 00:05:53,879 - INFO -   - Action: Controller-Mapper
+2026-03-03 00:05:53,879 - INFO -   - Unknown action: Controller-Mapper
+2026-03-03 00:05:53,879 - WARNING - Unknown action in sequence: Controller-Mapper
+2026-03-03 00:05:53,879 - INFO -   - Running: Post2
+2026-03-03 00:05:53,879 - INFO -   - Action: Post2
+2026-03-03 00:05:53,879 - INFO -   - Running: Borderless
+2026-03-03 00:05:53,879 - INFO -   - Action: Borderless
+2026-03-03 00:05:53,879 - INFO -   - Unknown action: Borderless
+2026-03-03 00:05:53,879 - WARNING - Unknown action in sequence: Borderless
+2026-03-03 00:05:53,879 - INFO -   - Running: Post3
+2026-03-03 00:05:53,879 - INFO -   - Action: Post3
+2026-03-03 00:05:53,879 - INFO -   - Running: Unmount-disc
+2026-03-03 00:05:53,879 - INFO -   - Action: Unmount-disc
+2026-03-03 00:05:53,879 - INFO -   - Running: Cloud-Sync
+2026-03-03 00:05:53,879 - INFO -   - Action: Cloud-Sync
+2026-03-03 00:05:53,879 - INFO -   - Unknown action: Cloud-Sync
+2026-03-03 00:05:53,879 - WARNING - Unknown action in sequence: Cloud-Sync
+2026-03-03 00:05:53,884 - INFO -   - Running: Kill-Game
+2026-03-03 00:05:53,884 - INFO -   - Action: Kill-Game
+2026-03-03 00:05:53,884 - INFO - Killing game process: Microvania_Win.exe
+2026-03-03 00:05:55,117 - INFO - Killed process Microvania_Win.exe using taskkill
+2026-03-03 00:05:55,118 - INFO - Tray menu stopped
+2026-03-03 00:05:55,118 - INFO - Ensuring cleanup...
+2026-03-03 00:05:55,118 - INFO - Cleaning up background processes...
+2026-03-03 00:05:55,118 - INFO - Cleaning up background processes...
+2026-03-03 00:05:55,119 - INFO - Exiting launcher

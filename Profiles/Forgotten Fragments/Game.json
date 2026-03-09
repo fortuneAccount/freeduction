@@ -1,0 +1,322 @@
+{
+    "1492090": {
+        "success": true,
+        "data": {
+            "type": "game",
+            "name": "Forgotten Fragments",
+            "steam_appid": 1492090,
+            "required_age": 0,
+            "is_free": false,
+            "controller_support": "full",
+            "dlc": [
+                4045980
+            ],
+            "detailed_description": "<h2 class=\"bb_tag\" ><strong> </strong></h2><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/98501cc51ef11e27b27d054ac9625571.avif?t=1758896081\" width=1170 height=110 /></span></p><p class=\"bb_paragraph\" >Use the spheres power to light the torches and complete the level. But it won't always be easy: you'll need to aim your throws well and launch them before the time limit runs out...</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/af2bc6f72ebd2d7286c4b2f73e5ecd14.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Uncover Enid's story as you recover the forgotten fragments, or team up with a friend to unravel all the secrets of the two-player campaign. Each campaign has its own levels!</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/d3c126e15002c57a7baa084ee02a3e68.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Each campaign features 4 worlds to explore, with over 60 levels each. But the challenge doesn't end there, as you can replay each level to improve your time and become the best!</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><h2 class=\"bb_tag\" ></h2><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/8b1877b122a67b8897445094ad82432f.avif?t=1758896081\" width=1170 height=110 /></span></p><p class=\"bb_paragraph\" >At the end of each world, you'll face a powerful boss, each with their own unique mechanics. Get ready to apply everything you've learned during your adventure to emerge victorious in these battles.</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/80c5b76d66fa0a2eaac3eb998e191b2f.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Find the hidden collectibles in some levels to unlock skins and customize your characters. Make sure to explore every corner: to play the secret levels, you'll need to light special torches...</p><p class=\"bb_paragraph\" style=\"text-align: center\"></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.poster.avif?t=1758896081\" width=1170 height=328 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p>",
+            "about_the_game": "<h2 class=\"bb_tag\" ><strong> </strong></h2><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/98501cc51ef11e27b27d054ac9625571.avif?t=1758896081\" width=1170 height=110 /></span></p><p class=\"bb_paragraph\" >Use the spheres power to light the torches and complete the level. But it won't always be easy: you'll need to aim your throws well and launch them before the time limit runs out...</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/58d8aa807cc486f14ce4eb7475d9e08e.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/af2bc6f72ebd2d7286c4b2f73e5ecd14.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Uncover Enid's story as you recover the forgotten fragments, or team up with a friend to unravel all the secrets of the two-player campaign. Each campaign has its own levels!</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/05d03e37e553a4c9075d7f272c2efc61.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/d3c126e15002c57a7baa084ee02a3e68.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Each campaign features 4 worlds to explore, with over 60 levels each. But the challenge doesn't end there, as you can replay each level to improve your time and become the best!</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/239f22dc8da9bde7beb1b8032fbd033a.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><h2 class=\"bb_tag\" ></h2><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/8b1877b122a67b8897445094ad82432f.avif?t=1758896081\" width=1170 height=110 /></span></p><p class=\"bb_paragraph\" >At the end of each world, you'll face a powerful boss, each with their own unique mechanics. Get ready to apply everything you've learned during your adventure to emerge victorious in these battles.</p><p class=\"bb_paragraph\" ></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.poster.avif?t=1758896081\" width=1170 height=658 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/17639a24ef8ceecd533c7ddcc89d13cb.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ></p><h2 class=\"bb_tag\" ><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/80c5b76d66fa0a2eaac3eb998e191b2f.avif?t=1758896081\" width=1170 height=110 /></span></h2><p class=\"bb_paragraph\" >Find the hidden collectibles in some levels to unlock skins and customize your characters. Make sure to explore every corner: to play the secret levels, you'll need to light special torches...</p><p class=\"bb_paragraph\" style=\"text-align: center\"></p><p class=\"bb_paragraph\" ><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.poster.avif?t=1758896081\" width=1170 height=328 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.webm?t=1758896081\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/extras/5be0b706813d8bc832b2c3a29f53069e.mp4?t=1758896081\" type=\"video/mp4\"></video></span></p>",
+            "short_description": "Test your skills in this puzzle-platformer game: Help Enid, Ryder, and Dayen recover the Forgotten Fragments in this beautiful pixel art adventure. More than a hundred of hand-crafted levels split between the single-player and co-op campaigns!",
+            "supported_languages": "English, Catalan, German, Spanish - Spain, Japanese, Simplified Chinese, Portuguese - Brazil",
+            "header_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/header.jpg?t=1758896081",
+            "capsule_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/e31db249969dd838c1e319306d939c0decb33f6a/capsule_231x87.jpg?t=1758896081",
+            "capsule_imagev5": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/e31db249969dd838c1e319306d939c0decb33f6a/capsule_184x69.jpg?t=1758896081",
+            "website": "https://binaryphoenixgames.com/",
+            "pc_requirements": {
+                "minimum": "<strong>Minimum:</strong><br><ul class=\"bb_ul\"><li>Requires a 64-bit processor and operating system<br></li><li><strong>OS:</strong> Windows 10 or newer<br></li><li><strong>Processor:</strong> Intel Core i5<br></li><li><strong>Memory:</strong> 2 GB RAM<br></li><li><strong>Graphics:</strong> Intel HD 4000<br></li><li><strong>DirectX:</strong> Version 10<br></li><li><strong>Storage:</strong> 1 GB available space</li></ul>",
+                "recommended": "<strong>Recommended:</strong><br><ul class=\"bb_ul\"><li>Requires a 64-bit processor and operating system</li></ul>"
+            },
+            "mac_requirements": {
+                "minimum": "<strong>Minimum:</strong><br><ul class=\"bb_ul\"></ul>",
+                "recommended": "<strong>Recommended:</strong><br><ul class=\"bb_ul\"></ul>"
+            },
+            "linux_requirements": {
+                "minimum": "<strong>Minimum:</strong><br><ul class=\"bb_ul\"></ul>",
+                "recommended": "<strong>Recommended:</strong><br><ul class=\"bb_ul\"></ul>"
+            },
+            "legal_notice": "\u00a9 Assemble Entertainment GmbH. Developed by Binary Phoenix S.L. Published by Assemble Entertainment GmbH. All rights reserved.",
+            "developers": [
+                "Binary Phoenix"
+            ],
+            "publishers": [
+                "Assemble Entertainment"
+            ],
+            "demos": [
+                {
+                    "appid": 1498080,
+                    "description": ""
+                }
+            ],
+            "price_overview": {
+                "currency": "USD",
+                "initial": 1299,
+                "final": 649,
+                "discount_percent": 50,
+                "initial_formatted": "$12.99",
+                "final_formatted": "$6.49"
+            },
+            "packages": [
+                525922
+            ],
+            "package_groups": [
+                {
+                    "name": "default",
+                    "title": "Buy Forgotten Fragments",
+                    "description": "",
+                    "selection_text": "Select a purchase option",
+                    "save_text": "",
+                    "display_type": 0,
+                    "is_recurring_subscription": "false",
+                    "subs": [
+                        {
+                            "packageid": 525922,
+                            "percent_savings_text": "-50% ",
+                            "percent_savings": 0,
+                            "option_text": "Forgotten Fragments - <span class=\"discount_original_price\">$12.99</span> $6.49",
+                            "option_description": "",
+                            "can_get_free_license": "0",
+                            "is_free_license": false,
+                            "price_in_cents_with_discount": 649
+                        }
+                    ]
+                }
+            ],
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "categories": [
+                {
+                    "id": 2,
+                    "description": "Single-player"
+                },
+                {
+                    "id": 1,
+                    "description": "Multi-player"
+                },
+                {
+                    "id": 9,
+                    "description": "Co-op"
+                },
+                {
+                    "id": 39,
+                    "description": "Shared/Split Screen Co-op"
+                },
+                {
+                    "id": 24,
+                    "description": "Shared/Split Screen"
+                },
+                {
+                    "id": 22,
+                    "description": "Steam Achievements"
+                },
+                {
+                    "id": 28,
+                    "description": "Full controller support"
+                },
+                {
+                    "id": 68,
+                    "description": "Custom Volume Controls"
+                },
+                {
+                    "id": 78,
+                    "description": "Adjustable Difficulty"
+                },
+                {
+                    "id": 75,
+                    "description": "Keyboard Only Option"
+                },
+                {
+                    "id": 74,
+                    "description": "Playable without Timed Input"
+                },
+                {
+                    "id": 69,
+                    "description": "Stereo Sound"
+                },
+                {
+                    "id": 23,
+                    "description": "Steam Cloud"
+                },
+                {
+                    "id": 43,
+                    "description": "Remote Play on TV"
+                },
+                {
+                    "id": 44,
+                    "description": "Remote Play Together"
+                },
+                {
+                    "id": 62,
+                    "description": "Family Sharing"
+                }
+            ],
+            "genres": [
+                {
+                    "id": "1",
+                    "description": "Action"
+                },
+                {
+                    "id": "25",
+                    "description": "Adventure"
+                },
+                {
+                    "id": "23",
+                    "description": "Indie"
+                }
+            ],
+            "screenshots": [
+                {
+                    "id": 0,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/aee14cec0f1690062368e9cf7c9f6ac54ac944b1/ss_aee14cec0f1690062368e9cf7c9f6ac54ac944b1.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/aee14cec0f1690062368e9cf7c9f6ac54ac944b1/ss_aee14cec0f1690062368e9cf7c9f6ac54ac944b1.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 1,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/bc83f63e3b8444e5838db4220f925a44e3375e65/ss_bc83f63e3b8444e5838db4220f925a44e3375e65.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/bc83f63e3b8444e5838db4220f925a44e3375e65/ss_bc83f63e3b8444e5838db4220f925a44e3375e65.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 2,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/c5ac156e2b8ea1cdef92b56b9ff15e5c96db9425/ss_c5ac156e2b8ea1cdef92b56b9ff15e5c96db9425.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/c5ac156e2b8ea1cdef92b56b9ff15e5c96db9425/ss_c5ac156e2b8ea1cdef92b56b9ff15e5c96db9425.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 3,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/eb825a82c6d6caa60b6df30e173c7e8bb4b286ca/ss_eb825a82c6d6caa60b6df30e173c7e8bb4b286ca.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/eb825a82c6d6caa60b6df30e173c7e8bb4b286ca/ss_eb825a82c6d6caa60b6df30e173c7e8bb4b286ca.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 4,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/0c791a8d68d1dfd3afef264afc803a713c2b41b5/ss_0c791a8d68d1dfd3afef264afc803a713c2b41b5.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/0c791a8d68d1dfd3afef264afc803a713c2b41b5/ss_0c791a8d68d1dfd3afef264afc803a713c2b41b5.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 5,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/3b435a8a2d9d3a90c0c2ed662c43ac4494c4cc99/ss_3b435a8a2d9d3a90c0c2ed662c43ac4494c4cc99.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/3b435a8a2d9d3a90c0c2ed662c43ac4494c4cc99/ss_3b435a8a2d9d3a90c0c2ed662c43ac4494c4cc99.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 6,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/2a541069d761e309455a99dadea22ab94be7c236/ss_2a541069d761e309455a99dadea22ab94be7c236.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/2a541069d761e309455a99dadea22ab94be7c236/ss_2a541069d761e309455a99dadea22ab94be7c236.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 7,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/121d419b717377cb784e307b5c52aed229b4099b/ss_121d419b717377cb784e307b5c52aed229b4099b.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/121d419b717377cb784e307b5c52aed229b4099b/ss_121d419b717377cb784e307b5c52aed229b4099b.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 8,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/e2556d24b8f4d2b3fabf9e95c286b34e9498af03/ss_e2556d24b8f4d2b3fabf9e95c286b34e9498af03.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/e2556d24b8f4d2b3fabf9e95c286b34e9498af03/ss_e2556d24b8f4d2b3fabf9e95c286b34e9498af03.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 9,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/296dd9698df5d6ec349f6d12d6ff5229e00445a0/ss_296dd9698df5d6ec349f6d12d6ff5229e00445a0.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/296dd9698df5d6ec349f6d12d6ff5229e00445a0/ss_296dd9698df5d6ec349f6d12d6ff5229e00445a0.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 10,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/6ae3ba35978ac639ebe1aba1829c218241bd3656/ss_6ae3ba35978ac639ebe1aba1829c218241bd3656.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/6ae3ba35978ac639ebe1aba1829c218241bd3656/ss_6ae3ba35978ac639ebe1aba1829c218241bd3656.1920x1080.jpg?t=1758896081"
+                },
+                {
+                    "id": 11,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/ddd7bad56bbcb7b1cff8a9595fac7160cea2ef04/ss_ddd7bad56bbcb7b1cff8a9595fac7160cea2ef04.600x338.jpg?t=1758896081",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/ddd7bad56bbcb7b1cff8a9595fac7160cea2ef04/ss_ddd7bad56bbcb7b1cff8a9595fac7160cea2ef04.1920x1080.jpg?t=1758896081"
+                }
+            ],
+            "movies": [
+                {
+                    "id": 257205461,
+                    "name": "Release",
+                    "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257205461/bd66dad89860c7e13f3cab0d54767b4b95c0dbae/movie_600x337.jpg?t=1758722936",
+                    "dash_av1": "https://video.akamai.steamstatic.com/store_trailers/1492090/1863693873/8b060f6648282a0b0de3cd91c95dcb015d8472d0/1758720800/dash_av1.mpd?t=1758722936",
+                    "dash_h264": "https://video.akamai.steamstatic.com/store_trailers/1492090/1863693873/8b060f6648282a0b0de3cd91c95dcb015d8472d0/1758720800/dash_h264.mpd?t=1758722936",
+                    "hls_h264": "https://video.akamai.steamstatic.com/store_trailers/1492090/1863693873/8b060f6648282a0b0de3cd91c95dcb015d8472d0/1758720800/hls_264_master.m3u8?t=1758722936",
+                    "highlight": true
+                },
+                {
+                    "id": 257201214,
+                    "name": "Release Date Announce",
+                    "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257201214/0b5ca8472f8a4ccf0befc2b546e54004e81d4898/movie_600x337.jpg?t=1758204345",
+                    "dash_av1": "https://video.akamai.steamstatic.com/store_trailers/1492090/1649654348/b299db5dd86c6242fa9bddf7a119ba0d1b86ced5/1758201234/dash_av1.mpd?t=1758204345",
+                    "dash_h264": "https://video.akamai.steamstatic.com/store_trailers/1492090/1649654348/b299db5dd86c6242fa9bddf7a119ba0d1b86ced5/1758201234/dash_h264.mpd?t=1758204345",
+                    "hls_h264": "https://video.akamai.steamstatic.com/store_trailers/1492090/1649654348/b299db5dd86c6242fa9bddf7a119ba0d1b86ced5/1758201234/hls_264_master.m3u8?t=1758204345",
+                    "highlight": true
+                }
+            ],
+            "achievements": {
+                "total": 25,
+                "highlighted": [
+                    {
+                        "name": "I won't miss that giant plant",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/8cf59240f896f1c58eddcc9539a75f7dbd536c5b.jpg"
+                    },
+                    {
+                        "name": "I hope you don't wake up again!",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/724953d4a22639a5a16c1364e6a30d64084d6760.jpg"
+                    },
+                    {
+                        "name": "Too much cold for me",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/8eb021033106297329c7e563e4ed11eb4bc7d43b.jpg"
+                    },
+                    {
+                        "name": "Giant robots are cool",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/9cce44ca7d3f7464bfcc72854c343d93194539eb.jpg"
+                    },
+                    {
+                        "name": "We won't miss that giant plant",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/8cf59240f896f1c58eddcc9539a75f7dbd536c5b.jpg"
+                    },
+                    {
+                        "name": "We hope you don't wake up again!",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/724953d4a22639a5a16c1364e6a30d64084d6760.jpg"
+                    },
+                    {
+                        "name": "Too much cold for us",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/8eb021033106297329c7e563e4ed11eb4bc7d43b.jpg"
+                    },
+                    {
+                        "name": "We love giant robots!",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/9cce44ca7d3f7464bfcc72854c343d93194539eb.jpg"
+                    },
+                    {
+                        "name": "End of everything",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/82b801269ee8e44ddb6cc40a23fc5e599a8f810b.jpg"
+                    },
+                    {
+                        "name": "Forever trapped",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/1492090/82b801269ee8e44ddb6cc40a23fc5e599a8f810b.jpg"
+                    }
+                ]
+            },
+            "release_date": {
+                "coming_soon": false,
+                "date": "Sep 24, 2025"
+            },
+            "support_info": {
+                "url": "https://binaryphoenixgames.com/",
+                "email": "binaryphoenixgames@gmail.com"
+            },
+            "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/1492090?t=1758896081",
+            "background_raw": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/1492090/page_bg_raw.jpg?t=1758896081",
+            "content_descriptors": {
+                "ids": [],
+                "notes": null
+            },
+            "ratings": {
+                "dejus": {
+                    "rating": "l"
+                },
+                "steam_germany": {
+                    "rating_generated": "1",
+                    "rating": "6",
+                    "required_age": "6",
+                    "banned": "0",
+                    "use_age_gate": "0",
+                    "descriptors": "Fantasy-Gewalt"
+                }
+            }
+        }
+    }
+}

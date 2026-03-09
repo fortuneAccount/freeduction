@@ -1,0 +1,45 @@
+{
+    "Developers": "Company:Yuke's",
+    "Publishers": "Company:Arc System Works",
+    "Engines": "Engine:Unreal Engine 5",
+    "Released": "2025-10-22",
+    "Genres": "Brawler,",
+    "Modes": "Singleplayer, Multiplayer",
+    "Series": "Double Dragon",
+    "Monetization": "One-time game purchase",
+    "Microtransactions": null,
+    "save_locations": {
+        "Windows": [
+            {
+                "path": "<path-to-game>\\DoubleDragonRevive\\ProjectDD\\Saved\\SaveGames\\<user-id>\\*.sav"
+            },
+            {
+                "path": "%LOCALAPPDATA%\\DoubleDragonRevive\\ProjectDD\\Saved\\SaveGames\\<user-id>\\*.sav"
+            }
+        ],
+        "Steam Play (Linux)": [
+            {
+                "path": "<SteamLibrary-folder>"
+            },
+            {
+                "path": "/steamapps/compatdata/3012220"
+            },
+            {
+                "path": "/pfx/"
+            }
+        ]
+    },
+    "config_locations": {
+        "Steam Play (Linux)": [
+            {
+                "path": "<SteamLibrary-folder>"
+            },
+            {
+                "path": "/steamapps/compatdata/3012220"
+            },
+            {
+                "path": "/pfx/"
+            }
+        ]
+    }
+}

@@ -1,0 +1,36 @@
+# Build artifacts
+/build/
+/dist/
+/py_launcher_dist/
+*.spec
+
+# Archives
+/portable.7z
+
+# Compiled Binaries
+/bin/Launcher.exe
+/bin/Launcher.c.exe
+/bin/Launcher.py.exe
+
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Local configuration and logs
+/deploy_ui.ini
+/app.log
+/rjpids.ini
+
+# Index and cache files
+/steam.json
+/steam.json.old
+/steam_filtered.txt
+/steam_filtered.txt.old
+/normalized_steam_games.cache
+/normalized_steam_games.cache.old
+/*.index
+/*.index.bak
+
+# IDE specific
+.vscode/
+.idea/

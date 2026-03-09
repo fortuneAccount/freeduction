@@ -1,0 +1,37 @@
+{
+    "Developers": "Company:Fallen City Brawl",
+    "Publishers": "Company:Eastasiasoft",
+    "Engines": "Engine:GameMaker",
+    "Released": "2025-08-12",
+    "Genres": "Brawler,",
+    "Modes": "Singleplayer, Multiplayer",
+    "Series": null,
+    "Monetization": "One-time game purchase",
+    "Microtransactions": "None",
+    "save_locations": {
+        "Steam Play (Linux)": [
+            {
+                "path": "<SteamLibrary-folder>"
+            },
+            {
+                "path": "/steamapps/compatdata/1717190"
+            },
+            {
+                "path": "/pfx/"
+            }
+        ]
+    },
+    "config_locations": {
+        "Steam Play (Linux)": [
+            {
+                "path": "<SteamLibrary-folder>"
+            },
+            {
+                "path": "/steamapps/compatdata/1717190"
+            },
+            {
+                "path": "/pfx/"
+            }
+        ]
+    }
+}

@@ -1,0 +1,23 @@
+# Minimal requirements for Launcher.py
+# This excludes heavy dependencies like pygame, psutil, pywin32, and plugin system
+
+# Core dependencies only
+# (All standard library modules are used, no external dependencies required for minimal build)
+
+# Note: Use the new build system instead:
+#   python assets/launcher/Build_PyLauncher.py minimal
+#
+# For other presets, see: assets/launcher/BUILD_PRESETS.md
+
+# Optional: If you want process management features, uncomment:
+# psutil>=5.9.0
+
+# Optional: If you want Windows GUI features, uncomment:
+# pywin32>=300
+
+# Optional: If you want splash screen and joystick detection, uncomment:
+# pygame>=2.0.0
+
+# Optional: If you want tray menu, uncomment:
+# pystray>=0.19.0
+# Pillow>=9.0.0

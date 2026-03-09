@@ -1,0 +1,10 @@
+Package: gbm
+Architecture: all
+Maintainer: Michael J. Seiferling <mseiferling@gmail.com>
+Priority: optional
+Version: 1.4.4
+Homepage: https://mikemaximus.github.io/gbm-web/
+Bugs: https://github.com/MikeMaximus/gbm/issues
+Depends: mono-vbnc, libsqlite3-0, p7zip-full
+Recommends: libnotify-bin
+Description: Automatically backup your saved games!

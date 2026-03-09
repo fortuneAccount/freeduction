@@ -1,0 +1,273 @@
+{
+    "2292860": {
+        "success": true,
+        "data": {
+            "type": "game",
+            "name": "Claire a la Mode",
+            "steam_appid": 2292860,
+            "required_age": 0,
+            "is_free": false,
+            "controller_support": "full",
+            "dlc": [
+                3368260
+            ],
+            "detailed_description": "<p class=\"bb_paragraph\" style=\"text-align: center\"><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.poster.avif?t=1767899710\" width=600 height=336 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.webm?t=1767899710\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.mp4?t=1767899710\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ><u><i><strong>DASH</strong></i></u> your way through each stage of a worldwide bake-off!</p><p class=\"bb_paragraph\" ><u><i><strong>DEFEAT</strong></i></u> Bee the Queen and stop her lackeys from rigging the competition and buying out the rest of the city through the missions of three unique campaigns!</p><p class=\"bb_paragraph\" ><u><i><strong>REPLAY</strong></i></u><strong> </strong>as different characters to beat your high score and experience everything the game has to offer - from collectables and secrets, to stories and unlockable characters! </p><p class=\"bb_paragraph\" style=\"text-align: center\"><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/2e5a425ecdf56859086eeb4e4e3d6232.avif?t=1767899710\" width=780 height=240 /></span></p><h2 class=\"bb_tag\" ><strong><u>Features that <i>Claire a la Mode</i>\u00a0has to offer:</u></strong></h2><ul class=\"bb_ul\"><li><p class=\"bb_paragraph\" >7+ Unique playable characters with their own strengths and weaknesses that change how you approach each level</p></li></ul><ul class=\"bb_ul\"><li><p class=\"bb_paragraph\" >Cooking chaos in each stage as you prepare your cake for the judges to win it all despite interference and danger</p></li><li><p class=\"bb_paragraph\" >Platforming craziness to help or hinder you way to take down the cheaters</p></li><li><p class=\"bb_paragraph\" >An incredible OST filled with all of the colorful sounds of <i>Claire a la Mode</i></p></li><li><p class=\"bb_paragraph\" >Quick, snappy, arcadey fun (NO QUARTERS REQUIRED)</p></li><li><p class=\"bb_paragraph\" >A once in a lifetime opportunity for an experience full of baking delight!</p></li></ul>",
+            "about_the_game": "<p class=\"bb_paragraph\" style=\"text-align: center\"><span class=\"bb_img_ctn\"><video class=\"bb_img\" autoplay muted loop playsinline poster=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.poster.avif?t=1767899710\" width=600 height=336 ><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.webm?t=1767899710\" type=\"video/webm; codecs=vp9\"><source src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/52ae99062e5b8c7a8708b6980a790ee1.mp4?t=1767899710\" type=\"video/mp4\"></video></span></p><p class=\"bb_paragraph\" ><u><i><strong>DASH</strong></i></u> your way through each stage of a worldwide bake-off!</p><p class=\"bb_paragraph\" ><u><i><strong>DEFEAT</strong></i></u> Bee the Queen and stop her lackeys from rigging the competition and buying out the rest of the city through the missions of three unique campaigns!</p><p class=\"bb_paragraph\" ><u><i><strong>REPLAY</strong></i></u><strong> </strong>as different characters to beat your high score and experience everything the game has to offer - from collectables and secrets, to stories and unlockable characters! </p><p class=\"bb_paragraph\" style=\"text-align: center\"><span class=\"bb_img_ctn\"><img class=\"bb_img\" src=\"https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/extras/2e5a425ecdf56859086eeb4e4e3d6232.avif?t=1767899710\" width=780 height=240 /></span></p><h2 class=\"bb_tag\" ><strong><u>Features that <i>Claire a la Mode</i>\u00a0has to offer:</u></strong></h2><ul class=\"bb_ul\"><li><p class=\"bb_paragraph\" >7+ Unique playable characters with their own strengths and weaknesses that change how you approach each level</p></li></ul><ul class=\"bb_ul\"><li><p class=\"bb_paragraph\" >Cooking chaos in each stage as you prepare your cake for the judges to win it all despite interference and danger</p></li><li><p class=\"bb_paragraph\" >Platforming craziness to help or hinder you way to take down the cheaters</p></li><li><p class=\"bb_paragraph\" >An incredible OST filled with all of the colorful sounds of <i>Claire a la Mode</i></p></li><li><p class=\"bb_paragraph\" >Quick, snappy, arcadey fun (NO QUARTERS REQUIRED)</p></li><li><p class=\"bb_paragraph\" >A once in a lifetime opportunity for an experience full of baking delight!</p></li></ul>",
+            "short_description": "Team up with a friend or go it alone in a sugar-high adventure! Bake your dessert masterpiece and collect new bakers as you rise through a high-stakes bake-off full of cheaters. Fend off their decadent lackeys and against all odds, come out on top in a worldwide baking frenzy!",
+            "supported_languages": "English<strong>*</strong><br><strong>*</strong>languages with full audio support",
+            "header_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/header.jpg?t=1767899710",
+            "capsule_image": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/1843cbec7cf84361de3df9df49c1112ad17a3d0e/capsule_231x87.jpg?t=1767899710",
+            "capsule_imagev5": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/1843cbec7cf84361de3df9df49c1112ad17a3d0e/capsule_184x69.jpg?t=1767899710",
+            "website": null,
+            "pc_requirements": {
+                "minimum": "<strong>Minimum:</strong><br><ul class=\"bb_ul\"><li><strong>OS *:</strong> Windows 7 (SP1+) and Windows 10<br></li><li><strong>Processor:</strong> x86, x64 architecture with SSE2 instruction set support<br></li><li><strong>Graphics:</strong> DX10, DX11, DX12 capable<br></li><li><strong>Storage:</strong> 600 MB available space</li></ul>"
+            },
+            "mac_requirements": [],
+            "linux_requirements": [],
+            "developers": [
+                "Colorgrave"
+            ],
+            "publishers": [
+                "Colorgrave"
+            ],
+            "price_overview": {
+                "currency": "USD",
+                "initial": 1499,
+                "final": 1499,
+                "discount_percent": 0,
+                "initial_formatted": "",
+                "final_formatted": "$14.99"
+            },
+            "packages": [
+                822622
+            ],
+            "package_groups": [
+                {
+                    "name": "default",
+                    "title": "Buy Claire a la Mode",
+                    "description": "",
+                    "selection_text": "Select a purchase option",
+                    "save_text": "",
+                    "display_type": 0,
+                    "is_recurring_subscription": "false",
+                    "subs": [
+                        {
+                            "packageid": 822622,
+                            "percent_savings_text": " ",
+                            "percent_savings": 0,
+                            "option_text": "Claire a la Mode - $14.99",
+                            "option_description": "",
+                            "can_get_free_license": "0",
+                            "is_free_license": false,
+                            "price_in_cents_with_discount": 1499
+                        }
+                    ]
+                }
+            ],
+            "platforms": {
+                "windows": true,
+                "mac": false,
+                "linux": false
+            },
+            "categories": [
+                {
+                    "id": 2,
+                    "description": "Single-player"
+                },
+                {
+                    "id": 22,
+                    "description": "Steam Achievements"
+                },
+                {
+                    "id": 28,
+                    "description": "Full controller support"
+                },
+                {
+                    "id": 23,
+                    "description": "Steam Cloud"
+                },
+                {
+                    "id": 62,
+                    "description": "Family Sharing"
+                }
+            ],
+            "genres": [
+                {
+                    "id": "1",
+                    "description": "Action"
+                },
+                {
+                    "id": "25",
+                    "description": "Adventure"
+                },
+                {
+                    "id": "4",
+                    "description": "Casual"
+                }
+            ],
+            "screenshots": [
+                {
+                    "id": 0,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/f13388a99d808569c801fc8657af5086f26be371/ss_f13388a99d808569c801fc8657af5086f26be371.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/f13388a99d808569c801fc8657af5086f26be371/ss_f13388a99d808569c801fc8657af5086f26be371.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 1,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/d7b320c94d198a3a5630e2cd41b273da0d508c01/ss_d7b320c94d198a3a5630e2cd41b273da0d508c01.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/d7b320c94d198a3a5630e2cd41b273da0d508c01/ss_d7b320c94d198a3a5630e2cd41b273da0d508c01.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 2,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/0aa507c98d6dd2909ca9cb4eaa1dc8167dd8c194/ss_0aa507c98d6dd2909ca9cb4eaa1dc8167dd8c194.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/0aa507c98d6dd2909ca9cb4eaa1dc8167dd8c194/ss_0aa507c98d6dd2909ca9cb4eaa1dc8167dd8c194.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 3,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/f583de871eb2ab12c5803d50abbf3c678ea70789/ss_f583de871eb2ab12c5803d50abbf3c678ea70789.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/f583de871eb2ab12c5803d50abbf3c678ea70789/ss_f583de871eb2ab12c5803d50abbf3c678ea70789.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 4,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/dd41f47e795b3ae95cdcc1ada01e73011954ba24/ss_dd41f47e795b3ae95cdcc1ada01e73011954ba24.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/dd41f47e795b3ae95cdcc1ada01e73011954ba24/ss_dd41f47e795b3ae95cdcc1ada01e73011954ba24.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 5,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/72ceb0edec9ba679378051b1843b1cb45c9e641d/ss_72ceb0edec9ba679378051b1843b1cb45c9e641d.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/72ceb0edec9ba679378051b1843b1cb45c9e641d/ss_72ceb0edec9ba679378051b1843b1cb45c9e641d.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 6,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/66b5fe591b481ae7c195b289792a2b1faf037db8/ss_66b5fe591b481ae7c195b289792a2b1faf037db8.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/66b5fe591b481ae7c195b289792a2b1faf037db8/ss_66b5fe591b481ae7c195b289792a2b1faf037db8.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 7,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/290e996141826ffd314351d8772ac991454bd72d/ss_290e996141826ffd314351d8772ac991454bd72d.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/290e996141826ffd314351d8772ac991454bd72d/ss_290e996141826ffd314351d8772ac991454bd72d.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 8,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/3839d1564dc468820d3e7e4f69f0e771a22721d0/ss_3839d1564dc468820d3e7e4f69f0e771a22721d0.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/3839d1564dc468820d3e7e4f69f0e771a22721d0/ss_3839d1564dc468820d3e7e4f69f0e771a22721d0.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 9,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/00c4fc1a24f18ec81922e2570daa8b9f0869962d/ss_00c4fc1a24f18ec81922e2570daa8b9f0869962d.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/00c4fc1a24f18ec81922e2570daa8b9f0869962d/ss_00c4fc1a24f18ec81922e2570daa8b9f0869962d.1920x1080.jpg?t=1767899710"
+                },
+                {
+                    "id": 10,
+                    "path_thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/764b234e16b70c7af4ca18149a7b10055180f8f8/ss_764b234e16b70c7af4ca18149a7b10055180f8f8.600x338.jpg?t=1767899710",
+                    "path_full": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/764b234e16b70c7af4ca18149a7b10055180f8f8/ss_764b234e16b70c7af4ca18149a7b10055180f8f8.1920x1080.jpg?t=1767899710"
+                }
+            ],
+            "movies": [
+                {
+                    "id": 257240471,
+                    "name": "Launch",
+                    "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257240471/a0e87e1c40455aed87cf84a854c570fc187797fe/movie_600x337.jpg?t=1764429801",
+                    "dash_av1": "https://video.akamai.steamstatic.com/store_trailers/2292860/857814320/d8c2c1ab24b551fd6ce4fd78febb984a179cd192/1764429578/dash_av1.mpd?t=1764429801",
+                    "dash_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/857814320/d8c2c1ab24b551fd6ce4fd78febb984a179cd192/1764429578/dash_h264.mpd?t=1764429801",
+                    "hls_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/857814320/d8c2c1ab24b551fd6ce4fd78febb984a179cd192/1764429578/hls_264_master.m3u8?t=1764429801",
+                    "highlight": true
+                },
+                {
+                    "id": 257226762,
+                    "name": "RELEASE DATE",
+                    "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257226762/abf526ce95f6dab7f034d8dbf7a1ca2c9183effc/movie_600x337.jpg?t=1762275858",
+                    "dash_av1": "https://video.akamai.steamstatic.com/store_trailers/2292860/151923388/4c4071e0cb9d3928f1bb4539b92c87b53ad9676f/1762271074/dash_av1.mpd?t=1762275858",
+                    "dash_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/151923388/4c4071e0cb9d3928f1bb4539b92c87b53ad9676f/1762271074/dash_h264.mpd?t=1762275858",
+                    "hls_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/151923388/4c4071e0cb9d3928f1bb4539b92c87b53ad9676f/1762271074/hls_264_master.m3u8?t=1762275858",
+                    "highlight": true
+                },
+                {
+                    "id": 257082741,
+                    "name": "CINEMATIC",
+                    "thumbnail": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/257082741/28312106dba81b3762625305513e84aca889fa67/movie_600x337.jpg?t=1734447298",
+                    "dash_av1": "https://video.akamai.steamstatic.com/store_trailers/2292860/801143/f852b1ca2edd768d4a882c40370c2d206af965ac/1750980652/dash_av1.mpd?t=1734447298",
+                    "dash_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/801143/f852b1ca2edd768d4a882c40370c2d206af965ac/1750980652/dash_h264.mpd?t=1734447298",
+                    "hls_h264": "https://video.akamai.steamstatic.com/store_trailers/2292860/801143/f852b1ca2edd768d4a882c40370c2d206af965ac/1750980652/hls_264_master.m3u8?t=1734447298",
+                    "highlight": true
+                }
+            ],
+            "achievements": {
+                "total": 40,
+                "highlighted": [
+                    {
+                        "name": "Beginnings",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/269f8e32464256a7b05ba0b93be379438938e3b7.jpg"
+                    },
+                    {
+                        "name": "Piece of Cake",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/f9bbd27c8c7cb627eab45aa3fb11479e9fa4c0b6.jpg"
+                    },
+                    {
+                        "name": "Cage Breaker",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/9156fdcc1d72bb1021797988e66806fa26f6448f.jpg"
+                    },
+                    {
+                        "name": "Vaulted",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/e2ecc2fcce0a3cdc64cc0423bcd60887e1a988d7.jpg"
+                    },
+                    {
+                        "name": "Unreal Estate",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/acf77dc26c5f22a81e5cbc4fedfeef609066427d.jpg"
+                    },
+                    {
+                        "name": "What Not On Earth",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/c78e285976a944982dbc4240d98b97eb748222ee.jpg"
+                    },
+                    {
+                        "name": "Tsk Tsk",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/8a875f9682a9d68f1d1929a783f07964d3eb2c11.jpg"
+                    },
+                    {
+                        "name": "Good Boy",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/fa5316d7fa66481029a289191feb14b2c06a146c.jpg"
+                    },
+                    {
+                        "name": "Bless Me!",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/0f08e960ae5497a2c621f36c421f5fd7c485d64a.jpg"
+                    },
+                    {
+                        "name": "UNLIMITED POWER!",
+                        "path": "https://cdn.akamai.steamstatic.com/steamcommunity/public/images/apps/2292860/8f7e2d4da2af58ffe7d15d9500ff44a37174ac70.jpg"
+                    }
+                ]
+            },
+            "release_date": {
+                "coming_soon": false,
+                "date": "Nov 17, 2025"
+            },
+            "support_info": {
+                "url": "https://x.com/ColorgraveGames",
+                "email": "Support@Colorgrave.com"
+            },
+            "background": "https://store.akamai.steamstatic.com/images/storepagebackground/app/2292860?t=1767899710",
+            "background_raw": "https://shared.akamai.steamstatic.com/store_item_assets/steam/apps/2292860/page_bg_raw.jpg?t=1767899710",
+            "content_descriptors": {
+                "ids": [],
+                "notes": null
+            },
+            "ratings": {
+                "dejus": {
+                    "rating_generated": "1",
+                    "rating": "l",
+                    "required_age": "0",
+                    "banned": "0",
+                    "use_age_gate": "0",
+                    "descriptors": "Viol\u00eancia fantasiosa"
+                },
+                "steam_germany": {
+                    "rating_generated": "1",
+                    "rating": "6",
+                    "required_age": "6",
+                    "banned": "0",
+                    "use_age_gate": "0",
+                    "descriptors": "Fantasy-Gewalt"
+                }
+            }
+        }
+    }
+}
