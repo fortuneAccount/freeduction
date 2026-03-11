@@ -26,6 +26,7 @@ steam_filtered.txt
 *.cache
 *.index
 *.bak
+*.obj
 
 # IDE specific
 .vscode/
