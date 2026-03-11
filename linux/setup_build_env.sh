@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-ENV_NAME="anattagen-build"
+ENV_NAME="app-build"
 PYTHON_VERSION="3.11.9"
 
 echo "=============================="
-echo " Anattagen Linux Setup"
+echo " App Linux Setup"
 echo " Python $PYTHON_VERSION + Qt6"
 echo "=============================="
 

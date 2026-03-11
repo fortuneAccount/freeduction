@@ -49,7 +49,7 @@ AntimicroX, keySticks, multimonitortool,  borderless-gaming,  borderless ,  rclo
 
 ## Installation
 
-99.55.33
+99.55.34
 
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
