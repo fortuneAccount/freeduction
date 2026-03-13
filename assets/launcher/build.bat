@@ -2,19 +2,24 @@ REM @echo off
 setlocal enabledelayedexpansion
 
 for /f "delims=" %%a in ('echo."%CD%"') do (
-	set "msystring=%%~a"
-	set "msystring=!msystring:\=/!"
-	set "clean=!msystring::=!"
-	set "mstring=/!clean!"
+	set "CURDIR=%%~a"
+	set "CURDIR=!CURDIR:\=/!"
+	set "DIRCVT=!CURDIR::=!"
+	set "CDCVT=/!DIRCVT!"
 )
 for /f "delims=" %%a in ('cygpath -m /') do (
 	if "%%~a" == "" (
 		break
 	)
 	set "MSYS2=%%~a"
-	"!MSYS2!msys2_shell.cmd" -mingw64 -defterm -no-start -here -c "%mstring%/Build.sh --windows"
+	set "MSYS2=!MSYS2:/=\!"
+	"!MSYS2!msys2_shell.cmd" -mingw64 -defterm -no-start -here -c "%CDCVT%/Build.sh --windows"
+	if errorlevel 1 (
+		echo MSYS2 build failed
+		exit /b 1
+	)
 )
-if "%MSYS2%" NEQ "" exit /b
+if "%MSYS2%" NEQ "" exit /b 0
 
 
 
