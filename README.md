@@ -174,7 +174,7 @@ freeduction/
 └── steam.json
 ```
 
-# Compiling
+# Compiling freeduction
 
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip
