@@ -174,7 +174,6 @@ freeduction/
 └── steam.json
 ```
 
-
 # Setup
 
 ## Ubuntu Users should :
