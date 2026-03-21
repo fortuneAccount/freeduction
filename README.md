@@ -175,8 +175,6 @@ freeduction/
 ```
 # Documentation
 
-## Quick Start
-
 # Setup
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip

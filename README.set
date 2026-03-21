@@ -175,8 +175,6 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 ```
 # Documentation
 
-## Quick Start
-
 # Setup
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip
