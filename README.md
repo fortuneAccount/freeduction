@@ -174,7 +174,9 @@ freeduction/
 └── steam.json
 ```
 
+
 # Setup
+
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip
 ## Copy this code and you should be GUD
