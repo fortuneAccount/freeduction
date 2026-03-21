@@ -23,6 +23,22 @@ import sys
 from pathlib import Path
 from typing import Dict, List, Set
 
+def get_writable_dir(subdir: str, fallback_base: Path) -> Path:
+    """Return system temp/<subdir> if writable, else fallback_base/<subdir>."""
+    import tempfile
+    tmp = Path(tempfile.gettempdir()) / subdir
+    try:
+        tmp.mkdir(parents=True, exist_ok=True)
+        test = tmp / ".write_test"
+        test.touch()
+        test.unlink()
+        return tmp
+    except OSError:
+        fb = fallback_base / subdir
+        fb.mkdir(parents=True, exist_ok=True)
+        return fb
+
+
 DEFAULT_INI = "deploy_ui.ini"
 README_SET = Path("README.set")
 SITE_SET = Path("site") / "index.set"
@@ -250,9 +266,14 @@ def run_gui(ini_path: Path) -> None:
     build_container.grid_columnconfigure(0, weight=1)
     build_container.grid_columnconfigure(1, weight=1)
     
+    _script_dir = Path(__file__).parent.absolute()
+    _project_root = _script_dir.parent if _script_dir.name.lower() == "python" else _script_dir
+    _default_dest = str(get_writable_dir("dist", _project_root))
+    _default_workpath = str(get_writable_dir("build", _project_root))
+
     build_vars = {
-        'dest': tk.StringVar(value=cfg.get('build', 'dest', fallback=str(Path("dist").absolute()))),
-        'workpath': tk.StringVar(value=cfg.get('build', 'workpath', fallback=str(Path("build").absolute()))),
+        'dest': tk.StringVar(value=cfg.get('build', 'dest', fallback=_default_dest)),
+        'workpath': tk.StringVar(value=cfg.get('build', 'workpath', fallback=_default_workpath)),
         'commit_msg': tk.StringVar(value=cfg.get('build', 'commit_msg', fallback="Update")),
         'skip_python': tk.BooleanVar(value=cfg.getboolean('build', 'skip_python', fallback=False)),
         'skip_c': tk.BooleanVar(value=cfg.getboolean('build', 'skip_c', fallback=False)),
@@ -426,331 +447,351 @@ def run_gui(ini_path: Path) -> None:
                 return False
         return True
 
-    def run_build_and_release():
+    # ------------------------------------------------------------------ #
+    #  COMPILE  – build launchers and main application                   #
+    # ------------------------------------------------------------------ #
+    def run_compile():
         import threading
-        import subprocess
-        import platform
         import shutil
 
-        # Get all vars from UI
         save_all()
-        
-        version = vars.get('VERSION', tk.StringVar(value="")).get()
-        git_user = vars.get('GITUSER', tk.StringVar(value="")).get()
-        rj_proj = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
+
         dest_dir_str = build_vars['dest'].get()
-        dest_dir = Path(dest_dir_str)
-        workpath = build_vars['workpath'].get()
-        commit_msg = build_vars['commit_msg'].get()
-        skip_python = build_vars['skip_python'].get()
-        skip_c = build_vars['skip_c'].get()
-        skip_application = build_vars['skip_application'].get()
-        clean_build = build_vars['clean_build'].get()
+        dest_dir     = Path(dest_dir_str)
+        workpath     = build_vars['workpath'].get()
+        skip_python  = build_vars['skip_python'].get()
+        skip_c       = build_vars['skip_c'].get()
+        skip_app     = build_vars['skip_application'].get()
+        clean_build  = build_vars['clean_build'].get()
         default_launcher = build_vars['default_launcher'].get()
-        
+        launcher_preset  = build_vars['launcher_preset'].get()
+        rj_proj      = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
+
         def worker():
             set_ui_busy(True)
             proc_state['cancelled'] = False
-            log("\n>>> Starting Build & Release Process <<<\n")
+            log("\n>>> Starting Compile <<<\n")
 
-            # 0. Clean directories if requested
+            sep = ';' if platform.system() == 'Windows' else ':'
+            script_dir   = Path(__file__).parent.absolute()
+            project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
+            launcher_src_dir = project_root / "assets" / "launcher"
+            bin_dir      = project_root / "bin"
+            bin_dir.mkdir(exist_ok=True)
+
+            # 0. Optional clean
             if clean_build:
                 log("Cleaning previous build artifacts...\n")
-                archive_path_to_clean = Path.cwd() / "portable.7z"
-                
-                if dest_dir.exists() and dest_dir.is_dir():
-                    log(f"Removing destination directory: {dest_dir}\n")
-                    try:
-                        shutil.rmtree(dest_dir)
-                    except Exception as e:
-                        log(f"Could not remove destination directory: {e}\n")
-                
-                workpath_path = Path(workpath)
-                if workpath_path.exists() and workpath_path.is_dir():
-                    log(f"Removing work directory: {workpath_path}\n")
-                    try:
-                        shutil.rmtree(workpath_path)
-                    except Exception as e:
-                        log(f"Could not remove work directory: {e}\n")
-                
-                if archive_path_to_clean.exists():
-                    log(f"Removing previous archive: {archive_path_to_clean}\n")
-                    try:
-                        archive_path_to_clean.unlink()
-                    except Exception as e:
-                        log(f"Could not remove previous archive: {e}\n")
-                log("Cleaning complete.\n")
+                for d, label in [(dest_dir, "destination"), (Path(workpath), "work")]:
+                    if d.exists() and d.is_dir():
+                        log(f"  Removing {label} directory: {d}\n")
+                        try:    shutil.rmtree(d)
+                        except Exception as e: log(f"  Could not remove {d}: {e}\n")
+                old_archive = dest_dir.parent / "portable.7z"
+                if old_archive.exists():
+                    try:    old_archive.unlink()
+                    except Exception as e: log(f"  Could not remove archive: {e}\n")
+                log("Clean complete.\n")
 
-            # 1. Check GitHub version
-            if version:
-                log(f"Checking if version {version} exists on GitHub...\n")
-                try:
-                    check_cmd = ["gh", "release", "view", version]
-                    proc = subprocess.run(check_cmd, capture_output=True, text=True)
-                    
-                    if proc.returncode == 0:
-                        log(f"Version {version} already exists.\n")
-                        
-                        def show_error_and_increment():
-                            messagebox.showerror("Version Conflict", f"Version {version} already exists on GitHub.\nPlease increment the version and try again.")
-                        
-                        root.after(0, show_error_and_increment)
-                        set_ui_busy(False)
-                        return
-                except FileNotFoundError:
-                    log("GH CLI not found, skipping version check.\n")
-                except Exception as e:
-                    log(f"Version check failed: {e}\n")
-            
             if proc_state['cancelled']: set_ui_busy(False); return
 
-            # 2. Run Build
-            sep = ';' if platform.system() == 'Windows' else ':'
-            script_dir = Path(__file__).parent.absolute()
-            project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
-            
-            python_launcher_built_path = None
-            
+            # 1. Python Launcher → bin/Launcher.py.exe
+            py_launcher_final = bin_dir / "Launcher.py.exe"
             if not skip_python:
-                # Main Application Build
-                if not skip_application:
-                    log(f"Starting Main Build (application)...\n")
-                    main_script = script_dir / "main.py"
-                    icon_path = project_root / "assets" / "Joystick.ico"
-                    cmd_main = [
-                        sys.executable, '-m', 'PyInstaller', str(main_script),
-                        f'--name={rj_proj}', '--noconfirm', '--clean', '--windowed',
-                        f'--distpath={dest_dir_str}', f'--workpath={workpath}',
-                        f'--add-data={project_root / "site"}{sep}site',
-                        f'--add-data={project_root / "assets"}{sep}assets',
-                        '--onefile', '--noupx'
-                    ]
-                    if platform.system() == 'Windows' and icon_path.exists():
-                        cmd_main.append(f'--icon={icon_path}')
-                    
-                    if not run_cmd_sequence([cmd_main], cwd=project_root):
-                        set_ui_busy(False); proc_state['proc'] = None; return
-                else:
-                    log("Skipping Main Build (application).\n")
-
-                if proc_state['cancelled']: set_ui_busy(False); return
-
-                # Launcher Build
-                launcher_preset = build_vars['launcher_preset'].get()
-                build_script = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
-                if build_script.exists():
-                    log(f"\nStarting Launcher Build with preset '{launcher_preset}'...\n")
-                    cmd_launcher = [sys.executable, str(build_script), launcher_preset]
+                build_script_py = project_root / "assets" / "launcher" / "Build_PyLauncher.py"
+                if build_script_py.exists():
+                    log(f"Building Python Launcher (preset: {launcher_preset})...\n")
+                    cmd_launcher = [sys.executable, str(build_script_py), launcher_preset]
                     if not run_cmd_sequence([cmd_launcher], cwd=project_root):
                         set_ui_busy(False); proc_state['proc'] = None; return
-                    
-                    # Store path to the built python launcher for later
-                    # It is built into a dedicated directory to avoid being in the main dist folder.
-                    preset_name = {'minimal': 'Launcher_minimal', 'standard': 'Launcher_standard'}.get(launcher_preset, 'Launcher_standard')
-                    py_launcher_dist_path = Path(workpath) / 'py_launcher_dist'
-                    src = py_launcher_dist_path / f"{preset_name}.exe"
 
-                    if src.exists():
-                        python_launcher_built_path = src
-                        log(f"Python launcher built successfully at: {src}\n")
+                    preset_name = {
+                        'minimal':  'Launcher_minimal',
+                        'standard': 'Launcher_standard',
+                    }.get(launcher_preset, 'Launcher_standard')
+                    src_py = Path(workpath) / 'py_launcher_dist' / f"{preset_name}.exe"
+
+                    if src_py.exists():
+                        if py_launcher_final.exists():
+                            py_launcher_final.unlink()
+                        shutil.copy2(str(src_py), str(py_launcher_final))
+                        log(f"  Python Launcher → {py_launcher_final}\n")
                     else:
-                        log(f"\nError: {preset_name}.exe not found in {py_launcher_dist_path} after build.\n")
+                        log(f"  Error: built file not found: {src_py}\n")
                 else:
-                    log(f"\nError: Build_PyLauncher.py not found. Cannot build launcher.\n")
+                    log("  Error: Build_PyLauncher.py not found.\n")
             else:
-                log("Skipping Python builds.\n")
+                log("Skipping Python Launcher build.\n")
 
             if proc_state['cancelled']: set_ui_busy(False); return
 
-            # Compile C Launcher
+            # 2. C Launcher → bin/Launcher.c.exe
+            c_launcher_final = bin_dir / "Launcher.c.exe"
             c_launcher_built = False
-            launcher_src_dir = project_root / "assets" / "launcher"
             if not skip_c:
-                log(f"\nStarting C Launcher Build...\n")
+                log("Building C Launcher...\n")
                 if platform.system() == 'Windows':
                     build_script_c = launcher_src_dir / "Build.bat"
-                    cmd_c_build = ["cmd", "/c", str(build_script_c)]
+                    cmd_c = ["cmd", "/c", str(build_script_c)]
                 else:
                     build_script_c = launcher_src_dir / "build.sh"
-                    cmd_c_build = ["sh", str(build_script_c), "--linux"]
-                
+                    cmd_c = ["sh", str(build_script_c), "--linux"]
+
                 if build_script_c.exists():
-                    if run_cmd_sequence([cmd_c_build], cwd=launcher_src_dir): # This returns False on failure
-                        log("C Launcher Build Completed.\n")
-                        c_launcher_built = True
+                    if run_cmd_sequence([cmd_c], cwd=launcher_src_dir):
+                        # Build script drops Launcher.exe into launcher_src_dir
+                        src_c = launcher_src_dir / "Launcher.exe"
+                        if src_c.exists():
+                            if c_launcher_final.exists():
+                                c_launcher_final.unlink()
+                            shutil.move(str(src_c), str(c_launcher_final))
+                            log(f"  C Launcher → {c_launcher_final}\n")
+                            c_launcher_built = True
+                        else:
+                            log("  Error: Launcher.exe not found after C build.\n")
                     else:
-                        log("\nC Launcher build failed. Halting process.\n")
+                        log("C Launcher build failed. Halting.\n")
                         set_ui_busy(False); proc_state['proc'] = None; return
                 else:
-                    log(f"Build script not found: {build_script_c}\n")
+                    log(f"  Build script not found: {build_script_c}\n")
             else:
                 log("Skipping C Launcher build.\n")
 
-            # Manage Launcher Executables
-            log("\nManaging launcher executables...\n")
-            bin_dir = project_root / "bin"
-            bin_dir.mkdir(exist_ok=True)
-            c_launcher_src_path = launcher_src_dir / "Launcher.exe"
+            if proc_state['cancelled']: set_ui_busy(False); return
 
-            # Define final destinations
-            c_launcher_final_default = bin_dir / "Launcher.exe"
-            c_launcher_final_alt = bin_dir / "Launcher.c.exe"
-            py_launcher_final_default = bin_dir / "Launcher.exe"
-            py_launcher_final_alt = bin_dir / "Launcher.py.exe"
+            # 3. Main application (PyInstaller)
+            if not skip_python and not skip_app:
+                log("Building main application...\n")
+                main_script = script_dir / "main.py"
+                icon_path   = project_root / "assets" / "Joystick.ico"
+                cmd_main = [
+                    sys.executable, '-m', 'PyInstaller', str(main_script),
+                    f'--name={rj_proj}', '--noconfirm', '--clean', '--windowed',
+                    f'--distpath={dest_dir_str}', f'--workpath={workpath}',
+                    f'--add-data={project_root / "site"}{sep}site',
+                    f'--add-data={project_root / "assets"}{sep}assets',
+                    '--onefile', '--noupx'
+                ]
+                if platform.system() == 'Windows' and icon_path.exists():
+                    cmd_main.append(f'--icon={icon_path}')
+                if not run_cmd_sequence([cmd_main], cwd=project_root):
+                    set_ui_busy(False); proc_state['proc'] = None; return
+            elif skip_python or skip_app:
+                log("Skipping main application build.\n")
 
-            # Clean up previous versions in bin to avoid conflicts
-            for p in [c_launcher_final_default, c_launcher_final_alt, py_launcher_final_alt]:
-                if p.exists():
-                    try:
-                        p.unlink()
-                    except OSError as e:
-                        log(f"Could not remove old launcher {p}: {e}\n")
+            if proc_state['cancelled']: set_ui_busy(False); return
+
+            # 4. Copy chosen default launcher → bin/Launcher.exe
+            default_dst = bin_dir / "Launcher.exe"
+            if default_dst.exists():
+                try:    default_dst.unlink()
+                except OSError as e: log(f"  Could not remove old Launcher.exe: {e}\n")
 
             if default_launcher == 'C':
-                log("Setting C Launcher as default.\n")
-                if c_launcher_built and c_launcher_src_path.exists():
-                    shutil.move(str(c_launcher_src_path), str(c_launcher_final_default))
-                    log(f"  - C Launcher set as default: {c_launcher_final_default}\n")
-                else:
-                    log("  - C Launcher source not found or build skipped/failed.\n")
-                
-                if python_launcher_built_path and python_launcher_built_path.exists():
-                    shutil.copy2(str(python_launcher_built_path), str(py_launcher_final_alt))
-                    log(f"  - Python Launcher set as alternate: {py_launcher_final_alt}\n")
-                else:
-                    log("  - Python Launcher source not found or build skipped/failed.\n")
-            else:  # Python is default
-                log("Setting Python Launcher as default.\n")
-                if python_launcher_built_path and python_launcher_built_path.exists():
-                    shutil.copy2(str(python_launcher_built_path), str(py_launcher_final_default))
-                    log(f"  - Python Launcher set as default: {py_launcher_final_default}\n")
-                else:
-                    log("  - Python Launcher source not found or build skipped/failed.\n")
-
-                if c_launcher_built and c_launcher_src_path.exists():
-                    shutil.move(str(c_launcher_src_path), str(c_launcher_final_alt))
-                    log(f"  - C Launcher set as alternate: {c_launcher_final_alt}\n")
-                else:
-                    log("  - C Launcher source not found or build skipped/failed.\n")
-
-            log("Build phase completed.\n")
-            if proc_state['cancelled']: set_ui_busy(False); return
-
-            # 3. Package and Release
-            log("\nStarting Packaging and Release phase...\n")
-
-            # Calculate SHA1
-            log("Calculating SHA1 of executable...\n")
-            exe_name = f"{rj_proj}.exe" if platform.system() == "Windows" else f"{rj_proj}"
-            exe_path = None
-            for dirpath, _, files in os.walk(dest_dir):
-                if exe_name in files:
-                    exe_path = Path(dirpath) / exe_name
-                    break
-            
-            sha1_hash = ""
-            if exe_path and exe_path.exists():
-                log(f"Found executable at: {exe_path}\n")
-                sha1 = hashlib.sha1()
-                with open(exe_path, 'rb') as f:
-                    while chunk := f.read(65536):
-                        sha1.update(chunk)
-                sha1_hash = sha1.hexdigest()
-                log(f"Executable SHA1: {sha1_hash}\n")
+                src_default = c_launcher_final
+                label_default = "C"
             else:
-                log(f"Executable '{exe_name}' not found in '{dest_dir_str}'. Build might have failed. Aborting release.\n")
-                set_ui_busy(False)
-                return
+                src_default = py_launcher_final
+                label_default = "Python"
 
-            if proc_state['cancelled']: set_ui_busy(False); return
-
-            # Compress
-            archive_name = "portable.7z"
-            # Place the archive in the parent of the dist directory.
-            # This allows the user to place build artifacts outside the git repo.
-            archive_path = dest_dir.parent / archive_name
-            seven_z = project_root / "bin" / "7z.exe"
-            
-            if seven_z.exists() and dest_dir.exists():
-                log(f"Compressing {dest_dir} to {archive_name}...\n")
-                if archive_path.exists(): archive_path.unlink()
-                
-                cmd_7z = [str(seven_z), "a", str(archive_path), f"{dest_dir_str}\\*"]
-                if not run_cmd_sequence([cmd_7z]):
-                    set_ui_busy(False); return
-                log("Compression complete.\n")
+            if src_default.exists():
+                shutil.copy2(str(src_default), str(default_dst))
+                log(f"  Default Launcher ({label_default}) → {default_dst}\n")
             else:
-                log("7z.exe or dist directory not found. Cannot create archive.\n")
+                log(f"  Warning: chosen default launcher not found: {src_default}\n")
+
+            log("\n>>> Compile complete <<<\n")
+            set_ui_busy(False)
+            proc_state['proc'] = None
+
+        open_log_window("Compile Log")
+        threading.Thread(target=worker, daemon=True).start()
+
+    # ------------------------------------------------------------------ #
+    #  APPLY  – read portable.7z, populate fields, increment version,    #
+    #           save INI, write README.md and index.html                  #
+    # ------------------------------------------------------------------ #
+    def run_apply():
+        dest_dir    = Path(build_vars['dest'].get())
+        archive_path = dest_dir.parent / "portable.7z"
+        version     = vars.get('VERSION', tk.StringVar(value="")).get()
+        git_user    = vars.get('GITUSER', tk.StringVar(value="")).get()
+        rj_proj     = vars.get('RJ_PROJ', tk.StringVar(value="")).get()
+        archive_name = "portable.7z"
+
+        if not archive_path.exists():
+            messagebox.showerror("Apply", f"Archive not found:\n{archive_path}\n\nRun Compile + Deploy first.")
+            return
+
+        # SHA1 of the archive itself
+        sha1 = hashlib.sha1()
+        try:
+            with open(archive_path, 'rb') as f:
+                while chunk := f.read(65536):
+                    sha1.update(chunk)
+            sha1_hash = sha1.hexdigest()
+        except OSError as e:
+            messagebox.showerror("Apply", f"Could not read archive: {e}")
+            return
+
+        size_mb = os.path.getsize(archive_path) / (1024 * 1024)
+
+        # Populate GUI fields
+        if 'RSHA1' in vars:
+            vars['RSHA1'].set(sha1_hash)
+        if 'RSIZE' in vars:
+            vars['RSIZE'].set(f"{size_mb:.2f}")
+        if 'PORTABLE' in vars and git_user and rj_proj and version:
+            url = f"https://github.com/{git_user}/{rj_proj}/releases/download/{version}/{archive_name}"
+            vars['PORTABLE'].set(url)
+        if 'RDATE' in vars:
+            vars['RDATE'].set(datetime.datetime.now().strftime("%m-%d-%Y"))
+
+        # Increment version
+        new_ver = increment_version(version)
+        if 'VERSION' in vars and new_ver != version:
+            vars['VERSION'].set(new_ver)
+
+        # Persist to INI and write output files
+        for k, sv in vars.items():
+            cfg["values"][k] = sv.get()
+        save_ini(ini_path, cfg)
+        apply_replacements({k: cfg["values"].get(k, "") for k in tags})
+
+        messagebox.showinfo("Apply", f"Fields updated.\nSHA1: {sha1_hash}\nSize: {size_mb:.2f} MB\nVersion incremented to {new_ver}\nREADME.md and index.html written.")
+
+    # ------------------------------------------------------------------ #
+    #  DEPLOY  – compress dist → portable.7z                             #
+    # ------------------------------------------------------------------ #
+    def run_deploy():
+        import threading
+
+        dest_dir_str = build_vars['dest'].get()
+        dest_dir     = Path(dest_dir_str)
+        script_dir   = Path(__file__).parent.absolute()
+        project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
+        archive_path = dest_dir.parent / "portable.7z"
+        seven_z      = project_root / "bin" / "7z.exe"
+
+        if not seven_z.exists():
+            messagebox.showerror("Deploy", f"7z.exe not found at:\n{seven_z}")
+            return
+        if not dest_dir.exists():
+            messagebox.showerror("Deploy", f"Dist directory not found:\n{dest_dir}\nRun Compile first.")
+            return
+
+        def worker():
+            set_ui_busy(True)
+            proc_state['cancelled'] = False
+            log("\n>>> Starting Deploy (compress) <<<\n")
+
+            if archive_path.exists():
+                try:    archive_path.unlink()
+                except Exception as e: log(f"Could not remove old archive: {e}\n")
+
+            sep = "\\" if platform.system() == "Windows" else "/"
+            cmd_7z = [str(seven_z), "a", str(archive_path), f"{dest_dir_str}{sep}*"]
+            if not run_cmd_sequence([cmd_7z]):
+                log("Compression failed.\n")
                 set_ui_busy(False); return
 
+            log(f"Archive created: {archive_path}\n")
+            log("\n>>> Deploy complete <<<\n")
+            set_ui_busy(False)
+            proc_state['proc'] = None
+
+        open_log_window("Deploy Log")
+        threading.Thread(target=worker, daemon=True).start()
+
+    # ------------------------------------------------------------------ #
+    #  RELEASE  – git commit/push + gh release create                    #
+    # ------------------------------------------------------------------ #
+    def run_release():
+        import threading
+
+        save_all()
+
+        version      = vars.get('VERSION', tk.StringVar(value="")).get()
+        commit_msg   = build_vars['commit_msg'].get()
+        dest_dir     = Path(build_vars['dest'].get())
+        archive_path = dest_dir.parent / "portable.7z"
+        script_dir   = Path(__file__).parent.absolute()
+        project_root = script_dir.parent if script_dir.name.lower() == "python" else script_dir
+
+        if not version:
+            messagebox.showerror("Release", "VERSION field is empty.")
+            return
+        if not archive_path.exists():
+            messagebox.showerror("Release", f"Archive not found:\n{archive_path}\nRun Deploy first.")
+            return
+
+        def worker():
+            set_ui_busy(True)
+            proc_state['cancelled'] = False
+            log("\n>>> Starting Release <<<\n")
+
+            # Check if version already exists on GitHub
+            log(f"Checking if version {version} already exists on GitHub...\n")
+            try:
+                proc = subprocess.run(["gh", "release", "view", version],
+                                      capture_output=True, text=True, cwd=str(project_root))
+                if proc.returncode == 0:
+                    log(f"Version {version} already exists on GitHub.\n")
+                    root.after(0, lambda: messagebox.showerror(
+                        "Version Conflict",
+                        f"Version {version} already exists on GitHub.\nIncrement the version and try again."))
+                    set_ui_busy(False); return
+            except FileNotFoundError:
+                log("GH CLI not found, skipping version check.\n")
+            except Exception as e:
+                log(f"Version check failed: {e}\n")
+
             if proc_state['cancelled']: set_ui_busy(False); return
 
-            # Calculate Size and update UI
-            size_mb = os.path.getsize(archive_path) / (1024 * 1024)
-            
-            def update_ui_for_release():
-                if 'RSHA1' in vars and sha1_hash: vars['RSHA1'].set(sha1_hash)
-                if 'RSIZE' in vars: vars['RSIZE'].set(f"{size_mb:.2f}")
-                if 'PORTABLE' in vars and git_user and rj_proj and version:
-                    url = f"https://github.com/{git_user}/{rj_proj}/releases/download/{version}/{archive_name}"
-                    vars['PORTABLE'].set(url)
-                save_all()
-            root.after(0, update_ui_for_release)
-            
-            import time
-            time.sleep(1)
-
-            if proc_state['cancelled']: set_ui_busy(False); return
-
-            # Git Push & Release
-            log("Committing changes and pushing to Git...\n")
+            # Git commit and push
+            log("Committing and pushing to Git...\n")
             git_commands = [
                 ["git", "add", "."],
                 ["git", "commit", "-m", commit_msg],
-                ["git", "push", "-f", "-u", "origin", "main"]
+                ["git", "push", "-f", "-u", "origin", "main"],
             ]
-            if not run_cmd_sequence(git_commands, cwd=Path.cwd()):
+            if not run_cmd_sequence(git_commands, cwd=project_root):
                 set_ui_busy(False); return
 
             if proc_state['cancelled']: set_ui_busy(False); return
 
-            log("Creating GitHub Release...\n")
+            # Create GitHub Release
+            log(f"Creating GitHub Release {version}...\n")
+            release_cmd = [
+                "gh", "release", "create", version, str(archive_path),
+                "--title", version, "--notes", "Automated release"
+            ]
             try:
-                release_cmd = ["gh", "release", "create", version, str(archive_path), "--title", version, "--notes", "Automated release"]
-                if not run_cmd_sequence([release_cmd], cwd=Path.cwd()):
+                if not run_cmd_sequence([release_cmd], cwd=project_root):
                     log("GitHub release creation failed.\n")
                     set_ui_busy(False); return
-                
                 log(f"Release {version} created successfully.\n")
-                
-                # Auto-increment version
-                new_ver = increment_version(version)
-                if new_ver != version:
-                    def update_ver_ui():
-                        if 'VERSION' in vars:
-                            vars['VERSION'].set(new_ver)
-                            save_all()
-                            log(f"Version auto-incremented to {new_ver}\n")
-                    root.after(0, update_ver_ui)
             except FileNotFoundError:
-                log("GH CLI not found. Skipping upload.\n")
+                log("GH CLI not found. Cannot create release.\n")
             except Exception as e:
-                log(f"Release upload failed: {e}\n")
+                log(f"Release failed: {e}\n")
             finally:
-                log("\n>>> Build & Release Process Completed <<<\n")
+                log("\n>>> Release complete <<<\n")
                 set_ui_busy(False)
                 proc_state['proc'] = None
 
-        open_log_window("Build & Release Log")
+        open_log_window("Release Log")
         threading.Thread(target=worker, daemon=True).start()
 
     # Button Row in build container
     btn_row = ttk.Frame(build_container, padding=(0, 4))
     btn_row.grid(row=row, column=0, columnspan=2, sticky="ew", pady=(2, 0))
-    
-    ttk.Button(btn_row, text="Apply & Save", command=save_all).pack(side="left", padx=2)
-    ttk.Button(btn_row, text="Build & Release", command=run_build_and_release).pack(side="left", padx=2)
-    
+
+    ttk.Button(btn_row, text="Compile", command=run_compile).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Apply",   command=run_apply).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Deploy",  command=run_deploy).pack(side="left", padx=2)
+    ttk.Button(btn_row, text="Release", command=run_release).pack(side="left", padx=2)
+
     btn_cancel = ttk.Button(btn_row, text="Cancel", command=cancel_process, state='disabled')
     btn_cancel.pack(side="left", padx=2)
 

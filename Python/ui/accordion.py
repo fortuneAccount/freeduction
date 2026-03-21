@@ -6,8 +6,12 @@ from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSlot
 
 
 class AccordionSection(QWidget):
+    # Large sentinel value used as "uncapped" maximum height
+    EXPANDED_MAX = 16777215  # Qt's QWIDGETSIZE_MAX
+
     def __init__(self, title: str, content: QWidget, animation_duration=200, start_expanded=False):
         super().__init__()
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.toggle_button = QToolButton(text=title, checkable=True, checked=start_expanded)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
@@ -15,26 +19,28 @@ class AccordionSection(QWidget):
         self.toggle_button.clicked.connect(self.toggle)
 
         self.content_area = QScrollArea()
-        self.content_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.content_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self.content_area.setFrameShape(QFrame.Shape.NoFrame)
         self.content_area.setWidgetResizable(True)
-        # Set initial height based on start_expanded
-        initial_height = 0 if not start_expanded else content.sizeHint().height()
-        self.content_area.setMaximumHeight(initial_height)
         self.content_area.setMinimumHeight(0)
+        # When expanded use uncapped height; when collapsed use 0
+        initial_height = self.EXPANDED_MAX if start_expanded else 0
+        self.content_area.setMaximumHeight(initial_height)
         self.content_area.setWidget(content)
 
         self.animation = QPropertyAnimation(self.content_area, b"maximumHeight")
         self.animation.setDuration(animation_duration)
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
 
+        # Keep content_height for backward compatibility with external code that reads/writes it.
+        # It no longer affects animation (we always expand to EXPANDED_MAX) but must exist.
+        self.content_height = content.sizeHint().height()
+
         layout = QVBoxLayout(self)
         layout.setSpacing(0)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.toggle_button)
         layout.addWidget(self.content_area)
-
-        self.content_height = content.sizeHint().height()
 
     @pyqtSlot()
     def toggle(self):
@@ -53,7 +59,7 @@ class AccordionSection(QWidget):
                     pass
 
         start_height = self.content_area.maximumHeight()
-        end_height = self.content_height if checked else 0
+        end_height = self.EXPANDED_MAX if checked else 0
 
         self.animation.stop()
         self.animation.setStartValue(start_height)

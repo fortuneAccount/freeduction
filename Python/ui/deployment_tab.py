@@ -301,8 +301,7 @@ class DeploymentTab(QWidget):
         creation_section.content_height += 150
 
         main_layout.addWidget(general_options_section)
-        main_layout.addWidget(creation_section)
-        main_layout.addStretch(1)
+        main_layout.addWidget(creation_section, 1)
 
         # --- Connect Signals ---
         self.name_check_checkbox.stateChanged.connect(self.config_changed.emit)

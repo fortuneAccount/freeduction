@@ -7,7 +7,20 @@ for /f "delims=" %%a in ('echo."%CD%"') do (
 	set "DIRCVT=!CURDIR::=!"
 	set "CDCVT=/!DIRCVT!"
 )
+if exist "C:\msys2" set MSYSDIR=C:\msys2\usr\bin
+if exist "C:\msys64" set MSYSDIR=C:\msys64\usr\bin
 for /f "delims=" %%a in ('cygpath -m /') do (
+	if "%%~a" == "" break
+	set "MSYS2=%%~a"
+	set "MSYS2=!MSYS2:/=\!"
+	"!MSYS2!msys2_shell.cmd" -mingw64 -defterm -no-start -here -c "%CDCVT%/Build.sh --windows"
+	if errorlevel 1 (
+		echo MSYS2 build failed
+		set MSYS2=
+	)
+)
+if "%MSYS2%" NEQ "" goto VSTRY
+for /f "delims=" %%a in ('%MSYSDIR%\cygpath -m /') do (
 	if "%%~a" == "" (
 		break
 	)
@@ -16,13 +29,14 @@ for /f "delims=" %%a in ('cygpath -m /') do (
 	"!MSYS2!msys2_shell.cmd" -mingw64 -defterm -no-start -here -c "%CDCVT%/Build.sh --windows"
 	if errorlevel 1 (
 		echo MSYS2 build failed
-		exit /b 1
+		set MSYS2=
+		break
 	)
 )
 if "%MSYS2%" NEQ "" exit /b 0
 
 
-
+VSTRY:
 if not defined VSCMD_VER (
 	for /f "delims=" %%a in ('dir /b/a-d/s "%programfiles%\Microsoft Visual Studio\*vcvars64.bat"') do (
 		set VSCMD_VER=%%~a -defterm -where "C:\users\jesse\documents\
