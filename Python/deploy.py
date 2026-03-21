@@ -296,7 +296,8 @@ def run_gui(ini_path: Path) -> None:
     
     def browse_dest():
         d = filedialog.askdirectory()
-        if d: build_vars['dest'].set(d)
+        if d:
+            build_vars['dest'].set(d)
     ttk.Button(ctl_frame, text="...", width=2, command=browse_dest).pack(side="left", padx=1)
     
     row += 1
@@ -308,7 +309,8 @@ def run_gui(ini_path: Path) -> None:
     ttk.Entry(wp_frame, textvariable=build_vars['workpath'], width=35).pack(side="left", fill="x", expand=True)
     def browse_workpath():
         d = filedialog.askdirectory()
-        if d: build_vars['workpath'].set(d)
+        if d:
+            build_vars['workpath'].set(d)
     ttk.Button(wp_frame, text="...", width=2, command=browse_workpath).pack(side="left", padx=1)
     
     row += 1
@@ -422,7 +424,7 @@ def run_gui(ini_path: Path) -> None:
         if proc_state['proc']:
             try:
                 proc_state['proc'].kill()
-            except:
+            except Exception:
                 pass
         log("\n>>> Operation Cancelled by User <<<\n")
 
@@ -527,7 +529,6 @@ def run_gui(ini_path: Path) -> None:
 
             # 2. C Launcher → bin/Launcher.c.exe
             c_launcher_final = bin_dir / "Launcher.c.exe"
-            c_launcher_built = False
             if not skip_c:
                 log("Building C Launcher...\n")
                 if platform.system() == 'Windows':
