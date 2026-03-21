@@ -173,7 +173,6 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 ├── requirements_win.txt
 └── steam.json
 ```
-# Documentation
 
 # Setup
 ## Ubuntu Users should :

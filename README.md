@@ -173,7 +173,6 @@ freeduction/
 ├── requirements_win.txt
 └── steam.json
 ```
-# Documentation
 
 # Setup
 ## Ubuntu Users should :
