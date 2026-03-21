@@ -174,7 +174,7 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 └── steam.json
 ```
 
-# Setup
+# Compiling
 
 ## Ubuntu Users should :
 ### For now clone the repo, setup a virtual environment in python and install the requirements via pip
