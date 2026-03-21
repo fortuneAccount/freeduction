@@ -54,9 +54,6 @@ AntimicroX, keySticks, multimonitortool,  borderless-gaming,  borderless ,  rclo
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
 freeduction/
-├── .devcontainer/
-│   ├── change_port_visibility.sh
-│   └── devcontainer.json
 ├── assets/
 │   ├── launcher/
 │   │   ├── inih/
@@ -144,6 +141,7 @@ freeduction/
 │   │   ├── __init__.py
 │   │   ├── cloud_path_utils.py
 │   │   └── path_discovery.py
+│   ├── config_editor_dialog.py
 │   ├── constants.py
 │   ├── deploy.py
 │   ├── Launcher.py
@@ -152,6 +150,7 @@ freeduction/
 │   ├── models.py
 │   ├── sequence_executor.py
 │   ├── sequence_executor_v2.py
+│   ├── tray_menu.py
 │   └── utils.py
 ├── site/
 │   ├── img/
@@ -208,18 +207,18 @@ win
 ```
 ### To compile the launcher:
 ```
-		cd assets
+		cd assets/launcher
 		sudo chmod +x
 		build.sh --linux
 ```
 ### Windows open a dev console:
 ```
-		pushd "%userprofile%\Downloads\freeduction\assets"
+		pushd "%userprofile%\Downloads\freeduction\assets\launcher"
 		build.bat
 ```
 #### or in Mingw64:
 ```
-		cd /c/Users/$USER/Downloads/freeduction/assets
+		cd /c/Users/$USER/Downloads/freeduction/assets/launcher
 		./build.sh --windows
 ```
 ### Build and Compile your own project:
