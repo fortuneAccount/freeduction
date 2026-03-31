@@ -29,6 +29,7 @@ steam_filtered.txt
 *.index
 *.bak
 *.obj
+index_backups/
 
 # IDE specific
 .vscode/
