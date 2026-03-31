@@ -1,6 +1,7 @@
 import os
 import logging
 import re
+import datetime
 from typing import Optional, Tuple, Dict, Any, Set
 from .name_processor import NameProcessor
 from .name_utils import replace_illegal_chars
@@ -147,6 +148,7 @@ def _process_executable(
         config = main_window.config
         game_data = {
             'create': not is_demoted_flag,
+            'date_indexed': datetime.datetime.now().isoformat(),
             'name': filename,
             'directory': os.path.dirname(exec_full_path),
             'steam_name': steam_name,

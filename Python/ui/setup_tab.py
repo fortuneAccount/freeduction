@@ -10,13 +10,15 @@ from PyQt6.QtWidgets import (
     QComboBox, QHBoxLayout, QCheckBox, QTabWidget,
     QFileDialog, QApplication, QSpinBox, QMessageBox, QMenu, QInputDialog,
     QDialog, QDialogButtonBox, QLineEdit, QProgressDialog, QGridLayout, QDoubleSpinBox,
-    QStyle
+    QStyle, QFontComboBox
 )
 import re
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
+from PyQt6.QtGui import QFont
 from Python.models import AppConfig
 from Python.ui.widgets import DragDropListWidget, PathConfigRow
 from Python.ui.accordion import AccordionSection
+from Python.ui.theme_manager import ThemeManager
 from Python import constants
     
 class DownloadThread(QThread):
@@ -658,13 +660,6 @@ class SetupTab(QWidget):
         self.fuzzy_match_spin.setToolTip("Sensitivity for fuzzy name matching (0.1 = loose, 1.0 = exact). Default: 0.6")
         behavior_layout.addRow("Fuzzy Match Sensitivity:", self.fuzzy_match_spin)
 
-        # Editor Page Size
-        self.page_size_spin = QSpinBox()
-        self.page_size_spin.setRange(25, 2000)
-        self.page_size_spin.setValue(50)
-        self.page_size_spin.setToolTip("Number of rows per page in the Editor tab (75-2000)")
-        behavior_layout.addRow("Editor Page Size:", self.page_size_spin)
-        
         # Plugin Manager Button
         self.plugin_manager_btn = QPushButton("Plugin Manager")
         self.plugin_manager_btn.setToolTip("Open Plugin Manager to view, enable/disable, and manage plugins")
@@ -677,10 +672,78 @@ class SetupTab(QWidget):
         behavior_layout.addRow(self.restart_btn)
         behavior_section = AccordionSection("BEHAVIOR", behavior_widget)
 
+        # --- Section 5: Appearance ---
+        appearance_widget = QWidget()
+        appearance_layout = QFormLayout(appearance_widget)
+
+        self.theme_selector = QComboBox()
+        theme_manager = ThemeManager()
+        available_themes = dict(theme_manager.list_available_themes())
+        for theme_id in ThemeManager.THEME_IDS:
+            if theme_id in available_themes:
+                display_name = available_themes[theme_id]
+                self.theme_selector.addItem(display_name)
+                self.theme_selector.setItemData(self.theme_selector.count() - 1, theme_id)
+            else:
+                # Determine display name from a temporary provider instance
+                provider = theme_manager._registry.get(theme_id)
+                display_name = provider.name if provider else theme_id
+                self.theme_selector.addItem(display_name)
+                idx = self.theme_selector.count() - 1
+                self.theme_selector.setItemData(idx, theme_id)
+                # Disable the item
+                model = self.theme_selector.model()
+                item = model.item(idx)
+                if item:
+                    item.setEnabled(False)
+                    item.setToolTip("Library not installed")
+
+        # UI Theme Row
+        theme_row = QHBoxLayout()
+        theme_row.addWidget(self.theme_selector)
+        self.reset_theme_btn = QPushButton("Reset")
+        self.reset_theme_btn.setFixedWidth(50)
+        self.reset_theme_btn.clicked.connect(self._reset_theme)
+        theme_row.addWidget(self.reset_theme_btn)
+        appearance_layout.addRow("UI THEME:", theme_row)
+
+        # UI Font Row
+        ui_font_row = QHBoxLayout()
+        self.font_selector = QFontComboBox()
+        self.font_size_spin = QSpinBox()
+        self.font_size_spin.setRange(6, 24)
+        self.font_size_spin.setSuffix(" pt")
+        self.reset_ui_font_btn = QPushButton("Reset")
+        self.reset_ui_font_btn.setFixedWidth(50)
+        self.reset_ui_font_btn.clicked.connect(self._reset_ui_font)
+        
+        ui_font_row.addWidget(self.font_selector, 2)
+        ui_font_row.addWidget(self.font_size_spin, 1)
+        ui_font_row.addWidget(self.reset_ui_font_btn)
+        appearance_layout.addRow("UI FONT:", ui_font_row)
+
+        # Editor Font Row
+        editor_font_row = QHBoxLayout()
+        self.editor_font_selector = QFontComboBox()
+        self.editor_font_size_spin = QSpinBox()
+        self.editor_font_size_spin.setRange(6, 24)
+        self.editor_font_size_spin.setSuffix(" pt")
+        self.reset_editor_font_btn = QPushButton("Reset")
+        self.reset_editor_font_btn.setFixedWidth(50)
+        self.reset_editor_font_btn.clicked.connect(self._reset_editor_font)
+
+        editor_font_row.addWidget(self.editor_font_selector, 2)
+        editor_font_row.addWidget(self.editor_font_size_spin, 1)
+        editor_font_row.addWidget(self.reset_editor_font_btn)
+        appearance_layout.addRow("EDITOR FONT:", editor_font_row)
+
+        appearance_section = AccordionSection("APPEARANCE", appearance_widget)
+
         main_layout.addWidget(source_config_section)
         main_layout.addWidget(paths_section, 1)
         main_layout.addWidget(sequences_section)
         main_layout.addWidget(behavior_section)
+        main_layout.addWidget(appearance_section)
         self._connect_signals()
         
         # Populate Launcher Executable Combobox
@@ -892,8 +955,14 @@ class SetupTab(QWidget):
         self.fuzzy_match_spin.valueChanged.connect(self.config_changed.emit)
         
         # Behavior
-        self.page_size_spin.valueChanged.connect(self.config_changed.emit)
         self.restart_btn.clicked.connect(self._reset_to_defaults)
+
+        # Appearance: theme selector
+        self.theme_selector.currentIndexChanged.connect(self._on_theme_changed)
+        self.font_selector.currentFontChanged.connect(self._on_font_changed)
+        self.font_size_spin.valueChanged.connect(self._on_font_size_changed)
+        self.editor_font_selector.currentFontChanged.connect(self._on_editor_font_changed)
+        self.editor_font_size_spin.valueChanged.connect(self._on_editor_font_size_changed)
 
         # Connect Cloud/Backup enable signals to update sub-tab state
         if "cloud_sync_path" in self.path_rows:
@@ -1846,12 +1915,29 @@ exit 1
         self.logging_verbosity_combo.setCurrentText(config.logging_verbosity)
         self.fuzzy_match_spin.setValue(getattr(config, 'fuzzy_match_cutoff', 0.6))
 
+        # Appearance
+        theme_id = getattr(config, 'ui_theme', 'default') or 'default'
+        idx = self.theme_selector.findData(theme_id)
+        self.theme_selector.setCurrentIndex(idx if idx >= 0 else 0)
+
+        font_family = getattr(config, 'ui_font_family', "")
+        if font_family:
+            self.font_selector.setCurrentFont(QFont(font_family))
+        
+        font_size = getattr(config, 'ui_font_size', 9)
+        self.font_size_spin.setValue(font_size)
+
+        editor_font_family = getattr(config, 'editor_font_family', "")
+        if editor_font_family:
+            self.editor_font_selector.setCurrentFont(QFont(editor_font_family))
+        
+        editor_font_size = getattr(config, 'editor_font_size', 9)
+        self.editor_font_size_spin.setValue(editor_font_size)
+
         self.run_as_admin_checkbox.setChecked(config.run_as_admin)
         self.use_kill_list_checkbox.setChecked(config.use_kill_list)
         self.hide_taskbar_checkbox.setChecked(config.hide_taskbar)
         self.terminate_bw_on_exit_checkbox.setChecked(config.terminate_borderless_on_exit)
-
-        self.page_size_spin.setValue(config.editor_page_size)
 
         for attr_name in self.PATH_ATTRIBUTES:
             if attr_name in self.path_rows:
@@ -1981,7 +2067,17 @@ exit 1
         config.exclude_selected_manager_games = self.exclude_manager_checkbox.isChecked()
         config.logging_verbosity = self.logging_verbosity_combo.currentText()
         config.fuzzy_match_cutoff = self.fuzzy_match_spin.value()
-        config.editor_page_size = self.page_size_spin.value()
+
+        # Appearance
+        theme_id = self.theme_selector.currentData()
+        if theme_id:
+            config.ui_theme = theme_id
+
+        config.ui_font_family = self.font_selector.currentFont().family()
+        config.ui_font_size = self.font_size_spin.value()
+        
+        config.editor_font_family = self.editor_font_selector.currentFont().family()
+        config.editor_font_size = self.editor_font_size_spin.value()
 
         config.run_as_admin = self.run_as_admin_checkbox.isChecked()
         config.use_kill_list = self.use_kill_list_checkbox.isChecked()
@@ -2044,6 +2140,73 @@ exit 1
         config.savestate_backup_path = self.savestate_backup_path_row.path if cloud_enabled else ""
         config.savestate_auto_backup = self.savestate_auto_backup_cb.isChecked() if cloud_enabled else False
 
+    def _on_theme_changed(self, index: int):
+        """Apply the selected theme immediately and persist it to config."""
+        theme_id = self.theme_selector.itemData(index)
+        if not theme_id:
+            return
+        theme_manager = ThemeManager()
+        requires_restart = theme_manager.apply_theme(theme_id, QApplication.instance())
+        if hasattr(self.main_window, 'config'):
+            self.main_window.config.ui_theme = theme_id
+            self.config_changed.emit()
+        if requires_restart:
+            QMessageBox.information(
+                self,
+                "Restart Required",
+                "The selected theme will take full effect after restarting the application.",
+            )
+
+    def _reset_theme(self):
+        """Reset theme to default."""
+        idx = self.theme_selector.findData("default")
+        self.theme_selector.setCurrentIndex(idx if idx >= 0 else 0)
+
+    def _reset_ui_font(self):
+        """Reset UI font to system default."""
+        self.font_selector.setCurrentFont(self.font().family())
+        self.font_size_spin.setValue(9)
+
+    def _reset_editor_font(self):
+        """Reset Editor font to system default."""
+        self.editor_font_selector.setCurrentFont(self.font().family())
+        self.editor_font_size_spin.setValue(9)
+
+    def _on_font_changed(self, font):
+        """Apply font change immediately."""
+        font.setPointSize(self.font_size_spin.value())
+        QApplication.instance().setFont(font)
+        if hasattr(self.main_window, 'config'):
+            self.main_window.config.ui_font_family = font.family()
+            self.config_changed.emit()
+
+    def _on_font_size_changed(self, size):
+        """Apply font size change immediately."""
+        font = self.font_selector.currentFont()
+        font.setPointSize(size)
+        QApplication.instance().setFont(font)
+        if hasattr(self.main_window, 'config'):
+            self.main_window.config.ui_font_size = size
+            self.config_changed.emit()
+
+    def _on_editor_font_changed(self, font):
+        """Apply editor font change immediately."""
+        font.setPointSize(self.editor_font_size_spin.value())
+        if hasattr(self.main_window, 'editor_tab'):
+            self.main_window.editor_tab.table.setFont(font)
+        if hasattr(self.main_window, 'config'):
+            self.main_window.config.editor_font_family = font.family()
+            self.config_changed.emit()
+
+    def _on_editor_font_size_changed(self, size):
+        """Apply editor font size change immediately."""
+        font = self.editor_font_selector.currentFont()
+        font.setPointSize(size)
+        if hasattr(self.main_window, 'editor_tab'):
+            self.main_window.editor_tab.table.setFont(font)
+        if hasattr(self.main_window, 'config'):
+            self.main_window.config.editor_font_size = size
+            self.config_changed.emit()
     def _on_path_text_changed(self, config_key, new_path):
         """Updates options and arguments if the new path matches a known tool."""
         if not new_path:

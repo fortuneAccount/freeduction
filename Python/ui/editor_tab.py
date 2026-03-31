@@ -2,7 +2,8 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QTableWidget, QTableWidgetItem, QLabel,
     QPushButton, QHeaderView, QAbstractItemView, QMenu, QCheckBox, QLineEdit,
     QApplication, QFileDialog, QInputDialog, QMessageBox, QSpinBox, QDialog,
-    QDialogButtonBox, QComboBox, QProgressDialog, QSizePolicy
+    QDialogButtonBox, QComboBox, QProgressDialog, QSizePolicy, QListWidget,
+    QListWidgetItem, QProgressBar
 )
 import os
 import json 
@@ -11,7 +12,9 @@ import copy
 import collections
 import re
 import difflib
+import datetime
 from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtGui import QColor, QBrush
 from Python import constants
 from Python.managers.index_manager import backup_index
 
@@ -47,6 +50,105 @@ class AppendKillListDialog(QDialog):
 
     def get_value(self):
         return self.input_edit.text().strip()
+
+class RemoveProfilesDialog(QDialog):
+    """Modal dialog to select existing profile folders for removal from index."""
+    def __init__(self, profiles_dir, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Cleanup Existing Profiles")
+        self.setModal(True)
+        self.resize(450, 500)
+        
+        layout = QVBoxLayout(self)
+        layout.addWidget(QLabel(f"Profiles Directory: {profiles_dir}"))
+        layout.addWidget(QLabel("Select folders to REMOVE from the current editor index:"))
+
+        # Search and Sort Row
+        filter_layout = QHBoxLayout()
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Filter folders...")
+        self.search_edit.textChanged.connect(self.refresh_list)
+        
+        self.sort_combo = QComboBox()
+        self.sort_combo.addItems(["Name (A-Z)", "Name (Z-A)", "Newest First", "Oldest First"])
+        self.sort_combo.currentIndexChanged.connect(self.refresh_list)
+        
+        filter_layout.addWidget(self.search_edit, 3)
+        filter_layout.addWidget(QLabel("Sort:"))
+        filter_layout.addWidget(self.sort_combo, 2)
+        layout.addLayout(filter_layout)
+
+        self.list_widget = QListWidget()
+        self.folder_data = []
+        if os.path.exists(profiles_dir):
+            try:
+                for f in os.scandir(profiles_dir):
+                    if f.is_dir():
+                        self.folder_data.append({'name': f.name, 'mtime': f.stat().st_mtime})
+            except Exception: pass
+        
+        layout.addWidget(self.list_widget)
+        
+        btn_layout = QHBoxLayout()
+        sel_all = QPushButton("Select All")
+        sel_all.clicked.connect(lambda: [self.list_widget.item(i).setCheckState(Qt.CheckState.Checked) for i in range(self.list_widget.count())])
+        sel_filtered = QPushButton("Select All Filtered")
+        sel_filtered.setToolTip("Only visible items in the current list are affected.")
+        sel_filtered.clicked.connect(self.select_all_filtered)
+        sel_none = QPushButton("Select None")
+        sel_none.clicked.connect(lambda: [self.list_widget.item(i).setCheckState(Qt.CheckState.Unchecked) for i in range(self.list_widget.count())])
+        btn_layout.addWidget(sel_all)
+        btn_layout.addWidget(sel_filtered)
+        btn_layout.addWidget(sel_none)
+        layout.addLayout(btn_layout)
+        
+        self.delete_physical_checkbox = QCheckBox("Also delete physical profile folders from disk")
+        self.delete_physical_checkbox.setChecked(False)
+        layout.addWidget(self.delete_physical_checkbox)
+
+        self.refresh_list()
+
+        self.buttons = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        self.buttons.accepted.connect(self.accept)
+        self.buttons.rejected.connect(self.reject)
+        layout.addWidget(self.buttons)
+
+    def get_selected_folders(self):
+        return [self.list_widget.item(i).text() for i in range(self.list_widget.count()) if self.list_widget.item(i).checkState() == Qt.CheckState.Checked]
+    
+    def get_delete_physical_state(self):
+        return self.delete_physical_checkbox.isChecked()
+
+    def refresh_list(self):
+        checked_names = set()
+        for i in range(self.list_widget.count()):
+            it = self.list_widget.item(i)
+            if it.checkState() == Qt.CheckState.Checked:
+                checked_names.add(it.text())
+
+        search_text = self.search_edit.text().lower()
+        sort_mode = self.sort_combo.currentIndex()
+        
+        if sort_mode == 0: self.folder_data.sort(key=lambda x: x['name'].lower())
+        elif sort_mode == 1: self.folder_data.sort(key=lambda x: x['name'].lower(), reverse=True)
+        elif sort_mode == 2: self.folder_data.sort(key=lambda x: x['mtime'], reverse=True)
+        elif sort_mode == 3: self.folder_data.sort(key=lambda x: x['mtime'])
+
+        self.list_widget.clear()
+        for folder in self.folder_data:
+            name = folder['name']
+            item = QListWidgetItem(name)
+            item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
+            item.setCheckState(Qt.CheckState.Checked if name in checked_names else Qt.CheckState.Unchecked)
+            if search_text not in name.lower():
+                item.setHidden(True)
+            self.list_widget.addItem(item)
+
+    def select_all_filtered(self):
+        for i in range(self.list_widget.count()):
+            item = self.list_widget.item(i)
+            if not item.isHidden():
+                item.setCheckState(Qt.CheckState.Checked)
 
 class EditorTab(QWidget):
     """Encapsulates the UI and logic for the Editor tab."""
@@ -90,15 +192,8 @@ class EditorTab(QWidget):
         # --- Tools Row (Above Table) ---
         tools_layout = QHBoxLayout()
         
-        # Toggle Create
-        self.toggle_create_button = QPushButton("Toggle Create")
-        self.toggle_create_button.clicked.connect(self.toggle_create_column)
-        tools_layout.addWidget(self.toggle_create_button)
-
-        # Remove Unchecked
         self.remove_unchecked_btn = QPushButton("Remove Unchecked")
         self.remove_unchecked_btn.clicked.connect(self.remove_unchecked_items)
-        tools_layout.addWidget(self.remove_unchecked_btn)
 
         # Select Flyout
         self.select_flyout_btn = QPushButton("Select By... ▼")
@@ -108,15 +203,15 @@ class EditorTab(QWidget):
         self.select_flyout_menu.addAction("Invalid/Absent Paths", lambda: self.select_by_criteria("invalid_paths"))
         self.select_flyout_menu.addAction("Large File LC (>10MB)", lambda: self.select_by_criteria("large_lc"))
         self.select_flyout_btn.setMenu(self.select_flyout_menu)
-        tools_layout.addWidget(self.select_flyout_btn)
 
         # Change Flyout
         self.change_flyout_btn = QPushButton("Change Selected... ▼")
         self.change_flyout_menu = QMenu(self)
         self.change_flyout_menu.addAction("Swap LC/CEN Type", self.swap_lc_cen_selected)
         self.change_flyout_menu.addAction("Restore Defaults", self.restore_defaults_selected)
+        self.change_flyout_menu.addAction("Toggle Create Status", self.toggle_create_column)
+        self.change_flyout_menu.addAction("Bulk Edit", self.open_bulk_edit_dialog)
         self.change_flyout_btn.setMenu(self.change_flyout_menu)
-        tools_layout.addWidget(self.change_flyout_btn)
 
         # Sort Flyout
         self.sort_flyout_btn = QPushButton("Sort By... ▼")
@@ -128,20 +223,37 @@ class EditorTab(QWidget):
         self.sort_flyout_menu.addAction("Kill List", lambda: self.sort_data('kill_list'))
         self.sort_flyout_menu.addAction("ISO Path", lambda: self.sort_data('iso_path'))
         self.sort_flyout_menu.addAction("As Admin Status", lambda: self.sort_data('run_as_admin'))
+        self.sort_flyout_menu.addAction("Date Created", lambda: self.sort_data('date_indexed'))
         self.sort_flyout_menu.addAction("Windowing Enabled", lambda: self.sort_data('borderless_windowing_enabled'))
         self.sort_flyout_menu.addAction("Hide Taskbar", lambda: self.sort_data('hide_taskbar'))
         self.sort_flyout_btn.setMenu(self.sort_flyout_menu)
-        tools_layout.addWidget(self.sort_flyout_btn)
 
         # Undo Button
         self.undo_button = QPushButton("Undo")
+        self.undo_button.setStyleSheet("font-weight: bold;")
         self.undo_button.setEnabled(False)
         self.undo_button.clicked.connect(self.undo)
-        tools_layout.addWidget(self.undo_button)
+        
+        # Clear View Button
+        self.clear_button = QPushButton("Clear View")
+        self.clear_button.clicked.connect(self.clear_view_requested.emit)
         
         # Compact View Checkbox
         self.compact_view_cb = QCheckBox("Compact View")
         self.compact_view_cb.stateChanged.connect(self.update_compact_view)
+
+        # Add to layout in order
+        # Left aligned
+        tools_layout.addWidget(self.sort_flyout_btn)
+        tools_layout.addWidget(self.select_flyout_btn)
+        tools_layout.addWidget(self.change_flyout_btn)
+        
+        tools_layout.addStretch()
+        
+        # Right aligned
+        tools_layout.addWidget(self.undo_button, alignment=Qt.AlignmentFlag.AlignCenter)
+        tools_layout.addWidget(self.remove_unchecked_btn)
+        tools_layout.addWidget(self.clear_button)
         tools_layout.addWidget(self.compact_view_cb)
 
         main_layout.addLayout(tools_layout)
@@ -277,35 +389,44 @@ class EditorTab(QWidget):
 
         # --- Buttons ---
         buttons_layout = QHBoxLayout()
-        self.save_button = QPushButton("Save Index")
-        self.load_button = QPushButton("Load Index")
-        self.import_profiles_button = QPushButton("Import Profiles")
-        self.delete_button = QPushButton("Delete Indexes")
-        self.clear_button = QPushButton("Clear View")
-        buttons_layout.addWidget(self.save_button)
-        buttons_layout.addWidget(self.load_button)
-        buttons_layout.addWidget(self.import_profiles_button)
-        buttons_layout.addWidget(self.delete_button)
-        buttons_layout.addWidget(self.clear_button)
+        # Index Flyout (Lower Left)
+        self.index_flyout_btn = QPushButton("Indexes ▼")
+        self.index_flyout_menu = QMenu(self)
+        self.index_flyout_menu.addAction("Save Index", self.save_index_requested.emit)
+        self.index_flyout_menu.addAction("Load Index", self.load_index_requested.emit)
+        self.index_flyout_menu.addAction("Delete Indexes", self.delete_indexes_requested.emit)
+        self.index_flyout_btn.setMenu(self.index_flyout_menu)
+        buttons_layout.addWidget(self.index_flyout_btn)
         
-        # Bulk Edit and Validate
-        self.bulk_edit_button = QPushButton("Bulk Edit")
-        self.bulk_edit_button.clicked.connect(self.open_bulk_edit_dialog)
-        buttons_layout.addWidget(self.bulk_edit_button)
-
+        # Profiles Flyout
+        self.profiles_flyout_btn = QPushButton("Profiles... ▼")
+        self.profiles_flyout_menu = QMenu(self)
+        
+        self.import_profiles_action = self.profiles_flyout_menu.addAction("Import")
+        self.import_profiles_action.triggered.connect(self.import_profiles)
+        
+        self.cleanup_profiles_action = self.profiles_flyout_menu.addAction("Cleanup")
+        self.cleanup_profiles_action.triggered.connect(self.remove_items_matching_profiles)
+        self.profiles_flyout_btn.setMenu(self.profiles_flyout_menu)
+        buttons_layout.addWidget(self.profiles_flyout_btn)
         self.validate_btn = QPushButton("Validate Paths")
         self.validate_btn.clicked.connect(self.validate_paths)
         buttons_layout.addWidget(self.validate_btn)
         
+        buttons_layout.addStretch()
+
+        # Editor Page Size (Lower Right)
+        buttons_layout.addWidget(QLabel("Page Size:"))
+        self.page_size_spin = QSpinBox()
+        self.page_size_spin.setRange(1, 2000)
+        self.page_size_spin.setValue(self.main_window.config.editor_page_size)
+        self.page_size_spin.setToolTip("Number of rows per page in the Editor tab (1-2000)")
+        self.page_size_spin.valueChanged.connect(self.update_page_size)
+        buttons_layout.addWidget(self.page_size_spin)
+        
         main_layout.addLayout(buttons_layout)
 
         # --- Connect Signals ---
-        self.save_button.clicked.connect(self.save_index_requested.emit)
-        self.load_button.clicked.connect(self.load_index_requested.emit)
-        self.import_profiles_button.clicked.connect(self.import_profiles)
-        self.delete_button.clicked.connect(self.delete_indexes_requested.emit)
-        self.clear_button.clicked.connect(self.clear_view_requested.emit)
-
         self.table.customContextMenuRequested.connect(self.on_context_menu)
         self.table.cellClicked.connect(self.on_cell_clicked)
         self.table.itemChanged.connect(self.on_item_changed)
@@ -330,12 +451,74 @@ class EditorTab(QWidget):
         self.undo_button.setEnabled(len(self.undo_stack) > 0)
         self.main_window._on_editor_table_edited(None)
 
+    def update_page_size(self, value):
+        """Update page size and refresh view."""
+        self.page_size = value
+        self.main_window.config.editor_page_size = value
+        self.main_window.config_manager.save_config(self.main_window.config)
+        self.refresh_view()
+
     def remove_unchecked_items(self):
         """Remove items where 'create' is False."""
         self.push_undo()
         self.original_data = [g for g in self.original_data if g.get('create', False)]
         self.filter_table(self.search_bar.text())
         self.main_window._on_editor_table_edited(None)
+
+    def remove_items_matching_profiles(self):
+        """Compare indexed items with physical profile folders and remove matches."""
+        profiles_dir = self.main_window.config.profiles_dir
+        if not profiles_dir or not os.path.exists(profiles_dir):
+            QMessageBox.warning(self, "Profiles Not Found", "Profiles directory is not configured or missing.")
+            return
+
+        dialog = RemoveProfilesDialog(profiles_dir, self)
+        if dialog.exec():
+            selected_folders = set(dialog.get_selected_folders())
+            delete_physical = dialog.get_delete_physical_state()
+            if not selected_folders: return
+
+            # Confirmation dialog
+            confirm = QMessageBox.question(
+                self, "Confirm Cleanup",
+                f"Are you sure you want to remove all items in the editor's index matching the {len(selected_folders)} selected folders?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            if confirm != QMessageBox.StandardButton.Yes:
+                return
+            
+            if delete_physical:
+                physical_confirm = QMessageBox.question(
+                    self, "Confirm Physical Deletion",
+                    f"WARNING: You are about to permanently delete {len(selected_folders)} physical profile folders from '{profiles_dir}'.\nThis action cannot be undone.\n\nAre you absolutely sure you want to proceed?",
+                    QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                    QMessageBox.StandardButton.No
+                )
+                if physical_confirm != QMessageBox.StandardButton.Yes:
+                    return
+                
+                # Perform physical deletion
+                import shutil
+                for folder_name in selected_folders:
+                    folder_path = os.path.join(profiles_dir, folder_name)
+                    if os.path.exists(folder_path):
+                        shutil.rmtree(folder_path)
+                        print(f"Deleted physical folder: {folder_path}")
+
+            self.push_undo()
+            from Python.ui.name_utils import make_safe_filename
+            
+            initial_count = len(self.original_data)
+            self.original_data = [
+                g for g in self.original_data 
+                if make_safe_filename(g.get('name_override') or g.get('name') or "") not in selected_folders
+            ]
+            
+            removed = initial_count - len(self.original_data)
+            self.filter_table(self.search_bar.text())
+            self.main_window._on_editor_table_edited(None)
+            QMessageBox.information(self, "Cleanup Complete", f"Removed {removed} items from the index matching selected profile folders.")
 
     def sort_data(self, key):
         """Sort the game list by the specified key."""
@@ -405,6 +588,10 @@ class EditorTab(QWidget):
     def update_from_config(self):
         """Update settings from main window config."""
         self.page_size = self.main_window.config.editor_page_size
+        if hasattr(self, 'page_size_spin'):
+            self.page_size_spin.blockSignals(True)
+            self.page_size_spin.setValue(self.page_size)
+            self.page_size_spin.blockSignals(False)
         self.refresh_view()
 
     def prev_page(self):
@@ -462,7 +649,8 @@ class EditorTab(QWidget):
         self.page_input.setValue(self.current_page + 1)
         self.page_input.blockSignals(False)
         
-        self.page_label.setText(f"of {total_pages} (Total: {len(self.filtered_data)})")
+        self.page_label.setText(f"of {total_pages} (Total: {len(self.filtered_data)}) <font color='green'>{end_index - start_index}</font>")
+        self.page_label.setText(f"of {total_pages} (Total: {len(self.original_data)}) <font color='green'>{len(self.filtered_data)}</font>")
         self.prev_page_button.setEnabled(self.current_page > 0)
         self.next_page_button.setEnabled(self.current_page < total_pages - 1)
         self.data_changed.emit()
@@ -480,27 +668,24 @@ class EditorTab(QWidget):
         self.refresh_view()
 
     def toggle_create_column(self):
-        """Toggle all checkboxes in the Create column based on visibility."""
+        """Swap the 'create' status for selected rows."""
         self.push_undo()
-        # Check if all visible items are checked
-        all_checked = True
-        for row in range(self.table.rowCount()):
-            if not self.table.isRowHidden(row):
-                real_index = (self.current_page * self.page_size) + row
-                if real_index < len(self.filtered_data) and not self.filtered_data[real_index].get('create', False):
-                    all_checked = False
-                    break
+        selected_rows = set()
+        for range_ in self.table.selectedRanges():
+            for r in range(range_.topRow(), range_.bottomRow() + 1):
+                selected_rows.add(r)
         
-        target_state = not all_checked
-        
-        for row in range(self.table.rowCount()):
+        if not selected_rows:
+            return
+
+        for row in selected_rows:
             real_index = (self.current_page * self.page_size) + row
             if real_index < len(self.filtered_data):
-                self.filtered_data[real_index]['create'] = target_state
-                # Update widget visually
-                self._update_widget_state(row, constants.EditorCols.INCLUDE.value, target_state)
-                # Re-apply styling for the row
-                self._apply_styling(row, self.filtered_data[real_index], set()) # Duplicates not strictly needed for this update
+                new_state = not self.filtered_data[real_index].get('create', False)
+                self.filtered_data[real_index]['create'] = new_state
+                self._update_widget_state(row, constants.EditorCols.INCLUDE.value, new_state)
+                self._apply_styling(row, self.filtered_data[real_index], set())
+                self._apply_styling(row, self.filtered_data[real_index])
         self.data_changed.emit()
 
     def add_game_manually(self):
@@ -1409,32 +1594,7 @@ class EditorTab(QWidget):
 
     def toggle_create_for_selection(self):
         """Toggle the 'create' status for all selected rows."""
-        self.push_undo()
-        selected_rows = set()
-        for range_ in self.table.selectedRanges():
-            for r in range(range_.topRow(), range_.bottomRow() + 1):
-                selected_rows.add(r)
-        
-        if not selected_rows:
-            return
-
-        # Determine target state: if any are unchecked, check all. Otherwise uncheck all.
-        target_state = False
-        for row in selected_rows:
-            real_index = (self.current_page * self.page_size) + row
-            if real_index < len(self.filtered_data):
-                if not self.filtered_data[real_index].get('create', False):
-                    target_state = True
-                    break
-        
-        for row in selected_rows:
-            real_index = (self.current_page * self.page_size) + row
-            if real_index < len(self.filtered_data):
-                self.filtered_data[real_index]['create'] = target_state
-                self._update_widget_state(row, constants.EditorCols.INCLUDE.value, target_state)
-                self._apply_styling(row, self.filtered_data[real_index], set())
-        
-        self.data_changed.emit()
+        self.toggle_create_column()
 
     def browse_for_cell(self, row, col):
         """Open file dialog for a specific cell."""
@@ -1732,6 +1892,10 @@ class EditorTab(QWidget):
 
         if not self.table.signalsBlocked():
             self._sync_cell_to_data(item.row(), item.column())
+            # Trigger styling update
+            real_index = (self.current_page * self.page_size) + item.row()
+            if real_index < len(self.filtered_data):
+                self._apply_styling(item.row(), self.filtered_data[real_index])
         self.main_window._on_editor_table_edited(item)
         self.data_changed.emit()
 
@@ -1852,10 +2016,18 @@ class EditorTab(QWidget):
 
     def _on_checkbox_changed(self, row, col, state):
         self._sync_cell_to_data(row, col)
+        # Trigger styling update
+        real_index = (self.current_page * self.page_size) + row
+        if real_index < len(self.filtered_data):
+            self._apply_styling(row, self.filtered_data[real_index])
         self.data_changed.emit()
 
     def _on_merged_widget_changed(self, row, col):
         self._sync_cell_to_data(row, col)
+        # Trigger styling update
+        real_index = (self.current_page * self.page_size) + row
+        if real_index < len(self.filtered_data):
+            self._apply_styling(row, self.filtered_data[real_index])
         self.data_changed.emit()
 
     def update_compact_view(self):
@@ -2364,12 +2536,22 @@ class EditorTab(QWidget):
         if not data:
             return
 
-        # Sanitize data before populating - ensure disabled items have empty paths
-        sanitized_data = self._sanitize_data_for_display(data)
+        # Incremental Update: Merge with existing data based on path
+        existing_paths = {os.path.normpath(os.path.join(g.get('directory', ''), g.get('name', ''))).lower() 
+                          for g in self.original_data}
         
-        self.original_data = [copy.deepcopy(game) for game in sanitized_data]
+        new_entries = []
+        sanitized_data = self._sanitize_data_for_display(data)
+        for game in sanitized_data:
+            path = os.path.normpath(os.path.join(game.get('directory', ''), game.get('name', ''))).lower()
+            if path not in existing_paths:
+                new_entries.append(copy.deepcopy(game))
+                existing_paths.add(path)
+        
+        if new_entries:
+            self.original_data.extend(new_entries)
+            
         self.filtered_data = self.original_data
-        self.current_page = 0
         self.refresh_view()
     
     def _sanitize_data_for_display(self, data):
@@ -2426,18 +2608,31 @@ class EditorTab(QWidget):
         name_item = QTableWidgetItem(game.get('name', ''))
         name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         
-        # Tooltip for file size
+        # Tooltip for file size and index date
         try:
             full_path = os.path.join(game.get('directory', ''), game.get('name', ''))
+            tooltip_parts = []
             if os.path.exists(full_path):
                 size = os.path.getsize(full_path)
                 for unit in ['B', 'KB', 'MB', 'GB', 'TB']:
                     if size < 1024:
                         break
                     size /= 1024
-                name_item.setToolTip(f"File Size: {size:.2f} {unit}")
+                tooltip_parts.append(f"File Size: {size:.2f} {unit}")
             else:
-                name_item.setToolTip("File not found")
+                tooltip_parts.append("File not found")
+            
+            date_indexed = game.get('date_indexed', 'Unknown')
+            if date_indexed != 'Unknown':
+                try:
+                    # Format: YYYY-MM-DD HH:MM
+                    dt = datetime.datetime.fromisoformat(date_indexed)
+                    display_date = dt.strftime("%Y-%m-%d %H:%M")
+                    tooltip_parts.append(f"Indexed: {display_date}")
+                except Exception:
+                    tooltip_parts.append(f"Indexed: {date_indexed}")
+                
+            name_item.setToolTip("\n".join(tooltip_parts))
         except Exception:
             pass
             
@@ -2700,6 +2895,154 @@ class EditorTab(QWidget):
         """Apply background colors based on game state - styling removed."""
         # All visual styling has been removed
         pass
+    def _apply_styling(self, row, game_data, duplicates=None):
+        """Apply background colors based on game state."""
+        if duplicates is None:
+            # Recalculate duplicates if not provided
+            all_names = [g.get('name_override', '').strip() for g in self.original_data 
+                         if g.get('name_override', '').strip() and g.get('create', True)]
+            counts = collections.Counter(all_names)
+            duplicates = {name for name, count in counts.items() if count > 1}
+
+        # Colors
+        dark_red = QColor(139, 0, 0)
+        white = QColor(Qt.GlobalColor.white)
+        yellow = QColor(Qt.GlobalColor.yellow)
+        purple = QColor(128, 0, 128)
+        orange = QColor(255, 165, 0)
+        blue = QColor(Qt.GlobalColor.blue)
+
+        # 1. Duplicate Name Overrides and Empty SteamID
+        name_override = game_data.get('name_override', '').strip()
+        steam_id = str(game_data.get('steam_id', ''))
+        
+        bg_color = None
+        fg_color = None
+        
+        if name_override in duplicates:
+            bg_color = dark_red
+            fg_color = white
+        elif not steam_id or steam_id == 'NOT_FOUND_IN_DATA' or steam_id == '':
+            bg_color = yellow
+            fg_color = purple
+            
+        col_override = constants.EditorCols.NAME_OVERRIDE.value
+        item_override = self.table.item(row, col_override)
+        widget_override = self.table.cellWidget(row, col_override)
+        
+        if item_override:
+            if bg_color:
+                item_override.setBackground(QBrush(bg_color))
+                item_override.setForeground(QBrush(fg_color))
+            else:
+                item_override.setData(Qt.ItemDataRole.BackgroundRole, None)
+                item_override.setData(Qt.ItemDataRole.ForegroundRole, None)
+        
+        if widget_override:
+            if bg_color:
+                bg_css = f"rgb({bg_color.red()}, {bg_color.green()}, {bg_color.blue()})"
+                fg_css = "white" if fg_color == white else f"rgb({fg_color.red()}, {fg_color.green()}, {fg_color.blue()})"
+                widget_override.setStyleSheet(f"background-color: {bg_css}; color: {fg_css};")
+            else:
+                widget_override.setStyleSheet("")
+
+        # 2. Missing Sequence Entry
+        config = self.main_window.config
+        combined_seq = set(config.launch_sequence + config.exit_sequence)
+        
+        # Element mapping: (Key in sequence, Path Key in data, List of associated columns)
+        element_styles = [
+            ('Controller-Mapper', 'controller_mapper_path', [
+                constants.EditorCols.CM_PATH, constants.EditorCols.CM_OPTIONS, 
+                constants.EditorCols.CM_ARGUMENTS, constants.EditorCols.CM_RUN_WAIT,
+                constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER2_PROFILE, 
+                constants.EditorCols.MEDIACENTER_PROFILE
+            ]),
+            ('Borderless', 'borderless_windowing_path', [
+                constants.EditorCols.BW_PATH, constants.EditorCols.BW_OPTIONS, 
+                constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT,
+                constants.EditorCols.WIN_EXIT
+            ]),
+            ('Monitor-Config', 'multi_monitor_app_path', [
+                constants.EditorCols.MM_PATH, constants.EditorCols.MM_OPTIONS, 
+                constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT,
+                constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE
+            ]),
+            ('JustAfterLaunch', 'just_after_launch_path', [
+                constants.EditorCols.JA_PATH, constants.EditorCols.JA_OPTIONS, 
+                constants.EditorCols.JA_ARGUMENTS, constants.EditorCols.JA_RUN_WAIT
+            ]),
+            ('JustBeforeExit', 'just_before_exit_path', [
+                constants.EditorCols.JB_PATH, constants.EditorCols.JB_OPTIONS, 
+                constants.EditorCols.JB_ARGUMENTS, constants.EditorCols.JB_RUN_WAIT
+            ]),
+            ('Pre1', 'pre1_path', [
+                constants.EditorCols.PRE1_PATH, constants.EditorCols.PRE1_OPTIONS, 
+                constants.EditorCols.PRE1_ARGUMENTS, constants.EditorCols.PRE1_RUN_WAIT
+            ]),
+            ('Pre2', 'pre2_path', [
+                constants.EditorCols.PRE2_PATH, constants.EditorCols.PRE2_OPTIONS, 
+                constants.EditorCols.PRE2_ARGUMENTS, constants.EditorCols.PRE2_RUN_WAIT
+            ]),
+            ('Pre3', 'pre3_path', [
+                constants.EditorCols.PRE3_PATH, constants.EditorCols.PRE3_OPTIONS, 
+                constants.EditorCols.PRE3_ARGUMENTS, constants.EditorCols.PRE3_RUN_WAIT
+            ]),
+            ('Post1', 'post1_path', [
+                constants.EditorCols.POST1_PATH, constants.EditorCols.POST1_OPTIONS, 
+                constants.EditorCols.POST1_ARGUMENTS, constants.EditorCols.POST1_RUN_WAIT
+            ]),
+            ('Post2', 'post2_path', [
+                constants.EditorCols.POST2_PATH, constants.EditorCols.POST2_OPTIONS, 
+                constants.EditorCols.POST2_ARGUMENTS, constants.EditorCols.POST2_RUN_WAIT
+            ]),
+            ('Post3', 'post3_path', [
+                constants.EditorCols.POST3_PATH, constants.EditorCols.POST3_OPTIONS, 
+                constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT
+            ]),
+            ('Cloud-Sync', 'cloud_app_path', [
+                constants.EditorCols.CLOUD_APP_PATH, constants.EditorCols.CLOUD_OPTIONS, 
+                constants.EditorCols.CLOUD_ARGUMENTS, constants.EditorCols.CLOUD_RUN_WAIT,
+                constants.EditorCols.CLOUD_REMOTE_NAME, constants.EditorCols.CLOUD_USER_PREFIX, 
+                constants.EditorCols.CLOUD_UPLOAD_ON_EXIT, constants.EditorCols.CLOUD_BACKUP_ON_LAUNCH, 
+                constants.EditorCols.CLOUD_LOCAL_SAVE_PATH
+            ]),
+            ('mount-disc', 'iso_path', [
+                constants.EditorCols.ISO_PATH, constants.EditorCols.DM_PATH, 
+                constants.EditorCols.DM_OPTIONS, constants.EditorCols.DM_ARGUMENTS, 
+                constants.EditorCols.DM_RUN_WAIT
+            ]),
+            ('Unmount-disc', 'iso_path', [
+                constants.EditorCols.DU_PATH, constants.EditorCols.DU_OPTIONS, 
+                constants.EditorCols.DU_ARGUMENTS, constants.EditorCols.DU_RUN_WAIT
+            ])
+        ]
+        
+        for seq_key, path_key, cols in element_styles:
+            path_val = game_data.get(path_key, '')
+            if path_val and seq_key not in combined_seq:
+                for col_enum in cols:
+                    col = col_enum.value
+                    it = self.table.item(row, col)
+                    if it:
+                        it.setBackground(QBrush(orange))
+                        it.setForeground(QBrush(blue))
+                    
+                    wdg = self.table.cellWidget(row, col)
+                    if wdg:
+                        wdg.setStyleSheet(f"background-color: rgb(255, 165, 0); color: blue;")
+            else:
+                # Clear styling for these columns if they were orange
+                for col_enum in cols:
+                    col = col_enum.value
+                    it = self.table.item(row, col)
+                    if it and it.background().color() == orange:
+                        it.setData(Qt.ItemDataRole.BackgroundRole, None)
+                        it.setData(Qt.ItemDataRole.ForegroundRole, None)
+                    
+                    wdg = self.table.cellWidget(row, col)
+                    if wdg and "background-color: rgb(255, 165, 0)" in wdg.styleSheet():
+                        wdg.setStyleSheet("")
 
     def get_all_game_data(self):
         """Extract all game data from the table, sanitizing disabled paths."""
@@ -2924,8 +3267,7 @@ class EditorTab(QWidget):
         
         # Normalize path to use forward slashes
         directory = directory.replace('\\', '/')
-        return
-        
+
         # Backup index
         try:
             backup_index(constants.APP_ROOT_DIR)
@@ -2933,6 +3275,8 @@ class EditorTab(QWidget):
             print(f"Failed to backup index: {e}")
 
         self.push_undo()
+        existing_paths = {os.path.normpath(os.path.join(g.get('directory', ''), g.get('name', ''))).lower() 
+                          for g in self.original_data}
         imported_count = 0
         
         for entry in os.scandir(directory):
@@ -2941,7 +3285,13 @@ class EditorTab(QWidget):
                 if os.path.exists(ini_path):
                     try:
                         game_data = self._parse_game_ini(ini_path, entry.path)
+                        # Check if already in index
+                        path = os.path.normpath(os.path.join(game_data.get('directory', ''), game_data.get('name', ''))).lower()
+                        if path in existing_paths:
+                            continue
+                            
                         self.original_data.append(game_data)
+                        existing_paths.add(path)
                         imported_count += 1
                     except Exception as e:
                         print(f"Failed to import {entry.name}: {e}")
@@ -3024,120 +3374,6 @@ class EditorTab(QWidget):
         game_data['launcher_executable'] = config.get('Paths', 'LauncherExecutable', fallback='')
         game_data['launcher_executable_enabled'] = bool(game_data['launcher_executable'])
         
-        # [PreLaunch]
-        for i in range(1, 4):
-            app_key = f'App{i}'
-            game_data[f'pre{i}_path'] = get_path('PreLaunch', app_key, f'PreLaunchApp{i}')
-            game_data[f'pre{i}_options'] = config.get('PreLaunch', f'{app_key}Options', fallback='')
-            game_data[f'pre{i}_arguments'] = config.get('PreLaunch', f'{app_key}Arguments', fallback='')
-            game_data[f'pre_{i}_run_wait'] = config.getboolean('PreLaunch', f'{app_key}Wait', fallback=False)
-            game_data[f'pre_{i}_enabled'] = bool(game_data[f'pre{i}_path'])
-
-        # [PostLaunch]
-        for i in range(1, 4):
-            app_key = f'App{i}'
-            game_data[f'post{i}_path'] = get_path('PostLaunch', app_key, f'PostLaunchApp{i}')
-            game_data[f'post{i}_options'] = config.get('PostLaunch', f'{app_key}Options', fallback='')
-            game_data[f'post{i}_arguments'] = config.get('PostLaunch', f'{app_key}Arguments', fallback='')
-            game_data[f'post_{i}_run_wait'] = config.getboolean('PostLaunch', f'{app_key}Wait', fallback=False)
-            game_data[f'post_{i}_enabled'] = bool(game_data[f'post{i}_path'])
-            
-        game_data['just_after_launch_path'] = get_path('PostLaunch', 'JustAfterLaunchApp', 'JustAfterLaunchApp')
-        game_data['just_after_launch_options'] = config.get('PostLaunch', 'JustAfterLaunchOptions', fallback='')
-        game_data['just_after_launch_arguments'] = config.get('PostLaunch', 'JustAfterLaunchArguments', fallback='')
-        game_data['just_after_launch_run_wait'] = config.getboolean('PostLaunch', 'JustAfterLaunchWait', fallback=False)
-        game_data['just_after_launch_enabled'] = bool(game_data['just_after_launch_path'])
-        
-        game_data['just_before_exit_path'] = get_path('PostLaunch', 'JustBeforeExitApp', 'JustBeforeExitApp')
-        game_data['just_before_exit_options'] = config.get('PostLaunch', 'JustBeforeExitOptions', fallback='')
-        game_data['just_before_exit_arguments'] = config.get('PostLaunch', 'JustBeforeExitArguments', fallback='')
-        game_data['just_before_exit_run_wait'] = config.getboolean('PostLaunch', 'JustBeforeExitWait', fallback=False)
-        game_data['just_before_exit_enabled'] = bool(game_data['just_before_exit_path'])
-
-        return game_data
-
-    def _parse_game_ini(self, ini_path, profile_path):
-        config = configparser.ConfigParser()
-        config.read(ini_path)
-        
-        game_data = {}
-        
-        # [Game]
-        game_data['create'] = True
-        game_data['name'] = config.get('Game', 'Executable', fallback='')
-        game_data['directory'] = config.get('Game', 'Directory', fallback='')
-        game_data['name_override'] = config.get('Game', 'Name', fallback=os.path.basename(profile_path))
-        game_data['iso_path'] = config.get('Game', 'IsoPath', fallback='')
-        
-        # Try to find Steam ID from Game.json
-        json_path = os.path.join(profile_path, "Game.json")
-        if os.path.exists(json_path):
-            try:
-                with open(json_path, 'r') as f:
-                    data = json.load(f)
-                    if data:
-                        key = next(iter(data))
-                        game_data['steam_id'] = key
-            except:
-                pass
-        
-        # [Options]
-        game_data['run_as_admin'] = config.getboolean('Options', 'RunAsAdmin', fallback=False)
-        game_data['hide_taskbar'] = config.getboolean('Options', 'HideTaskbar', fallback=False)
-        game_data['options'] = config.get('Options', 'Borderless', fallback='0')
-        game_data['kill_list_enabled'] = config.getboolean('Options', 'UseKillList', fallback=False)
-        game_data['terminate_borderless_on_exit'] = config.getboolean('Options', 'TerminateBorderlessOnExit', fallback=False)
-        game_data['kill_list'] = config.get('Options', 'KillList', fallback='')
-        
-        # Helper for paths
-        def get_path(section, key, source_key=None):
-            if source_key and config.has_option('SourcePaths', source_key):
-                return "> " + config.get('SourcePaths', source_key)
-            val = config.get(section, key, fallback='')
-            return val
-
-        # [Paths]
-        game_data['controller_mapper_path'] = get_path('Paths', 'ControllerMapperApp', 'ControllerMapperApp')
-        game_data['controller_mapper_options'] = config.get('Paths', 'ControllerMapperOptions', fallback='')
-        game_data['controller_mapper_arguments'] = config.get('Paths', 'ControllerMapperArguments', fallback='')
-        game_data['controller_mapper_enabled'] = bool(game_data['controller_mapper_path'])
-        
-        game_data['borderless_windowing_path'] = get_path('Paths', 'BorderlessWindowingApp', 'BorderlessWindowingApp')
-        game_data['borderless_windowing_options'] = config.get('Paths', 'BorderlessWindowingOptions', fallback='')
-        game_data['borderless_windowing_arguments'] = config.get('Paths', 'BorderlessWindowingArguments', fallback='')
-        game_data['borderless_windowing_enabled'] = bool(game_data['borderless_windowing_path'])
-        
-        game_data['multi_monitor_app_path'] = get_path('Paths', 'MultiMonitorTool', 'MultiMonitorTool')
-        game_data['multi_monitor_app_options'] = config.get('Paths', 'MultiMonitorOptions', fallback='')
-        game_data['multi_monitor_app_arguments'] = config.get('Paths', 'MultiMonitorArguments', fallback='')
-        game_data['multi_monitor_app_enabled'] = bool(game_data['multi_monitor_app_path'])
-        
-        game_data['player1_profile'] = get_path('Paths', 'Player1Profile', 'Player1Profile')
-        game_data['player1_profile_enabled'] = bool(game_data['player1_profile'])
-        game_data['player2_profile'] = get_path('Paths', 'Player2Profile', 'Player2Profile')
-        game_data['player2_profile_enabled'] = bool(game_data['player2_profile'])
-        game_data['mm_game_profile'] = get_path('Paths', 'MultiMonitorGamingConfig', 'MultiMonitorGamingConfig')
-        game_data['mm_game_profile_enabled'] = bool(game_data['mm_game_profile'])
-        game_data['mm_desktop_profile'] = get_path('Paths', 'MultiMonitorDesktopConfig', 'MultiMonitorDesktopConfig')
-        game_data['mm_desktop_profile_enabled'] = bool(game_data['mm_desktop_profile'])
-        game_data['mediacenter_profile'] = get_path('Paths', 'MediaCenterProfile', 'MediaCenterProfile')
-        game_data['mediacenter_profile_enabled'] = bool(game_data['mediacenter_profile'])
-        
-        game_data['launcher_executable'] = config.get('Paths', 'LauncherExecutable', fallback='')
-        game_data['launcher_executable_enabled'] = bool(game_data['launcher_executable'])
-        
-        game_data['disc_mount_path'] = get_path('Paths', 'DiscMountApp', 'DiscMountApp')
-        game_data['disc_mount_options'] = config.get('Paths', 'DiscMountOptions', fallback='')
-        game_data['disc_mount_arguments'] = config.get('Paths', 'DiscMountArguments', fallback='')
-        game_data['disc_mount_enabled'] = bool(game_data['disc_mount_path'])
-        game_data['disc_mount_run_wait'] = config.getboolean('Paths', 'DiscMountWait', fallback=False)
-        
-        game_data['disc_unmount_path'] = get_path('Paths', 'DiscUnmountApp', 'DiscUnmountApp')
-        game_data['disc_unmount_options'] = config.get('Paths', 'DiscUnmountOptions', fallback='')
-        game_data['disc_unmount_arguments'] = config.get('Paths', 'DiscUnmountArguments', fallback='')
-        game_data['disc_unmount_enabled'] = bool(game_data['disc_unmount_path'])
-        game_data['disc_unmount_run_wait'] = config.getboolean('Paths', 'DiscUnmountWait', fallback=False)
-
         # [PreLaunch]
         for i in range(1, 4):
             app_key = f'App{i}'

@@ -145,6 +145,7 @@ class ConfigManager(QObject):
         config.hide_taskbar = False
         config.run_as_admin = True
         config.enable_name_matching = True
+        config.auto_flag_existing = True
         config.steam_json_version = 2
         config.create_overwrite_joystick_profiles = True
 

@@ -1,9 +1,9 @@
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QTabWidget, QWidget, 
-    QMessageBox, QFileDialog, QProgressDialog
+    QMessageBox, QFileDialog, QProgressDialog, QCheckBox
 )
 from PyQt6.QtCore import Qt, pyqtSlot
-from PyQt6.QtGui import QIcon
+from PyQt6.QtGui import QIcon, QFontDatabase, QFont
 import os
 import shutil
 from Python.ui.deployment_tab import DeploymentTab
@@ -29,6 +29,24 @@ class MainWindow(QMainWindow):
         self.config_manager = ConfigManager()
         self.config = self.config_manager.load_config()
 
+        # Verify pyqtdarktheme version for compatibility
+        try:
+            import qdarktheme
+            from importlib.metadata import version as get_version
+            theme_version = get_version("pyqtdarktheme")
+            logging.info(f"pyqtdarktheme {theme_version} detected.")
+            # Version 2.0.0+ uses setup_theme, older uses load_stylesheet
+            if not hasattr(qdarktheme, "setup_theme"):
+                logging.warning("Legacy pyqtdarktheme detected (< 2.0.0). Theme manager will use fallback stylesheet logic.")
+        except Exception as e:
+            logging.error(f"Failed to verify pyqtdarktheme version: {e}")
+
+        self._load_custom_fonts()
+
+        from Python.ui.theme_manager import ThemeManager
+        self.theme_manager = ThemeManager()
+        self.theme_manager.apply_theme_from_config(self.config, QApplication.instance())
+
         self.indexing_cancelled = False
         self.data_manager = DataManager(self.config, self)
         self.steam_cache_manager = SteamCacheManager(self)
@@ -52,9 +70,48 @@ class MainWindow(QMainWindow):
         # Sync the UI to reflect the loaded configuration
         self.sync_ui_from_config()
         
+        self._apply_editor_font()
         # Show the window
         self.show()
-        
+
+    def _load_custom_fonts(self):
+        """Load custom fonts from the site directory into the application."""
+        site_dir = os.path.join(constants.APP_ROOT_DIR, "site")
+        if os.path.exists(site_dir):
+            for filename in os.listdir(site_dir):
+                if filename.lower().endswith(('.otf', '.ttf', '.woff', '.woff2')):
+                    font_path = os.path.join(site_dir, filename)
+                    font_id = QFontDatabase.addApplicationFont(font_path)
+                    if font_id != -1:
+                        families = QFontDatabase.applicationFontFamilies(font_id)
+                        logging.info(f"Loaded custom font family from /site: {families}")
+
+        # Apply configured UI font
+        font_family = getattr(self.config, 'ui_font_family', "")
+        font_size = getattr(self.config, 'ui_font_size', 9)
+        if font_family:
+            app_font = QFont(font_family, font_size)
+            QApplication.instance().setFont(app_font)
+        else:
+            app_font = QApplication.instance().font()
+            app_font.setPointSize(font_size)
+            QApplication.instance().setFont(app_font)
+    def _apply_editor_font(self):
+        """Apply the specific editor font to the editor table."""
+        if not hasattr(self, 'editor_tab'):
+            return
+            
+        font_family = getattr(self.config, 'editor_font_family', "")
+        font_size = getattr(self.config, 'editor_font_size', 9)
+        if font_family:
+            editor_font = QFont(font_family, font_size)
+            self.editor_tab.table.setFont(editor_font)
+        else:
+            editor_font = self.editor_tab.table.font()
+            editor_font.setPointSize(font_size)
+            self.editor_tab.table.setFont(editor_font)
+
+
         # Check if steam.json exists but caches don't - auto-process if needed
         self._check_and_process_steam_on_startup()
 
@@ -332,6 +389,7 @@ class MainWindow(QMainWindow):
         """Updates the UI widgets with values from the AppConfig model."""
         self.setup_tab.sync_ui_from_config(self.config)
         self.deployment_tab.sync_ui_from_config(self.config)
+        self._apply_editor_font()
 
     @pyqtSlot()
     def _sync_config_from_ui_and_save(self):
@@ -447,9 +505,39 @@ class MainWindow(QMainWindow):
             f"Proceed with creation?"
         )
         
-        reply = QMessageBox.question(self, "Confirm Creation", msg_text, QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
-        if reply != QMessageBox.StandardButton.Yes:
+        msg_box = QMessageBox(self)
+        msg_box.setWindowTitle("Confirm Creation")
+        msg_box.setIcon(QMessageBox.Icon.Question)
+        msg_box.setText(msg_text)
+        msg_box.setStandardButtons(QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
+        msg_box.setDefaultButton(QMessageBox.StandardButton.No)
+        
+        if msg_box.exec() != QMessageBox.StandardButton.Yes:
             return
+
+        # Clear the log buffer at the start of a new bulk creation process
+        self.deployment_tab.clear_log_buffer()
+
+        if self.config.auto_flag_existing:
+            from Python.ui.name_utils import make_safe_filename
+            profiles_dir = self.config.profiles_dir
+            for g in self.editor_tab.original_data:
+                if g.get('create'):
+                    safe_name = make_safe_filename(g.get('name_override') or g.get('name') or "")
+                    if os.path.exists(os.path.join(profiles_dir, safe_name)):
+                        g['create'] = False
+            
+            self.editor_tab.refresh_view()
+            
+            # Recalculate what to process after flagging
+            all_games = self.editor_tab.get_all_game_data()
+            games_to_process = [g for g in all_games if g.get('create')]
+            
+            if not games_to_process:
+                QMessageBox.information(self, "Creation Skipped", "All selected games already have profiles. No new items to create.")
+                return
+            
+            create_count = len(games_to_process)
 
         # Create Progress Dialog
         progress = QProgressDialog("Creating launchers...", "Cancel", 0, create_count, self)
@@ -459,7 +547,32 @@ class MainWindow(QMainWindow):
         def update_progress(current, _, game_name):
             if progress.wasCanceled():
                 return False
-            self.deployment_tab.append_log_message(f"Creating launcher for: {game_name}")
+            
+            # Get game data to identify non-default options for logging
+            game = games_to_process[current-1]
+            diffs = []
+            if game.get('run_as_admin') != self.config.run_as_admin: diffs.append("RAA")
+            if game.get('hide_taskbar') != self.config.hide_taskbar: diffs.append("HTB")
+            if game.get('kill_list_enabled') != self.config.use_kill_list: diffs.append("KLE")
+            if game.get('terminate_borderless_on_exit') != self.config.terminate_borderless_on_exit: diffs.append("TBE")
+            
+            mapping = [
+                ('controller_mapper_enabled', 'controller_mapper_path_enabled', 'CME'),
+                ('borderless_windowing_enabled', 'borderless_gaming_path_enabled', 'BWE'),
+                ('multi_monitor_app_enabled', 'multi_monitor_tool_path_enabled', 'MME'),
+                ('just_after_launch_enabled', 'just_after_launch_path_enabled', 'JAL'),
+                ('just_before_exit_enabled', 'just_before_exit_path_enabled', 'JBE'),
+                ('pre_1_enabled', 'pre1_path_enabled', 'P1'),
+                ('pre_2_enabled', 'pre2_path_enabled', 'P2'),
+                ('pre_3_enabled', 'pre3_path_enabled', 'P3'),
+                ('disc_mount_enabled', 'disc_mount_path_enabled', 'DME'),
+            ]
+            for g_key, c_key, abbr in mapping:
+                if game.get(g_key) != self.config.defaults.get(c_key, True):
+                    diffs.append(abbr)
+            
+            abbr_str = f" [{', '.join(diffs)}]" if diffs else ""
+            self.deployment_tab.append_log_message(f"Creating launcher for: {game_name}{abbr_str}")
             progress.setValue(current)
             progress.setLabelText(f"Creating launcher for: {game_name}")
             QApplication.processEvents()

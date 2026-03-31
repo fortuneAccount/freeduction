@@ -4,16 +4,18 @@ Plugin hot-reloading system
 Supports dynamic loading, unloading, and reloading of plugins without restarting.
 """
 
+import json
 import os
 import sys
 import importlib
 import importlib.util
 import logging
-from typing import Dict, List, Optional, Type
+from typing import Dict, List, Optional, Tuple, Type
 from pathlib import Path
 import time
 
 from Python.plugins.base_plugin import ToolPlugin
+from Python.plugins.manifest import PluginManifest
 from Python.plugins.registry import PluginRegistry
 
 
@@ -40,6 +42,7 @@ class PluginLoader:
         self.loaded_modules: Dict[str, any] = {}
         self.plugin_paths: Dict[str, str] = {}  # plugin_name -> file_path
         self.file_mtimes: Dict[str, float] = {}  # file_path -> modification time
+        self._load_errors: List[Tuple[str, str]] = []
     
     def load_plugin_from_file(self, file_path: str) -> Optional[ToolPlugin]:
         """
@@ -265,3 +268,138 @@ class PluginLoader:
             'file_path': self.plugin_paths.get(plugin_name),
             'module': self.loaded_modules[plugin_name].__name__
         }
+
+    # ------------------------------------------------------------------
+    # Manifest validation and community plugin loading (tasks 3.2 – 3.5)
+    # ------------------------------------------------------------------
+
+    def _validate_manifest(self, manifest_path: Path) -> Optional[PluginManifest]:
+        """Read and validate a plugin.json manifest file.
+
+        Returns a PluginManifest on success, or None on any parse/validation error.
+        Errors are logged and appended to self._load_errors.
+        """
+        try:
+            with open(manifest_path, "r", encoding="utf-8") as fh:
+                data = json.load(fh)
+        except json.JSONDecodeError as exc:
+            error_msg = f"Skipping plugin at '{manifest_path}': invalid JSON — {exc}"
+            self.logger.error(error_msg)
+            self._load_errors.append((str(manifest_path), error_msg))
+            return None
+
+        try:
+            return PluginManifest.from_dict(data)
+        except KeyError as exc:
+            error_msg = f"Skipping plugin at '{manifest_path}': {exc}"
+            self.logger.error(error_msg)
+            self._load_errors.append((str(manifest_path), error_msg))
+            return None
+
+    def _check_api_version(self, manifest: PluginManifest) -> bool:
+        """Return True if the manifest's min_api_version is compatible with the current API.
+
+        Logs an error and appends to _load_errors when incompatible.
+        """
+        from Python.plugins import PLUGIN_API_VERSION
+
+        def _parse(v: str) -> tuple:
+            return tuple(int(x) for x in v.split("."))
+
+        try:
+            required = _parse(manifest.min_api_version)
+            current = _parse(PLUGIN_API_VERSION)
+        except (ValueError, AttributeError):
+            # Unparseable version strings — treat as incompatible to be safe
+            error_msg = (
+                f"ERROR: Cannot load plugin '{manifest.name}': "
+                f"unparseable version string (required={manifest.min_api_version!r}, "
+                f"current={PLUGIN_API_VERSION!r})"
+            )
+            self.logger.error(error_msg)
+            self._load_errors.append((manifest.name, error_msg))
+            return False
+
+        if required > current:
+            error_msg = (
+                f"ERROR: Cannot load plugin '{manifest.name}': "
+                f"requires API version {manifest.min_api_version}, "
+                f"current is {PLUGIN_API_VERSION}"
+            )
+            self.logger.error(error_msg)
+            self._load_errors.append((manifest.name, error_msg))
+            return False
+
+        return True
+
+    def load_community_plugins(self, community_dir: str) -> List[ToolPlugin]:
+        """Scan *community_dir* for subdirectories and load each as a community plugin.
+
+        For each subdirectory:
+        - If ``plugin.json`` is present, validate the manifest and check the API version.
+          Skip the plugin if either check fails.
+        - If ``plugin.json`` is absent, log a warning and attempt a direct ``.py`` load.
+        - Catch all per-plugin exceptions; record them in ``_load_errors`` and continue.
+
+        Returns a list of successfully loaded ToolPlugin instances.
+        """
+        loaded: List[ToolPlugin] = []
+        community_path = Path(community_dir)
+
+        if not community_path.exists():
+            self.logger.warning(f"Community plugin directory does not exist: {community_dir}")
+            return loaded
+
+        for subdir in sorted(community_path.iterdir()):
+            if not subdir.is_dir():
+                continue
+
+            try:
+                manifest_path = subdir / "plugin.json"
+                manifest: Optional[PluginManifest] = None
+
+                if manifest_path.exists():
+                    manifest = self._validate_manifest(manifest_path)
+                    if manifest is None:
+                        continue  # validation error already recorded
+                    if not self._check_api_version(manifest):
+                        continue  # version error already recorded
+                else:
+                    self.logger.warning(
+                        f"No plugin.json found in '{subdir}'. "
+                        "Attempting direct load. A manifest is recommended."
+                    )
+
+                # Determine entry point
+                if manifest is not None:
+                    entry_point = subdir / manifest.entry_point
+                else:
+                    # Find the first .py file that isn't __init__.py or private
+                    py_files = [
+                        f for f in subdir.glob("*.py")
+                        if not f.name.startswith("_")
+                    ]
+                    if not py_files:
+                        error_msg = f"No .py entry point found in '{subdir}'"
+                        self.logger.error(error_msg)
+                        self._load_errors.append((str(subdir), error_msg))
+                        continue
+                    entry_point = py_files[0]
+
+                plugin = self.load_plugin_from_file(str(entry_point))
+                if plugin:
+                    loaded.append(plugin)
+
+            except Exception as exc:
+                error_msg = str(exc)
+                self.logger.error(f"Failed to load community plugin from '{subdir}': {error_msg}")
+                self._load_errors.append((str(subdir), error_msg))
+
+        return loaded
+
+    def get_load_errors(self) -> List[Tuple[str, str]]:
+        """Return a copy of all load errors recorded so far.
+
+        Each entry is a ``(path_or_name, error_message)`` tuple.
+        """
+        return list(self._load_errors)

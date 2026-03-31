@@ -9,6 +9,9 @@ import os
 import json
 import logging
 import hashlib
+import urllib.request
+import urllib.parse
+import urllib.error
 from typing import Dict, List, Optional, Any
 from pathlib import Path
 from dataclasses import dataclass, asdict

@@ -3,6 +3,7 @@ Plugin manager for handling plugin lifecycle and tool discovery
 """
 
 import os
+import json
 import logging
 from typing import Dict, List, Optional
 from pathlib import Path
@@ -22,21 +23,26 @@ class PluginManager:
     - Support dependency injection
     """
     
-    def __init__(self, bin_directory: str = None, registry: PluginRegistry = None):
+    def __init__(self, bin_directory: str = None, registry: PluginRegistry = None, config_dir: str = None):
         """
         Initialize the plugin manager.
         
         Args:
             bin_directory: Path to the bin directory to scan for tools (optional, uses DI if None)
             registry: Plugin registry instance (optional, creates new if None)
+            config_dir: Path to the config directory for plugin_states.json persistence (optional)
         """
         self.registry = registry if registry is not None else PluginRegistry()
         self.bin_directory = bin_directory
+        self.config_dir = config_dir
         self.installed_tools: Dict[str, List[str]] = {}
         self.logger = logging.getLogger(__name__)
+        self._plugin_states: dict[str, bool] = {}
         
         # Support for dependency injection
         self._container = None
+
+        self._load_plugin_states()
     
     def set_container(self, container):
         """
@@ -61,6 +67,57 @@ class PluginManager:
             return self._container.resolve(name)
         return None
     
+    def _load_plugin_states(self) -> None:
+        """Load plugin enabled/disabled states from plugin_states.json."""
+        if self.config_dir is None:
+            return
+
+        states_path = os.path.join(self.config_dir, "plugin_states.json")
+        if not os.path.exists(states_path):
+            self._plugin_states = {}
+            self.logger.debug("plugin_states.json not found, treating all plugins as enabled")
+            return
+
+        try:
+            with open(states_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            self._plugin_states = data["states"]
+        except (json.JSONDecodeError, KeyError):
+            self._plugin_states = {}
+            self.logger.warning("plugin_states.json is malformed. Treating all plugins as enabled.")
+
+    def _save_plugin_states(self) -> None:
+        """Persist plugin enabled/disabled states to plugin_states.json."""
+        if self.config_dir is None:
+            return
+
+        states_path = os.path.join(self.config_dir, "plugin_states.json")
+        with open(states_path, "w", encoding="utf-8") as f:
+            f.write(json.dumps({"version": "1", "states": self._plugin_states}, indent=2))
+
+    def set_plugin_enabled(self, plugin_name: str, enabled: bool) -> None:
+        """
+        Enable or disable a plugin by name.
+
+        Args:
+            plugin_name: The plugin's name identifier
+            enabled: True to enable, False to disable
+        """
+        self._plugin_states[plugin_name] = enabled
+        self._save_plugin_states()
+
+    def is_plugin_enabled(self, plugin_name: str) -> bool:
+        """
+        Check whether a plugin is enabled.
+
+        Args:
+            plugin_name: The plugin's name identifier
+
+        Returns:
+            True if enabled (or not explicitly set), False if disabled
+        """
+        return self._plugin_states.get(plugin_name, True)
+
     def load_builtin_plugins(self):
         """Load all built-in plugins from Python/plugins/builtin/"""
         builtin_dir = Path(__file__).parent.parent / 'plugins' / 'builtin'
@@ -115,6 +172,9 @@ class PluginManager:
             return self.installed_tools
         
         for plugin in self.registry.get_all_plugins():
+            if not self.is_plugin_enabled(plugin.name):
+                self.logger.debug(f"Skipping disabled plugin: {plugin.name}")
+                continue
             paths = self._find_executables_for_plugin(plugin)
             if paths:
                 self.installed_tools[plugin.name] = paths

@@ -1,3 +1,4 @@
+.gitignore
 # Build artifacts
 build/
 dist/
@@ -19,6 +20,7 @@ __pycache__/
 # Local configuration and logs
 *.ini
 *.log
+*.amgp
 
 # Index and cache files
 *.old

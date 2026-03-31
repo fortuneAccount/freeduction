@@ -5,8 +5,13 @@ class AppConfig:
         self.source_dirs = []
         self.excluded_dirs = []
         self.logging_verbosity = "Low"
+        self.ui_theme: str = "default"
         self.game_managers_present = "None"
         self.exclude_selected_manager_games = False
+        self.ui_font_family = ""
+        self.ui_font_size = 9
+        self.editor_font_family = ""
+        self.editor_font_size = 9
 
         # Setup Tab: Element & Application Locations
         self.profiles_dir = ""
@@ -153,6 +158,7 @@ class AppConfig:
         self.run_as_admin = False
         self.enable_name_matching = True
         self.fuzzy_match_cutoff = 0.6
+        self.auto_flag_existing = True
         self.steam_json_version = 2
         self.use_kill_list = True
         self.terminate_borderless_on_exit = True

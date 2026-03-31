@@ -59,7 +59,7 @@ class LogViewerDialog(QDialog):
         layout = QVBoxLayout(self)
         self.text_edit = QTextEdit()
         self.text_edit.setReadOnly(True)
-        self.text_edit.setText(text)
+        self.text_edit.setHtml(text)
         layout.addWidget(self.text_edit)
         
         # Buttons Layout
@@ -194,6 +194,10 @@ class DeploymentTab(QWidget):
         self.name_check_checkbox = QCheckBox("Enable Steam Name Matching")
         self.name_check_checkbox.setToolTip("Attempt to match indexed games with Steam titles for better naming. Requires steam.json.")
         right_layout.addWidget(self.name_check_checkbox)
+
+        self.auto_flag_checkbox = QCheckBox("Demote current library")
+        self.auto_flag_checkbox.setToolTip("Flag items as 'Do not create' if profile folder exists")
+        right_layout.addWidget(self.auto_flag_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
         
         self.indexing_progress = QProgressBar()
         self.indexing_progress.setRange(0, 0) # Indeterminate
@@ -205,17 +209,10 @@ class DeploymentTab(QWidget):
 
         self.view_log_button = QPushButton("Log")
         self.view_log_button.clicked.connect(self.show_log_viewer)
-        self.view_log_button.setFixedWidth(35)
 
         right_layout.addWidget(self.index_sources_button)
         right_layout.addWidget(self.indexing_progress)
         right_layout.addStretch()
-        
-        # Bottom-right aligned View Log button
-        view_log_layout = QHBoxLayout()
-        view_log_layout.addStretch()
-        view_log_layout.addWidget(self.view_log_button)
-        right_layout.addLayout(view_log_layout)
 
         # Add columns to main layout
         database_indexing_layout.addWidget(left_col, 1)
@@ -241,22 +238,16 @@ class DeploymentTab(QWidget):
 
         self.download_game_json_checkbox = QCheckBox("Download Steam's Game.json")
         self.download_game_json_checkbox.setToolTip("If checked, attempts to download game metadata from Steam using the Steam ID during creation.")
-        self.overwrite_game_json_checkbox = QCheckBox("Overwrite Game.json")
 
         self.download_pcgw_checkbox = QCheckBox("Download PcGamingWiki")
-        self.overwrite_pcgw_checkbox = QCheckBox("Overwrite PcGamingWiki")
 
         self.download_artwork_checkbox = QCheckBox("Download Artwork")
         self.download_artwork_checkbox.setToolTip("Downloads header and background images to the profile folder.")
-        self.overwrite_artwork_checkbox = QCheckBox("Overwrite Artwork")
 
         # Layout the checkboxes
         meta_layout.addWidget(self.download_game_json_checkbox, 0, 0)
-        meta_layout.addWidget(self.overwrite_game_json_checkbox, 0, 1)
         meta_layout.addWidget(self.download_pcgw_checkbox, 1, 0)
-        meta_layout.addWidget(self.overwrite_pcgw_checkbox, 1, 1)
         meta_layout.addWidget(self.download_artwork_checkbox, 2, 0)
-        meta_layout.addWidget(self.overwrite_artwork_checkbox, 2, 1)
 
         options_layout.addWidget(meta_group)
 
@@ -269,6 +260,11 @@ class DeploymentTab(QWidget):
         overwrite_layout = QGridLayout(overwrite_group)
         overwrite_layout.setContentsMargins(5, 5, 5, 5)
 
+        # Added specific metadata overwrite checkboxes to this group
+        self.overwrite_game_json_checkbox = QCheckBox("Overwrite Game.json")
+        self.overwrite_pcgw_checkbox = QCheckBox("Overwrite PcGamingWiki")
+        self.overwrite_artwork_checkbox = QCheckBox("Overwrite Artwork")
+
         for i, key in enumerate(PATH_KEYS):
             label = PATH_LABELS.get(key, f"Overwrite {key}")
             cb = QCheckBox(f"{label}")
@@ -280,6 +276,11 @@ class DeploymentTab(QWidget):
             cb.stateChanged.connect(self.config_changed.emit)
             self.overwrite_checkboxes[key] = cb
             overwrite_layout.addWidget(cb, i // 2, i % 2)
+            
+        # Append metadata overwrites to the end of the grid
+        overwrite_layout.addWidget(self.overwrite_game_json_checkbox, (len(PATH_KEYS) + 1) // 2, 0)
+        overwrite_layout.addWidget(self.overwrite_pcgw_checkbox, (len(PATH_KEYS) + 1) // 2, 1)
+        overwrite_layout.addWidget(self.overwrite_artwork_checkbox, (len(PATH_KEYS) + 3) // 2, 0)
 
         options_layout.addWidget(overwrite_group)
         options_layout.addStretch()
@@ -291,6 +292,7 @@ class DeploymentTab(QWidget):
 
         # Create button shows dynamic count of selected items
         self.create_button = QPushButton()
+        self.create_button.setMinimumHeight(68) # 40px base + 70% increase
         creation_options_layout.addWidget(self.create_button)
 
         # --- Accordion Setup ---
@@ -302,9 +304,17 @@ class DeploymentTab(QWidget):
 
         main_layout.addWidget(general_options_section)
         main_layout.addWidget(creation_section, 1)
+        main_layout.addWidget(self.create_button)
+
+        # Bottom-aligned View Log button
+        log_btn_layout = QHBoxLayout()
+        log_btn_layout.addStretch()
+        log_btn_layout.addWidget(self.view_log_button)
+        main_layout.addLayout(log_btn_layout)
 
         # --- Connect Signals ---
         self.name_check_checkbox.stateChanged.connect(self.config_changed.emit)
+        self.auto_flag_checkbox.stateChanged.connect(self.config_changed.emit)
         self.steam_version_group.buttonClicked.connect(lambda: self.config_changed.emit())
         self.download_game_json_checkbox.stateChanged.connect(self.config_changed.emit)
         self.overwrite_game_json_checkbox.stateChanged.connect(self.config_changed.emit)
@@ -392,7 +402,7 @@ class DeploymentTab(QWidget):
 
     def show_log_viewer(self):
         """Open the modal log viewer dialog."""
-        log_text = "\n".join(self.log_buffer)
+        log_text = "<br>".join(self.log_buffer)
         self.current_log_dialog = LogViewerDialog(log_text, self, clear_callback=self.clear_log_buffer)
         self.current_log_dialog.exec()
         self.current_log_dialog = None
@@ -404,7 +414,12 @@ class DeploymentTab(QWidget):
         """Append a message to the log buffer and update dialog if open."""
         # timeout arg is accepted to be compatible with status_updated signal signature (str, int)
         timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-        entry = f"[{timestamp}] {message}"
+        
+        if "error" in message.lower() or "failed" in message.lower():
+            entry = f'<font color="red">[{timestamp}] {message}</font>'
+        else:
+            entry = f"[{timestamp}] {message}"
+            
         self.log_buffer.append(entry)
         if self.current_log_dialog and self.current_log_dialog.isVisible():
             self.current_log_dialog.append_text(entry)
@@ -532,6 +547,7 @@ class DeploymentTab(QWidget):
         self.blockSignals(True)
 
         self.name_check_checkbox.setChecked(config.enable_name_matching)
+        self.auto_flag_checkbox.setChecked(config.auto_flag_existing)
         
         if config.steam_json_version == 1:
             self.steam_json_v1_radio.setChecked(True)
@@ -563,6 +579,7 @@ class DeploymentTab(QWidget):
     def sync_config_from_ui(self, config: AppConfig):
         """Updates the AppConfig model with values from the UI widgets."""
         config.enable_name_matching = self.name_check_checkbox.isChecked()
+        config.auto_flag_existing = self.auto_flag_checkbox.isChecked()
         config.steam_json_version = 1 if self.steam_json_v1_radio.isChecked() else 2
 
         config.download_game_json = self.download_game_json_checkbox.isChecked()
