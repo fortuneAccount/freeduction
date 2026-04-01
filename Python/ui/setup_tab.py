@@ -14,7 +14,7 @@ from PyQt6.QtWidgets import (
 )
 import re
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
-from PyQt6.QtGui import QFont
+from PyQt6.QtGui import QFont, QColor, QBrush
 from Python.models import AppConfig
 from Python.ui.widgets import DragDropListWidget, PathConfigRow
 from Python.ui.accordion import AccordionSection
@@ -919,6 +919,10 @@ class SetupTab(QWidget):
         self.hide_taskbar_checkbox.stateChanged.connect(self.config_changed.emit)
         self.terminate_bw_on_exit_checkbox.stateChanged.connect(self.config_changed.emit)
 
+        # Update sequence item colours when relevant toggles change
+        self.hide_taskbar_checkbox.stateChanged.connect(lambda _: self._update_sequence_item_colors())
+        self.use_kill_list_checkbox.stateChanged.connect(lambda _: self._update_sequence_item_colors())
+
         self.source_dirs_list.model().rowsMoved.connect(self.config_changed.emit)
         self.source_dirs_list.model().rowsInserted.connect(self.config_changed.emit)
         self.source_dirs_list.model().rowsRemoved.connect(self.config_changed.emit)
@@ -929,6 +933,7 @@ class SetupTab(QWidget):
         for key, row in self.path_rows.items():
             row.valueChanged.connect(self.config_changed.emit)
             row.valueChanged.connect(lambda k=key: self.setting_changed.emit(k))
+            row.valueChanged.connect(self._update_sequence_item_colors)
             row.downloadRequested.connect(self._on_download_requested)
         
         # Link disc mount and unmount comboboxes
@@ -1783,12 +1788,14 @@ exit 1
         self.launch_sequence_list.addItems(["Cloud-Sync", "mount-disc", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless"])
         self.config_changed.emit()
         self._update_list_tooltips(self.launch_sequence_list)
+        self._update_sequence_item_colors()
 
     def _reset_exit_sequence(self):
         self.exit_sequence_list.clear()
         self.exit_sequence_list.addItems(["Post1", "Post2", "Post3", "Monitor-Config", "Taskbar", "Controller-Mapper", "Unmount-disc", "Cloud-Sync"])
         self.config_changed.emit()
         self._update_list_tooltips(self.exit_sequence_list)
+        self._update_sequence_item_colors()
 
     def _on_sequence_context_menu(self, pos, list_widget, sequence_type):
         item = list_widget.itemAt(pos)
@@ -1902,6 +1909,50 @@ exit 1
     def _update_list_tooltips(self, list_widget):
         for i in range(list_widget.count()):
             self._update_item_tooltip(list_widget.item(i))
+
+    def _update_sequence_item_colors(self):
+        """Grey out sequence list items whose corresponding feature is disabled/unconfigured."""
+        config = self.main_window.config if self.main_window and hasattr(self.main_window, 'config') else None
+        if config is None:
+            return
+
+        grey = QColor(150, 150, 150)
+
+        # Map sequence item text -> callable that returns True if the item is active
+        def has_path(attr):
+            return bool(getattr(config, attr, '') and config.defaults.get(f'{attr}_enabled', True))
+
+        active_map = {
+            'No-TB':             lambda: config.hide_taskbar,
+            'Taskbar':           lambda: config.hide_taskbar,
+            'Controller-Mapper': lambda: has_path('controller_mapper_path'),
+            'Borderless':        lambda: has_path('borderless_gaming_path'),
+            'Monitor-Config':    lambda: has_path('multi_monitor_tool_path'),
+            'Cloud-Sync':        lambda: has_path('cloud_sync_path'),
+            'mount-disc':        lambda: has_path('disc_mount_path'),
+            'Unmount-disc':      lambda: has_path('disc_unmount_path'),
+            'Kill-Game':         lambda: True,
+            'Kill-List':         lambda: config.use_kill_list,
+            'Pre1':              lambda: has_path('pre1_path'),
+            'Pre2':              lambda: has_path('pre2_path'),
+            'Pre3':              lambda: has_path('pre3_path'),
+            'Post1':             lambda: has_path('post1_path'),
+            'Post2':             lambda: has_path('post2_path'),
+            'Post3':             lambda: has_path('post3_path'),
+            'JustAfterLaunch':   lambda: has_path('just_after_launch_path'),
+            'JustBeforeExit':    lambda: has_path('just_before_exit_path'),
+        }
+
+        for list_widget in (self.launch_sequence_list, self.exit_sequence_list):
+            for i in range(list_widget.count()):
+                item = list_widget.item(i)
+                text = item.text()
+                is_active = active_map.get(text, lambda: True)()
+                if is_active:
+                    # Clear any explicit foreground so Qt uses the palette colour
+                    item.setData(Qt.ItemDataRole.ForegroundRole, None)
+                else:
+                    item.setForeground(QBrush(grey))
 
     def sync_ui_from_config(self, config: AppConfig):
         self.blockSignals(True)
@@ -2020,7 +2071,7 @@ exit 1
         
         self.exit_sequence_list.addItems(exit_seq)
         self._update_list_tooltips(self.exit_sequence_list)
-        
+        self._update_sequence_item_colors()        
         # Cloud Backup Configuration
         self.rclone_remote_name_edit.setText(getattr(config, 'rclone_remote_name', ''))
         self.rclone_local_path_row.path = getattr(config, 'rclone_local_path', '')

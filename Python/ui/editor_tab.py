@@ -2891,10 +2891,6 @@ class EditorTab(QWidget):
 
         self.table.blockSignals(False) # Unblock signals
 
-    def _apply_styling(self, row, game_data, duplicates):
-        """Apply background colors based on game state - styling removed."""
-        # All visual styling has been removed
-        pass
     def _apply_styling(self, row, game_data, duplicates=None):
         """Apply background colors based on game state."""
         if duplicates is None:
@@ -2922,9 +2918,13 @@ class EditorTab(QWidget):
         if name_override in duplicates:
             bg_color = dark_red
             fg_color = white
+            tooltip_text = "Duplicate Name Override"
         elif not steam_id or steam_id == 'NOT_FOUND_IN_DATA' or steam_id == '':
             bg_color = yellow
             fg_color = purple
+            tooltip_text = "Empty Steam ID"
+        else:
+            tooltip_text = ""
             
         col_override = constants.EditorCols.NAME_OVERRIDE.value
         item_override = self.table.item(row, col_override)
@@ -2934,17 +2934,21 @@ class EditorTab(QWidget):
             if bg_color:
                 item_override.setBackground(QBrush(bg_color))
                 item_override.setForeground(QBrush(fg_color))
+                item_override.setToolTip(tooltip_text)
             else:
                 item_override.setData(Qt.ItemDataRole.BackgroundRole, None)
                 item_override.setData(Qt.ItemDataRole.ForegroundRole, None)
+                item_override.setToolTip("")
         
         if widget_override:
             if bg_color:
                 bg_css = f"rgb({bg_color.red()}, {bg_color.green()}, {bg_color.blue()})"
                 fg_css = "white" if fg_color == white else f"rgb({fg_color.red()}, {fg_color.green()}, {fg_color.blue()})"
                 widget_override.setStyleSheet(f"background-color: {bg_css}; color: {fg_css};")
+                widget_override.setToolTip(tooltip_text)
             else:
                 widget_override.setStyleSheet("")
+                widget_override.setToolTip("")
 
         # 2. Missing Sequence Entry
         config = self.main_window.config
@@ -3027,22 +3031,25 @@ class EditorTab(QWidget):
                     if it:
                         it.setBackground(QBrush(orange))
                         it.setForeground(QBrush(blue))
+                        it.setToolTip(f"Missing from Launch/Exit Sequence: {seq_key}")
                     
                     wdg = self.table.cellWidget(row, col)
                     if wdg:
                         wdg.setStyleSheet(f"background-color: rgb(255, 165, 0); color: blue;")
+                        wdg.setToolTip(f"Missing from Launch/Exit Sequence: {seq_key}")
             else:
                 # Clear styling for these columns if they were orange
                 for col_enum in cols:
                     col = col_enum.value
                     it = self.table.item(row, col)
-                    if it and it.background().color() == orange:
+                    if it and it.background().color() == orange and "Missing from Launch/Exit Sequence" in it.toolTip():
                         it.setData(Qt.ItemDataRole.BackgroundRole, None)
                         it.setData(Qt.ItemDataRole.ForegroundRole, None)
-                    
+                        it.setToolTip("")
                     wdg = self.table.cellWidget(row, col)
-                    if wdg and "background-color: rgb(255, 165, 0)" in wdg.styleSheet():
+                    if wdg and "background-color: rgb(255, 165, 0)" in wdg.styleSheet() and "Missing from Launch/Exit Sequence" in wdg.toolTip():
                         wdg.setStyleSheet("")
+                        wdg.setToolTip("")
 
     def get_all_game_data(self):
         """Extract all game data from the table, sanitizing disabled paths."""

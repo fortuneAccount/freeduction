@@ -1,7 +1,7 @@
 {
     "app_directory": "",
     "audio_tool_path": "",
-    "auto_flag_existing": true,
+    "auto_flag_existing": false,
     "borderless_gaming_path": "",
     "borderless_gaming_path_arguments": "",
     "borderless_gaming_path_options": "",
@@ -249,7 +249,7 @@
     "terminate_borderless_on_exit": true,
     "ui_font_family": "Copperplate Gothic",
     "ui_font_size": 10,
-    "ui_theme": "qdarktheme_dark",
+    "ui_theme": "fluent_dark",
     "use_kill_list": true,
     "wincdemu_exe_path": ""
 }
