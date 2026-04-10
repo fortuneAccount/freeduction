@@ -80,9 +80,16 @@ class PluginManagerDialog(QDialog):
         self.reload_btn.clicked.connect(self._reload_selected_plugin)
         self.refresh_btn = QPushButton("Refresh List")
         self.refresh_btn.clicked.connect(self._load_plugins)
+        
+        self.plugin_mode_btn = QPushButton("Plugin Creation Mode")
+        self.plugin_mode_btn.setStyleSheet("background-color: #8B0000; color: white;")
+        self.plugin_mode_btn.setToolTip("Restart in Plugin Creation Mode to design plugin UI")
+        self.plugin_mode_btn.clicked.connect(self._enter_plugin_mode)
+        
         btn_layout.addWidget(self.reload_btn)
         btn_layout.addWidget(self.refresh_btn)
         btn_layout.addStretch()
+        btn_layout.addWidget(self.plugin_mode_btn)
         layout.addLayout(btn_layout)
         
         return widget
@@ -173,3 +180,27 @@ class PluginManagerDialog(QDialog):
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error reloading plugin: {e}")
             self.logger.error(f"Error reloading plugin {plugin.name}: {e}", exc_info=True)
+
+    def _enter_plugin_mode(self):
+        """Restart the application in Plugin Creation Mode."""
+        import subprocess
+        import sys
+        
+        reply = QMessageBox.question(
+            self, "Enter Plugin Mode",
+            "This will restart the application in Plugin Creation Mode.\n\nThe window frame will turn red to indicate you are in development mode.\n\nContinue?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            app_path = sys.executable
+            script_path = os.path.join(constants.APP_ROOT_DIR, "Python", "main.py")
+            
+            try:
+                subprocess.Popen([app_path, script_path, "--plugin-mode"])
+                self.accept()
+                from PyQt6.QtWidgets import QApplication
+                QApplication.quit()
+            except Exception as e:
+                QMessageBox.critical(self, "Restart Failed", f"Could not restart in Plugin Mode: {str(e)}")

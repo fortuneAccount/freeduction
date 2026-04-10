@@ -21,9 +21,11 @@ import logging
 
 
 class MainWindow(QMainWindow):
-    def __init__(self):
+    def __init__(self, plugin_mode=False):
         """Initialize the main window"""
         super().__init__()
+        
+        self.plugin_mode = plugin_mode
         
         # Initialize managers
         self.config_manager = ConfigManager()
@@ -129,24 +131,41 @@ class MainWindow(QMainWindow):
         self.steam_cache_manager.load_normalized_steam_index()
         
     def _setup_ui(self):
-        self.setWindowTitle("Game Environment Manager")
+        self.setWindowTitle("Game Environment Manager" + (" [Plugin Creation Mode]" if self.plugin_mode else ""))
         self.setWindowIcon(QIcon(constants.APP_ICON))
-        self.setGeometry(100, 100, 880, 500)  # Reduced from 950, 750 to 800, 600
+        self.setGeometry(100, 100, 880, 500)
+
+        if self.plugin_mode:
+            self.setStyleSheet("""
+                QMainWindow {
+                    border: 3px solid #8B0000;
+                }
+                QTitleBar, QMenuBar {
+                    background-color: #4A0000;
+                    color: #FFCCCC;
+                }
+            """)
 
         self.tabs = QTabWidget()
         self.setCentralWidget(self.tabs)
 
-        # Create all tab widgets first
-        self.setup_tab = SetupTab(self)
-        self.deployment_tab = DeploymentTab(self)
-        self.editor_tab = EditorTab(self)
-        # Add tabs to the tab widget
-        self.tabs.addTab(self.setup_tab, "   SETUP   ")
-        self.tabs.addTab(self.deployment_tab, "DEPLOYMENT")
-        self.tabs.addTab(self.editor_tab, "   EDITOR   ")
+        if self.plugin_mode:
+            from Python.ui.plugin_creation_tab import PluginCreationTab
+            self.plugin_creation_tab = PluginCreationTab(self)
+            self.tabs.addTab(self.plugin_creation_tab, " PLUGIN ")
+            self.statusBar().showMessage("Plugin Creation Mode - Restart without --plugin-mode to exit")
+        else:
+            # Create all tab widgets first
+            self.setup_tab = SetupTab(self)
+            self.deployment_tab = DeploymentTab(self)
+            self.editor_tab = EditorTab(self)
+            # Add tabs to the tab widget
+            self.tabs.addTab(self.setup_tab, "   SETUP   ")
+            self.tabs.addTab(self.deployment_tab, "DEPLOYMENT")
+            self.tabs.addTab(self.editor_tab, "   EDITOR   ")
 
-        # Highlight unpopulated items in deployment tab with red color
-        self.deployment_tab.highlight_unpopulated_items(self)
+            # Highlight unpopulated items in deployment tab with red color
+            self.deployment_tab.highlight_unpopulated_items(self)
         
         # Create status bar
         self.statusBar().showMessage("Ready")
@@ -176,6 +195,9 @@ class MainWindow(QMainWindow):
 
     def _connect_signals(self):
         """Connect signals from UI tabs and managers to slots."""
+        if self.plugin_mode:
+            return
+            
         # --- Manager Signals ---
         self.config_manager.status_updated.connect(self.statusBar().showMessage)
         self.data_manager.status_updated.connect(self.statusBar().showMessage)
@@ -387,6 +409,8 @@ class MainWindow(QMainWindow):
 
     def sync_ui_from_config(self):
         """Updates the UI widgets with values from the AppConfig model."""
+        if self.plugin_mode:
+            return
         self.setup_tab.sync_ui_from_config(self.config)
         self.deployment_tab.sync_ui_from_config(self.config)
         self._apply_editor_font()

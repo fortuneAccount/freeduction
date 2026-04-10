@@ -147,12 +147,34 @@ class DownloadThread(QThread):
                     
                     success = True
                     
+                    # If the file was extracted, try to find the specific executable
+                    # Otherwise return the path to the downloaded file (useful for installers)
+                    if filename.lower().endswith(('.zip', '.7z')):
+                        # Check if the exe exists in the extraction dir
+                        potential_exe = os.path.join(self.extract_dir, self.exe_name)
+                        if os.path.exists(potential_exe):
+                            save_path = potential_exe
+                        else:
+                            # Scan one level deep for common folder nesting in zips
+                            found_nested = False
+                            if os.path.exists(self.extract_dir):
+                                for item in os.listdir(self.extract_dir):
+                                    sub_path = os.path.join(self.extract_dir, item)
+                                    if os.path.isdir(sub_path):
+                                        check_path = os.path.join(sub_path, self.exe_name)
+                                        if os.path.exists(check_path):
+                                            save_path = check_path
+                                            found_nested = True
+                                            break
+                            if not found_nested:
+                                save_path = self.extract_dir
+                    
                 except Exception as e:
                     last_error = str(e)
                     continue  # Try next URL
             
             if success:
-                self.finished.emit(True, "Download completed successfully", self.extract_dir)
+                self.finished.emit(True, "Download completed successfully", save_path)
             else:
                 self.finished.emit(False, f"All downloads failed. Last error: {last_error}", "")
                 
@@ -1005,7 +1027,7 @@ class SetupTab(QWidget):
         if not os.path.exists(constants.REPOS_SET):
             return repos
 
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(interpolation=None)
         config.optionxform = str
         config.read(constants.REPOS_SET)
 
@@ -1304,74 +1326,6 @@ class SetupTab(QWidget):
         # If not found, return the original path
         return os.path.join(parent_dir, dir_name)
 
-
-    def _on_wincdemu_download_finished(self, success, message, result_path, bin_dir):
-        if hasattr(self, 'progress_dialog'):
-            self.progress_dialog.close()
-
-        if success:
-            self._write_exe_path_to_config("wincdemu", result_path)
-            self._generate_mount_scripts_files(bin_dir, "wincdemu")
-            self._refresh_tool_paths()  # Refresh all tool paths
-            
-            QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{result_path}")
-        else:
-            QMessageBox.critical(self, "Download Failed", f"Error: {message}")
-            
-        self.active_download_row = None
-        self._current_download_tool_name = None
-
-    def _on_imgdrive_download_finished(self, success, message, result_path, bin_dir):
-        if hasattr(self, 'progress_dialog'):
-            self.progress_dialog.close()
-
-        if success:
-            exe_path = os.path.join(bin_dir, "imgdrive.exe")
-            self._write_exe_path_to_config("imgdrive", exe_path)
-            self._generate_mount_scripts_files(bin_dir, "imgdrive")
-            self._refresh_tool_paths()  # Refresh all tool paths
-            
-            QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{result_path}")
-        else:
-            QMessageBox.critical(self, "Download Failed", f"Error: {message}")
-
-        self.active_download_row = None
-        self._current_download_tool_name = None
-        
-    def _on_cdmage_download_finished(self, success, message, result_path, bin_dir):
-        if hasattr(self, 'progress_dialog'):
-            self.progress_dialog.close()
-
-        if success:
-            exe_path = os.path.join(bin_dir, "cdmage.exe")
-            self._write_exe_path_to_config("cdmage", exe_path)
-            self._generate_mount_scripts_files(bin_dir, "cdmage")
-            self._refresh_tool_paths()  # Refresh all tool paths
-            
-            QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{result_path}")
-        else:
-            QMessageBox.critical(self, "Download Failed", f"Error: {message}")
-
-        self.active_download_row = None
-        self._current_download_tool_name = None
-
-    def _on_osf_download_finished(self, success, message, result_path, bin_dir):
-        if hasattr(self, 'progress_dialog'):
-            self.progress_dialog.close()
-
-        if success:
-            exe_path = os.path.join(bin_dir, "osf.exe")
-            self._write_exe_path_to_config("osf", exe_path)
-            self._generate_mount_scripts_files(bin_dir, "osf")
-            self._refresh_tool_paths()  # Refresh all tool paths
-            
-            QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{result_path}")
-        else:
-            QMessageBox.critical(self, "Download Failed", f"Error: {message}")
-
-        self.active_download_row = None
-        self._current_download_tool_name = None
-
     def _write_exe_path_to_config(self, exe_name, exe_path):
         """Write the executable path to config.json with the format {exe_name}_exe_path."""
         # Remove .exe extension if present for the config key
@@ -1382,6 +1336,11 @@ class SetupTab(QWidget):
             setattr(self.main_window.config, config_key, exe_path)
             self.config_changed.emit()
             logging.info(f"Wrote executable path to config: {config_key} = {exe_path}")
+
+            # Trigger mount script generation for disc tools
+            mount_tools = ["wincdemu", "osf", "imgdrive", "cdmage", "native"]
+            if tool_name_no_ext in mount_tools:
+                 self._generate_mount_scripts_files(os.path.join(constants.APP_ROOT_DIR, "bin"), tool_name_no_ext)
         else:
             logging.warning(f"Failed to write {config_key} to config: Configuration object is not initialized.")
 
@@ -1578,7 +1537,14 @@ exit 1
     
     def _handle_installer(self, installer_path, installed_path, silent_install):
         """Handle running an installer and tracking the installed executable."""
+        logging.info(f"Handling installation for: {installer_path}")
         try:
+            if not os.path.exists(installer_path):
+                error_msg = f"Installer executable not found on disk: {installer_path}"
+                logging.error(error_msg)
+                QMessageBox.critical(self, "Installation Error", error_msg)
+                return
+
             # Ask user if they want to run the installer
             reply = QMessageBox.question(
                 self, 
@@ -1591,6 +1557,7 @@ exit 1
             )
             
             if reply != QMessageBox.StandardButton.Yes:
+                logging.info("User declined to run the installer.")
                 QMessageBox.information(
                     self, 
                     "Installation Skipped",
@@ -1606,7 +1573,7 @@ exit 1
                 cmd.extend(['/S', '/SILENT', '/VERYSILENT'])
             
             # Run installer
-            logging.info(f"Running installer: {' '.join(cmd)}")
+            logging.info(f"Executing installer: {' '.join(cmd)}")
             
             if silent_install:
                 # Run silently and wait
@@ -1627,6 +1594,7 @@ exit 1
                 while process.poll() is None:
                     QApplication.processEvents()
                     if progress.wasCanceled():
+                        logging.warning("User cancelled the silent installation process.")
                         process.terminate()
                         QMessageBox.warning(self, "Installation Cancelled", "Installation was cancelled by user.")
                         return
@@ -1635,17 +1603,20 @@ exit 1
                 
                 if process.returncode != 0:
                     stderr = process.stderr.read().decode('utf-8', errors='ignore')
-                    logging.error(f"Installer failed with code {process.returncode}: {stderr}")
+                    logging.error(f"Silent installer failed with code {process.returncode}. Stderr: {stderr}")
                     QMessageBox.critical(
                         self, 
                         "Installation Failed",
-                        f"Installer returned error code {process.returncode}\n\n"
+                        f"Installer returned error code {process.returncode}.\n\n"
+                        f"Details: {stderr[:200]}...\n\n"
                         f"You may need to run the installer manually:\n{installer_path}"
                     )
                     return
+                logging.info("Silent installation process finished successfully.")
             else:
                 # Run installer with UI (non-blocking)
                 subprocess.Popen(cmd)
+                logging.info("Installer launched with UI (non-blocking).")
                 
                 QMessageBox.information(
                     self,
@@ -1659,9 +1630,11 @@ exit 1
             if installed_path:
                 # Expand environment variables in installed path
                 expanded_path = os.path.expandvars(installed_path)
+                logging.info(f"Verifying installation at target path: {expanded_path}")
                 
                 # Check if installed executable exists
                 if os.path.exists(expanded_path):
+                    logging.info(f"Verified installation. Updating config with path: {expanded_path}")
                     # Update the path row
                     if hasattr(self, 'active_download_row') and self.active_download_row:
                         self.active_download_row.path = expanded_path
@@ -1681,6 +1654,7 @@ exit 1
                     )
                 else:
                     # Installed path not found - ask user to locate it
+                    logging.warning(f"Installation verified as finished but executable not found at: {expanded_path}")
                     QMessageBox.warning(
                         self,
                         "Installed Path Not Found",
@@ -1689,14 +1663,16 @@ exit 1
                     )
                     
                     # Open file dialog to locate installed exe
+                    initial_dir = os.path.dirname(expanded_path) if os.path.dirname(expanded_path) else ""
                     file_path, _ = QFileDialog.getOpenFileName(
                         self,
                         "Locate Installed Executable",
-                        "",
+                        initial_dir,
                         "Executables (*.exe);;All Files (*.*)"
                     )
                     
                     if file_path:
+                        logging.info(f"User manually mapped installed path: {file_path}")
                         if hasattr(self, 'active_download_row') and self.active_download_row:
                             self.active_download_row.path = file_path
                         
@@ -1711,8 +1687,11 @@ exit 1
                             "Path Set",
                             f"Tool path set to:\n{file_path}"
                         )
+                    else:
+                        logging.warning("User cancelled manual file location selection.")
             else:
                 # No installed path specified - try to auto-detect
+                logging.info("No explicit installed path defined in repos.set. Attempting auto-detection.")
                 QMessageBox.information(
                     self,
                     "Installation Complete",
@@ -1725,7 +1704,7 @@ exit 1
                 self._refresh_tool_paths()
                 
         except Exception as e:
-            logging.error(f"Error handling installer: {e}", exc_info=True)
+            logging.error(f"Critical error during installer handling: {e}", exc_info=True)
             QMessageBox.critical(
                 self,
                 "Installer Error",

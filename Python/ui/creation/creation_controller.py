@@ -1059,7 +1059,7 @@ class CreationController:
         if not os.path.exists(constants.REPOS_SET):
             return repos
 
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(interpolation=None)
         config.read(constants.REPOS_SET)
 
         global_vars = {}

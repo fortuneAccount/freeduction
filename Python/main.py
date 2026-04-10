@@ -38,6 +38,11 @@ def main():
         action="store_true",
         help="Run the Android Kivy UI in desktop preview mode",
     )
+    parser.add_argument(
+        "--plugin-mode",
+        action="store_true",
+        help="Run in plugin creation mode with red-tinted window frame",
+    )
 
     args, _ = parser.parse_known_args()
     # Remove app-specific args so Kivy doesn't try to parse them
@@ -84,7 +89,7 @@ def main():
         from Python.main_window_new import MainWindow
 
         app = QApplication(sys.argv)
-        window = MainWindow()
+        window = MainWindow(plugin_mode=args.plugin_mode)
         window.show()
         sys.exit(app.exec())
     except Exception as e:

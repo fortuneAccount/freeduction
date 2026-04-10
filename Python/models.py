@@ -6,6 +6,7 @@ class AppConfig:
         self.excluded_dirs = []
         self.logging_verbosity = "Low"
         self.ui_theme: str = "default"
+        self.plugin_creation_mode: bool = False
         self.game_managers_present = "None"
         self.exclude_selected_manager_games = False
         self.ui_font_family = ""
