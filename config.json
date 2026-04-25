@@ -2,7 +2,7 @@
     "app_directory": "",
     "audio_tool_path": "",
     "auto_flag_existing": true,
-    "borderless_gaming_path": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\bin\\magpie\\Magpie.exe",
+    "borderless_gaming_path": "",
     "borderless_gaming_path_arguments": "",
     "borderless_gaming_path_options": "",
     "cdmage_exe_path": "",
@@ -17,7 +17,7 @@
     "custom_mount_path": "",
     "defaults": {
         "controller_mapper_path_enabled": true,
-        "borderless_gaming_path_enabled": true,
+        "borderless_gaming_path_enabled": false,
         "multi_monitor_tool_path_enabled": false,
         "just_after_launch_path_enabled": false,
         "just_before_exit_path_enabled": false,
@@ -242,14 +242,15 @@
     "savestate_auto_backup": false,
     "savestate_backup_path": "",
     "source_dirs": [
-        "C:/Games"
+        "C:/Games",
+        "D:/Games"
     ],
     "steam_json_path": "",
     "steam_json_version": 2,
     "syncthing_auto_start": false,
     "syncthing_sync_folder": "",
     "terminate_borderless_on_exit": true,
-    "ui_font_family": "Copperplate Gothic",
+    "ui_font_family": "Trueno",
     "ui_font_size": 10,
     "ui_theme": "fluent_dark",
     "use_kill_list": true,

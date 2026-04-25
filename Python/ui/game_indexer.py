@@ -4,7 +4,7 @@ import re
 import datetime
 from typing import Optional, Tuple, Dict, Any, Set
 from .name_processor import NameProcessor
-from .name_utils import replace_illegal_chars
+from .name_utils import replace_illegal_chars, make_safe_filename
 
 
 def get_filtered_directory_name(exec_full_path: str, folder_exclude_set: set) -> str:
@@ -123,7 +123,12 @@ def _process_executable(
             exec_name_no_ext, name_override, dir_name,
             main_window.demoted_set, main_window.folder_demoted_set, name_processor
         )
-
+             # Check if auto-flag (demote current library) is enabled and profile folder exists
+        if not is_demoted_flag and main_window.config.auto_flag_existing:
+            profiles_dir = main_window.config.profiles_dir
+            safe_name = make_safe_filename(name_override or dir_name)
+            if profiles_dir and os.path.exists(os.path.join(profiles_dir, safe_name)):
+                is_demoted_flag = True
         steam_name, steam_id, name_override = _get_steam_match(
             name_override, main_window.config, main_window.steam_cache_manager.normalized_steam_index, name_processor
         )
