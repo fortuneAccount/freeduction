@@ -218,6 +218,22 @@ class GameLauncher:
         # Use parse_known_args to allow for other potential flags
         self.args, unknown = parser.parse_known_args()
         args = self.args
+
+        # Reconstruct target path if it contained spaces and wasn't quoted in the shortcut.
+        # This is required because Shortcut.exe crashes (0xC0000005) if parameters are double-quoted.
+        if args.target and unknown:
+            pos_args = [args.target]
+            # Attempt to build the longest possible valid path from positional arguments
+            for item in unknown:
+                if item.startswith('-'):
+                    break
+                pos_args.append(item)
+                
+                reconstructed = " ".join(pos_args)
+                if os.path.exists(reconstructed) or reconstructed.lower().endswith('.lnk'):
+                    args.target = reconstructed
+                    break
+
         if args.home:
             self.home = os.path.abspath(args.home)
             self.source = os.path.join(self.home, "Python")

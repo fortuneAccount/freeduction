@@ -306,7 +306,7 @@ class CreationController:
             game_exe_path = Path(game_data.get('directory', '')) / game_data.get('name', '')
             profile_shortcut_path = game_profile_dir / f"{safe_game_name}.lnk"
             
-            self._create_shortcut(
+            sc1 = self._create_shortcut(
                 target_path=game_exe_path,
                 shortcut_path=profile_shortcut_path,
                 working_dir=game_data.get('directory', ''),
@@ -314,12 +314,15 @@ class CreationController:
             )
 
             # 7. Create Launcher Shortcut (pointing to Launcher.exe)
-            launcher_args = f'"{profile_shortcut_path}"'
+            # Ensure profile shortcut path uses Windows-style backslashes when passed as an argument
+            # We do NOT wrap the path in internal double quotes because Shortcut.exe crashes with nested quoting.
+            # Launcher.py's argument parser handles reconstructing space-split paths.
+            launcher_args = os.path.normpath(str(profile_shortcut_path))
             extra_args = game_data.get('launcher_executable_arguments', app_config.launcher_executable_arguments)
             if extra_args:
                 launcher_args += f" {extra_args}"
 
-            self._create_shortcut(
+            sc2 = self._create_shortcut(
                 target_path=target_launcher_exe,
                 shortcut_path=launcher_shortcut_path,
                 arguments=launcher_args,
@@ -328,8 +331,12 @@ class CreationController:
                 description=f"Launch {game_name_override}"
             )
 
-            self.main_window.statusBar().showMessage(f"Successfully created launcher for {game_name_override}", 3000)
-            return True
+            if sc1 and sc2:
+                self.main_window.statusBar().showMessage(f"Successfully created launcher for {game_name_override}", 3000)
+                return True
+            else:
+                logging.error(f"Shortcut creation failed for {game_name_override}. Check logs for details.")
+                return False
             
         except Exception as e:
             logging.error(f"Failed to create launcher for {game_name_override}: {e}", exc_info=True)
@@ -343,22 +350,61 @@ class CreationController:
             logging.error(f"Shortcut.exe not found at {shortcut_exe}")
             return False
 
-        cmd = [
-            shortcut_exe,
-            "/F:" + str(shortcut_path),
-            "/A:C",
-            "/T:" + str(target_path)
-        ]
-        if arguments:
-            cmd.append("/P:" + str(arguments))
-        if working_dir:
-            cmd.append("/W:" + str(working_dir))
-        if icon_path:
-            cmd.append("/I:" + str(icon_path))
-        if description:
-            cmd.append("/D:" + str(description))
+        # Normalize all paths to Windows format and ensure they are strings
+        def prepare_path(p):
+            if not p: return ""
+            # os.path.normpath converts slashes to backslashes on Windows
+            return os.path.normpath(str(p))
 
-        subprocess.run(cmd, check=True, capture_output=True)
+        target_norm = prepare_path(target_path)
+        shortcut_norm = prepare_path(shortcut_path)
+        working_norm = prepare_path(working_dir)
+        icon_norm = prepare_path(icon_path)
+
+        # Shortcut.exe is a legacy tool that can crash (0xC0000005) if command line arguments
+        # are not quoted according to its specific expectations. We build a command string
+        # with explicit quoting around switch+value pairs to ensure success.
+        def q(switch, value):
+            if not value: return ""
+            return f'"{switch}{value}"'
+
+        cmd_parts = [
+            f'"{shortcut_exe}"',
+            q("/F:", shortcut_norm),
+            "/A:C",
+            q("/T:", target_norm)
+        ]
+        
+        if arguments:
+            cmd_parts.append(q("/P:", str(arguments)))
+        if working_norm:
+            cmd_parts.append(q("/W:", working_norm))
+        if icon_norm:
+            cmd_parts.append(q("/I:", icon_norm))
+        if description:
+            cmd_parts.append(q("/D:", str(description)))
+
+        cmd_str = " ".join(cmd_parts)
+
+        try:
+            # Pass the command string directly to avoid Python's default argument list processing
+            subprocess.run(cmd_str, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore')
+            return True
+        except subprocess.CalledProcessError as e:
+            # Check if the file was created DESPITE the crash. 
+            # Legacy tools like Shortcut.exe often crash (0xC0000005) during exit routine when handling long paths.
+            if os.path.exists(shortcut_norm):
+                logging.warning(f"Shortcut.exe crashed with exit status {e.returncode}, but the shortcut was created successfully at {shortcut_norm}.")
+                return True
+
+            logging.error(f"Shortcut.exe failed with exit status {e.returncode}")
+            logging.error(f"Command line used: {e.cmd}")
+            if e.stderr:
+                logging.error(f"Shortcut.exe Stderr: {e.stderr.strip()}")
+            return False
+        except Exception as e:
+            logging.error(f"Unexpected error calling Shortcut.exe: {e}")
+            return False
 
     def _download_game_json(self, game_data, game_launcher_dir):
         """Downloads Game.json from Steam API if steam_id is present."""
