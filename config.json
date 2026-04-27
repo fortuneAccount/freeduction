@@ -1,7 +1,7 @@
 {
     "app_directory": "",
     "audio_tool_path": "",
-    "auto_flag_existing": false,
+    "auto_flag_existing": true,
     "borderless_gaming_path": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\bin\\borderlessgaming\\borderlessgaming.exe",
     "borderless_gaming_path_arguments": "",
     "borderless_gaming_path_options": "",
