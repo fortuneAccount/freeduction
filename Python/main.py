@@ -31,7 +31,7 @@ def setup_logging():
 def main():
     """Main function to run the application."""
     parser = argparse.ArgumentParser(
-        description="Game Env Manager - Main App"
+        description="[RJPROJ]"
     )
     parser.add_argument(
         "--android-preview",

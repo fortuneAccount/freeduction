@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
         self.steam_cache_manager.load_normalized_steam_index()
         
     def _setup_ui(self):
-        self.setWindowTitle("Game Environment Manager" + (" [Plugin Creation Mode]" if self.plugin_mode else ""))
+        self.setWindowTitle("[RJPROJ]" + (" [Plugin Creation Mode]" if self.plugin_mode else ""))
         self.setWindowIcon(QIcon(constants.APP_ICON))
         self.setGeometry(100, 100, 880, 500)
 

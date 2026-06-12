@@ -21,6 +21,7 @@ __pycache__/
 *.ini
 *.log
 *.amgp
+config.json
 
 # Index and cache files
 *.old
@@ -30,8 +31,10 @@ steam_filtered.txt
 *.bak
 *.obj
 index_backups/
+cache/
 
 # IDE specific
+.devcontainer/
 .vscode/
 .idea/
 .kiro/

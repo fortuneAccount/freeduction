@@ -1,3 +1,4 @@
+setuptools
 py7zr
 PyQt6
 nltk

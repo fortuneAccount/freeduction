@@ -343,8 +343,44 @@ class CreationController:
             self.main_window.statusBar().showMessage(f"Error creating launcher for {game_name_override}: {e}", 5000)
             return False
 
+    def _create_shortcut_powershell(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description=""):
+        """Fallback method to create shortcuts using PowerShell (handles Unicode correctly)."""
+        def ps_escape(s):
+            return str(s).replace("'", "''")
+
+        target_norm = os.path.normpath(str(target_path))
+        shortcut_norm = os.path.normpath(str(shortcut_path))
+        working_norm = os.path.normpath(str(working_dir)) if working_dir else ""
+        icon_norm = os.path.normpath(str(icon_path)) if icon_path else ""
+
+        # Build PS script to create the shortcut via WScript.Shell COM object
+        ps_cmd = (
+            f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{ps_escape(shortcut_norm)}');"
+            f"$s.TargetPath='{ps_escape(target_norm)}';"
+            f"$s.Arguments='{ps_escape(arguments)}';"
+            f"$s.WorkingDirectory='{ps_escape(working_norm)}';"
+            f"$s.Description='{ps_escape(description)}';"
+        )
+        if icon_norm:
+            ps_cmd += f"$s.IconLocation='{ps_escape(icon_norm)}';"
+        ps_cmd += "$s.Save()"
+
+        try:
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps_cmd], 
+                           check=True, capture_output=True)
+            return True
+        except Exception as e:
+            logging.error(f"PowerShell shortcut creation failed for {shortcut_path}: {e}")
+            return False
+
     def _create_shortcut(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description=""):
         """Creates a Windows shortcut using the bundled Shortcut.exe."""
+        # Pre-check for Unicode characters which Shortcut.exe (ANSI) cannot handle
+        is_unicode = any(ord(c) > 127 for c in (str(target_path) + str(shortcut_path) + str(arguments) + str(working_dir)))
+        if is_unicode:
+            logging.info(f"Unicode detected in paths. Using PowerShell for shortcut: {shortcut_path}")
+            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
+
         shortcut_exe = os.path.join(constants.APP_ROOT_DIR, "bin", "Shortcut.exe")
         if not os.path.exists(shortcut_exe):
             logging.error(f"Shortcut.exe not found at {shortcut_exe}")
@@ -397,14 +433,11 @@ class CreationController:
                 logging.warning(f"Shortcut.exe crashed with exit status {e.returncode}, but the shortcut was created successfully at {shortcut_norm}.")
                 return True
 
-            logging.error(f"Shortcut.exe failed with exit status {e.returncode}")
-            logging.error(f"Command line used: {e.cmd}")
-            if e.stderr:
-                logging.error(f"Shortcut.exe Stderr: {e.stderr.strip()}")
-            return False
+            logging.warning(f"Shortcut.exe failed (code {e.returncode}). Attempting PowerShell fallback...")
+            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
         except Exception as e:
-            logging.error(f"Unexpected error calling Shortcut.exe: {e}")
-            return False
+            logging.warning(f"Unexpected error calling Shortcut.exe: {e}. Attempting PowerShell fallback...")
+            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
 
     def _download_game_json(self, game_data, game_launcher_dir):
         """Downloads Game.json from Steam API if steam_id is present."""
