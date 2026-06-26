@@ -22,6 +22,7 @@ __pycache__/
 *.log
 *.amgp
 config.json
+*.code-workspace
 
 # Index and cache files
 *.old

@@ -202,6 +202,7 @@ class EditorTab(QWidget):
         self.select_flyout_menu.addAction("Empty Kill List", lambda: self.select_by_criteria("empty_killlist"))
         self.select_flyout_menu.addAction("Invalid/Absent Paths", lambda: self.select_by_criteria("invalid_paths"))
         self.select_flyout_menu.addAction("Large File LC (>10MB)", lambda: self.select_by_criteria("large_lc"))
+        self.select_flyout_menu.addAction("By File Name...", lambda: self.select_by_criteria("by_filename"))
         self.select_flyout_btn.setMenu(self.select_flyout_menu)
 
         # Change Flyout
@@ -226,6 +227,8 @@ class EditorTab(QWidget):
         self.sort_flyout_menu.addAction("Date Created", lambda: self.sort_data('date_indexed'))
         self.sort_flyout_menu.addAction("Windowing Enabled", lambda: self.sort_data('borderless_windowing_enabled'))
         self.sort_flyout_menu.addAction("Hide Taskbar", lambda: self.sort_data('hide_taskbar'))
+        self.sort_flyout_menu.addAction("Duplicate Name-Override", lambda: self.sort_data('_dup_name_override'))
+        self.sort_flyout_menu.addAction("Parent Folder", lambda: self.sort_data('_parent_folder'))
         self.sort_flyout_btn.setMenu(self.sort_flyout_menu)
 
         # Undo Button
@@ -523,12 +526,31 @@ class EditorTab(QWidget):
     def sort_data(self, key):
         """Sort the game list by the specified key."""
         self.push_undo()
-        
-        def sort_key(item):
-            val = item.get(key)
-            if val is None:
-                return ""
-            return str(val).lower()
+
+        # Build duplicate name-override counts for the special sort
+        if key == '_dup_name_override':
+            import collections as _c
+            name_counts = _c.Counter(
+                g.get('name_override', '').strip().lower()
+                for g in self.original_data
+                if g.get('name_override', '').strip()
+            )
+            def sort_key(item):
+                no = item.get('name_override', '').strip().lower()
+                count = name_counts.get(no, 0)
+                # Sort duplicates first (count > 1), then alphabetically within each bucket
+                return (0 if count > 1 else 1, no)
+        elif key == '_parent_folder':
+            def sort_key(item):
+                directory = item.get('directory', '')
+                parent = os.path.basename(os.path.normpath(directory)).lower() if directory else ''
+                return parent
+        else:
+            def sort_key(item):
+                val = item.get(key)
+                if val is None:
+                    return ""
+                return str(val).lower()
 
         # Check if already sorted ascending to toggle
         is_sorted_asc = all(sort_key(self.original_data[i]) <= sort_key(self.original_data[i+1]) for i in range(len(self.original_data)-1))
@@ -541,7 +563,6 @@ class EditorTab(QWidget):
     def select_by_criteria(self, criteria):
         """Select rows matching specific criteria."""
         self.table.clearSelection()
-        rows_to_select = []
         
         path_cols = [
             constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH, constants.EditorCols.MM_PATH,
@@ -554,6 +575,14 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.ISO_PATH
         ]
+
+        # For "by_filename", prompt the user for a substring before iterating
+        filename_filter = None
+        if criteria == "by_filename":
+            text, ok = QInputDialog.getText(self, "Select by File Name", "Enter filename substring (case-insensitive):")
+            if not ok or not text.strip():
+                return
+            filename_filter = text.strip().lower()
 
         for row in range(self.table.rowCount()):
             real_index = (self.current_page * self.page_size) + row
@@ -581,6 +610,11 @@ class EditorTab(QWidget):
                     widget = self.table.cellWidget(row, col_enum.value)
                     if widget and self._check_widget_large_lc(widget):
                         match = True; break
+            elif criteria == "by_filename" and filename_filter is not None:
+                game_name = game.get('name', '').lower()
+                name_override = game.get('name_override', '').lower()
+                if filename_filter in game_name or filename_filter in name_override:
+                    match = True
             
             if match:
                 self.table.selectRow(row)
@@ -2608,7 +2642,7 @@ class EditorTab(QWidget):
         name_item = QTableWidgetItem(game.get('name', ''))
         name_item.setFlags(name_item.flags() & ~Qt.ItemFlag.ItemIsEditable)
         
-        # Tooltip for file size and index date
+        # Tooltip for file size, date modified, file version, and index date
         try:
             full_path = os.path.join(game.get('directory', ''), game.get('name', ''))
             tooltip_parts = []
@@ -2619,6 +2653,28 @@ class EditorTab(QWidget):
                         break
                     size /= 1024
                 tooltip_parts.append(f"File Size: {size:.2f} {unit}")
+
+                # Date modified
+                try:
+                    mtime = os.path.getmtime(full_path)
+                    mtime_str = datetime.datetime.fromtimestamp(mtime).strftime("%Y-%m-%d %H:%M")
+                    tooltip_parts.append(f"Date Modified: {mtime_str}")
+                except Exception:
+                    pass
+
+                # File version (Windows PE resources)
+                if full_path.lower().endswith('.exe'):
+                    try:
+                        import win32api
+                        info = win32api.GetFileVersionInfo(full_path, '\\')
+                        ms = info['FileVersionMS']
+                        ls = info['FileVersionLS']
+                        version_str = f"{ms >> 16}.{ms & 0xFFFF}.{ls >> 16}.{ls & 0xFFFF}"
+                        tooltip_parts.append(f"File Version: {version_str}")
+                    except ImportError:
+                        pass  # pywin32 not available
+                    except Exception:
+                        pass  # Version info not present in this exe
             else:
                 tooltip_parts.append("File not found")
             

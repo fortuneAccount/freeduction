@@ -167,7 +167,10 @@ class DownloadThread(QThread):
                                             found_nested = True
                                             break
                             if not found_nested:
+                                # Fall back to directory — caller will do a deep scan
                                 save_path = self.extract_dir
+                    
+                    break  # Download + extraction succeeded — stop trying fallback URLs
                     
                 except Exception as e:
                     last_error = str(e)
@@ -1493,6 +1496,53 @@ exit 1
         except Exception as e:
             logging.error(f"Error copying template {template_path} to {dest_path}: {e}")
 
+    def _find_exe_recursive(self, root_dir, exe_name):
+        """Recursively search a directory for a specific executable (case-insensitive)."""
+        exe_lower = exe_name.lower()
+        for dirpath, dirnames, filenames in os.walk(root_dir):
+            for fname in filenames:
+                if fname.lower() == exe_lower:
+                    return os.path.join(dirpath, fname)
+        return None
+
+    def _auto_populate_mapper_templates(self, tool_name, mapper_exe_path):
+        """After downloading a mapper tool, populate missing profile templates via config_manager."""
+        tool_lower = tool_name.lower().replace('.exe', '')
+        mapper_tools = {'antimicrox': '.amgp', 'keysticks': '.keysticks'}
+        ext = mapper_tools.get(tool_lower)
+        if not ext:
+            return
+
+        config = self.main_window.config if self.main_window and hasattr(self.main_window, 'config') else None
+        if not config:
+            return
+
+        # Check whether any profile paths are already configured — if all set, skip
+        needs_population = (
+            not config.p1_profile_path or
+            not config.p2_profile_path or
+            not config.mediacenter_profile_path
+        )
+        if not needs_population:
+            return
+
+        try:
+            if hasattr(self.main_window, 'config_manager'):
+                # Set the controller_mapper_path if not already set
+                if not config.controller_mapper_path:
+                    config.controller_mapper_path = mapper_exe_path
+                    config.defaults['controller_mapper_path_enabled'] = True
+                
+                self.main_window.config_manager._populate_controller_profiles(
+                    config, mapper_exe_path, tool_lower, ext
+                )
+                logging.info(f"Auto-populated controller profiles for {tool_lower}")
+                self.main_window.config_manager.save_config(config)
+                self.config_changed.emit()
+                self.main_window.sync_ui_from_config()
+        except Exception as e:
+            logging.error(f"Failed to auto-populate mapper profiles for {tool_lower}: {e}")
+
     def _on_download_finished_slot(self, success, message, result_path):
         if hasattr(self, 'progress_dialog'):
             self.progress_dialog.close()
@@ -1513,19 +1563,34 @@ exit 1
                 # Handle installer
                 self._handle_installer(result_path, installed_path, silent_install)
             else:
+                # If result_path is a directory (exe not found at top level), search recursively
+                resolved_path = result_path
+                if os.path.isdir(result_path) and hasattr(self, '_current_download_tool_data') and self._current_download_tool_data:
+                    exe_name = self._current_download_tool_data.get('exe_name', '')
+                    if exe_name:
+                        found = self._find_exe_recursive(result_path, exe_name)
+                        if found:
+                            resolved_path = found
+                            logging.info(f"Located executable via recursive search: {resolved_path}")
+                        else:
+                            logging.warning(f"Executable '{exe_name}' not found in extracted directory '{result_path}'")
+
                 # Handle portable executable
                 if hasattr(self, 'active_download_row') and self.active_download_row:
-                    self.active_download_row.path = result_path
+                    self.active_download_row.path = resolved_path
                     
                     # Write the executable path to config.json
                     if hasattr(self, '_current_download_tool_name') and self._current_download_tool_name:
                         tool_name = self._current_download_tool_name
-                        self._write_exe_path_to_config(tool_name, result_path)
+                        self._write_exe_path_to_config(tool_name, resolved_path)
+
+                        # Auto-populate mapper profile templates if applicable
+                        self._auto_populate_mapper_templates(tool_name, resolved_path)
                 
                 # Refresh all tool paths from bin directory after successful download
                 self._refresh_tool_paths()
                     
-                QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{result_path}")
+                QMessageBox.information(self, "Download Complete", f"Successfully downloaded to:\n{resolved_path}")
         else:
             QMessageBox.critical(self, "Download Failed", f"Error: {message}")
             
@@ -1643,6 +1708,9 @@ exit 1
                     if hasattr(self, '_current_download_tool_name') and self._current_download_tool_name:
                         tool_name = self._current_download_tool_name
                         self._write_exe_path_to_config(tool_name, expanded_path)
+                        
+                        # Auto-populate mapper profile templates if applicable
+                        self._auto_populate_mapper_templates(tool_name, expanded_path)
                     
                     # Refresh tool paths
                     self._refresh_tool_paths()
@@ -1679,6 +1747,9 @@ exit 1
                         if hasattr(self, '_current_download_tool_name') and self._current_download_tool_name:
                             tool_name = self._current_download_tool_name
                             self._write_exe_path_to_config(tool_name, file_path)
+                            
+                            # Auto-populate mapper profile templates if applicable
+                            self._auto_populate_mapper_templates(tool_name, file_path)
                         
                         self._refresh_tool_paths()
                         
@@ -1717,7 +1788,6 @@ exit 1
         if hasattr(self.main_window, 'config_manager') and hasattr(self.main_window, 'config'):
             logging.info("Refreshing tool paths after download...")
             self.main_window.config_manager.refresh_tool_paths(self.main_window.config)
-            # Re-sync UI to show updated paths
             self.main_window.sync_ui_from_config()
             logging.info("Tool paths refreshed and UI updated.")
 
@@ -2176,10 +2246,15 @@ exit 1
         if not theme_id:
             return
         theme_manager = ThemeManager()
-        requires_restart = theme_manager.apply_theme(theme_id, QApplication.instance())
-        if hasattr(self.main_window, 'config'):
-            self.main_window.config.ui_theme = theme_id
+        config = getattr(self.main_window, 'config', None)
+        requires_restart = theme_manager.apply_theme(theme_id, QApplication.instance(), config=config)
+        if config is not None:
+            config.ui_theme = theme_id
             self.config_changed.emit()
+        # Re-apply Qlementine capability enhancements (nav bar, popover QSS,
+        # accordion style) whenever the theme changes at runtime.
+        if hasattr(self.main_window, 'apply_ui_capabilities'):
+            self.main_window.apply_ui_capabilities()
         if requires_restart:
             QMessageBox.information(
                 self,

@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (QListWidget, QAbstractItemView, QWidget, QHBoxLayout,
                              QCheckBox, QLineEdit, QPushButton, QRadioButton, QComboBox,
                              QButtonGroup, QFileDialog, QToolButton, QMenu, QSizePolicy)
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import pyqtSignal
 import os
 
 def _find_dir_case_insensitive(parent_dir, dir_name):
@@ -51,7 +51,22 @@ class PathConfigRow(QWidget):
     downloadRequested = pyqtSignal(str, dict)  # tool_name, tool_data
 
     def __init__(self, config_key, is_directory=False, add_enabled=True,
-                 add_run_wait=False, add_cen_lc=True, repo_items=None, use_combobox=True, parent=None):
+                 add_run_wait=False, add_cen_lc=True, repo_items=None,
+                 use_combobox=True, qlementine_toggles: bool = False, parent=None):
+        """
+        Args:
+            config_key:          Identifier used to look up this row's config value.
+            is_directory:        Use directory picker instead of file picker.
+            add_enabled:         Include an enable/disable checkbox.
+            add_run_wait:        Include a run-wait checkbox.
+            add_cen_lc:          Include CEN/LC radio buttons.
+            repo_items:          Optional dict of downloadable tool entries.
+            use_combobox:        Use QComboBox (True) or QLineEdit (False).
+            qlementine_toggles:  When True, sets object names on checkboxes and
+                                 radio buttons so Qlementine renders them as
+                                 modern toggle switches.  When False the widgets
+                                 retain their standard Qt appearance.
+        """
         super().__init__(parent)
         self.config_key = config_key
         self.is_directory = is_directory
@@ -59,6 +74,7 @@ class PathConfigRow(QWidget):
         self.add_run_wait = add_run_wait
         self._overwrite = True
         self.use_combobox = use_combobox
+        self._qlementine_toggles = qlementine_toggles
         
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -68,6 +84,8 @@ class PathConfigRow(QWidget):
             self.enabled_cb = QCheckBox()
             self.enabled_cb.setChecked(True)
             self.enabled_cb.setToolTip("Enable/Disable this application")
+            if qlementine_toggles:
+                self.enabled_cb.setObjectName("qlementineToggle")
             self.enabled_cb.stateChanged.connect(self.valueChanged.emit)
             layout.addWidget(self.enabled_cb)
         else:
@@ -120,6 +138,9 @@ class PathConfigRow(QWidget):
             self.cen_radio = QRadioButton("CEN")
             self.lc_radio = QRadioButton("LC")
             self.cen_radio.setChecked(True)
+            if qlementine_toggles:
+                self.cen_radio.setObjectName("qlementineToggle")
+                self.lc_radio.setObjectName("qlementineToggle")
             self.mode_group = QButtonGroup(self)
             self.mode_group.addButton(self.cen_radio)
             self.mode_group.addButton(self.lc_radio)
@@ -186,6 +207,8 @@ class PathConfigRow(QWidget):
         # Run Wait Checkbox
         if self.add_run_wait:
             self.run_wait_cb = QCheckBox("Wait")
+            if qlementine_toggles:
+                self.run_wait_cb.setObjectName("qlementineToggle")
             self.run_wait_cb.stateChanged.connect(self.valueChanged.emit)
             layout.addWidget(self.run_wait_cb)
         else:

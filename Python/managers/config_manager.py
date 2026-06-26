@@ -230,6 +230,22 @@ class ConfigManager(QObject):
         mapper_dir = Path(mapper_path).parent
         assets_dir = project_dir / "assets"
         
+        # Additional search locations in priority order
+        search_locations = [
+            project_dir,  # $approot
+        ]
+        
+        # Add antimicrox-specific profile location
+        if prefix == "antimicrox":
+            antimicrox_profiles = Path(os.environ.get("LOCALAPPDATA", "")) / "antimicrox" / "profiles"
+            if antimicrox_profiles.exists():
+                search_locations.append(antimicrox_profiles)
+        
+        # Add user documents location
+        user_docs = Path.home() / "Documents"
+        if user_docs.exists():
+            search_locations.append(user_docs)
+        
         # Profile mappings: config_attr -> (search_name, template_name, output_name)
         profiles = {
             'p1_profile_path': ('Player1', f'{prefix}_Player{ext}.set', f'Player1{ext}'),
@@ -238,13 +254,21 @@ class ConfigManager(QObject):
         }
         
         for config_attr, (search_name, template_name, output_name) in profiles.items():
-            # Search for existing profile in project dir or mapper subdirectories
-            found_profile = None
+            # Skip if already set
+            if getattr(config, config_attr, ""):
+                continue
             
-            # Search in project root
-            for file in project_dir.glob(f'*{search_name}*{ext}'):
-                found_profile = str(file)
-                break
+            template_path = assets_dir / template_name
+            output_path = project_dir / output_name
+            
+            # Search for existing profile in priority locations
+            found_profile = None
+            for search_dir in search_locations:
+                for file in search_dir.glob(f'*{search_name}*{ext}'):
+                    found_profile = str(file)
+                    break
+                if found_profile:
+                    break
             
             # Search in mapper directory and subdirectories
             if not found_profile and mapper_dir.exists():
@@ -254,13 +278,13 @@ class ConfigManager(QObject):
             
             if found_profile:
                 setattr(config, config_attr, found_profile)
+                config.defaults[f"{config_attr}_enabled"] = True
+                config.overwrite_states[config_attr] = True
+                config.deployment_path_modes[config_attr] = "LC"
                 logging.info(f"Found {search_name} profile: {found_profile}")
-            else:
-                # Create from template
-                template_path = assets_dir / template_name
-                output_path = project_dir / output_name
-                
-                if template_path.exists() and not output_path.exists():
+            elif not output_path.exists():
+                # Create from template only if output doesn't exist
+                if template_path.exists():
                     try:
                         # Read template
                         with open(template_path, 'r', encoding='utf-8') as f:
@@ -282,9 +306,19 @@ class ConfigManager(QObject):
                             f.write(content)
                         
                         setattr(config, config_attr, str(output_path))
+                        config.defaults[f"{config_attr}_enabled"] = True
+                        config.overwrite_states[config_attr] = True
+                        config.deployment_path_modes[config_attr] = "LC"
                         logging.info(f"Created {search_name} profile from template: {output_path}")
                     except Exception as e:
                         logging.error(f"Failed to create {search_name} profile from template: {e}")
+            else:
+                # Output exists but was not found in search - use it anyway
+                setattr(config, config_attr, str(output_path))
+                config.defaults[f"{config_attr}_enabled"] = True
+                config.overwrite_states[config_attr] = True
+                config.deployment_path_modes[config_attr] = "LC"
+                logging.info(f"Using existing profile: {output_path}")
 
     def _detect_multimonitor_tool(self, config: AppConfig):
         project_dir = Path(constants.APP_ROOT_DIR)
@@ -359,6 +393,29 @@ class ConfigManager(QObject):
                 self._apply_tool_defaults(config, config_attr, found_path, options_args_map)
             else:
                 logging.debug(f"Could not find executable for {config_attr} (looking for: {exe_names})")
+
+        # Detect controller mapper and populate profiles if not already set
+        if not config.controller_mapper_path:
+            antimicrox_path = self._find_executable_recursive(bin_dir, ANTIMICROX_EXES)
+            if antimicrox_path:
+                config.controller_mapper_path = antimicrox_path
+                logging.info(f"Auto-detected AntimicroX: {antimicrox_path}")
+                self._apply_tool_defaults(config, 'controller_mapper_path', antimicrox_path, options_args_map)
+                self._populate_controller_profiles(config, antimicrox_path, 'antimicrox', '.amgp')
+            else:
+                keysticks_path = self._find_executable_recursive(bin_dir, KEYSTICKS_EXES)
+                if keysticks_path:
+                    config.controller_mapper_path = keysticks_path
+                    logging.info(f"Auto-detected Keysticks: {keysticks_path}")
+                    self._apply_tool_defaults(config, 'controller_mapper_path', keysticks_path, options_args_map)
+                    self._populate_controller_profiles(config, keysticks_path, 'keysticks', '.keysticks')
+        elif config.controller_mapper_path and (not config.p1_profile_path or not config.p2_profile_path or not config.mediacenter_profile_path):
+            # Controller mapper already set but profiles might be missing - populate them
+            mapper_path = config.controller_mapper_path
+            if 'antimicrox' in mapper_path.lower():
+                self._populate_controller_profiles(config, mapper_path, 'antimicrox', '.amgp')
+            elif 'keysticks' in mapper_path.lower():
+                self._populate_controller_profiles(config, mapper_path, 'keysticks', '.keysticks')
     
     def _load_options_arguments(self):
         """Load options and arguments from options_arguments.set file."""

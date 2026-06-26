@@ -2,6 +2,8 @@
 7za
 7zg
 activationui
+artbook
+artwork
 altstreamdump
 assemblygenerator
 assemblyunhollower
@@ -247,6 +249,7 @@ seqdownload
 serailver
 servertool
 setsound
+soundtrack
 setup
 sff2pcx
 sff2png

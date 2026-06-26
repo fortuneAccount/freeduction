@@ -9,7 +9,19 @@ class AccordionSection(QWidget):
     # Large sentinel value used as "uncapped" maximum height
     EXPANDED_MAX = 16777215  # Qt's QWIDGETSIZE_MAX
 
-    def __init__(self, title: str, content: QWidget, animation_duration=200, start_expanded=False):
+    def __init__(self, title: str, content: QWidget, animation_duration=200,
+                 start_expanded=False, qlementine_style: bool = False):
+        """
+        Args:
+            title:            Header label text.
+            content:          Widget shown in the collapsible area.
+            animation_duration: Expand/collapse animation time in milliseconds.
+            start_expanded:   Whether the section starts open.
+            qlementine_style: When True, applies Qlementine-compatible toggle
+                              button styling (suppressed menu-indicator, rounded
+                              border, bold header).  When False (default) the
+                              existing appearance is preserved unchanged.
+        """
         super().__init__()
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
@@ -17,6 +29,9 @@ class AccordionSection(QWidget):
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.toggle_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.toggle_button.clicked.connect(self.toggle)
+
+        if qlementine_style:
+            self._apply_qlementine_style()
 
         self.content_area = QScrollArea()
         self.content_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -41,6 +56,26 @@ class AccordionSection(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.toggle_button)
         layout.addWidget(self.content_area)
+
+    def _apply_qlementine_style(self) -> None:
+        """Apply Qlementine-compatible styling to the toggle button.
+
+        Suppresses the default QToolButton menu indicator, adds a rounded
+        border, left-aligned bold text, and reserves space for a caret arrow
+        via left padding.  The animation and sibling-collapse logic are not
+        affected.
+        """
+        self.toggle_button.setObjectName("qlementineAccordionToggle")
+        self.toggle_button.setStyleSheet(
+            "QToolButton#qlementineAccordionToggle {"
+            "    border: none;"
+            "    border-radius: 4px;"
+            "    padding: 4px 8px 4px 22px;"
+            "    text-align: left;"
+            "    font-weight: 600;"
+            "}"
+            "QToolButton#qlementineAccordionToggle::menu-indicator { image: none; width: 0px; }"
+        )
 
     @pyqtSlot()
     def toggle(self):

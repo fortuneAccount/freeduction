@@ -26,7 +26,7 @@ EXTRACTLOC = $app_directory\bin\$ITEMNAME
 
 
 [MAPPERS]
-antimicrox = https://github.com/AntiMicroX/antimicrox/releases/download/3.4.1/antimicrox-3.4.1-Windows-x86_64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
+antimicrox = https://github.com/AntiMicroX/antimicrox/releases/download/3.6.1/antimicrox-3.6.1-PortableWindows-AMD64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|bin\$ITEMNAME.exe
 keysticks = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 ds4windows = https://github.com/Ryochan7/DS4Windows/releases/download/v3.3.3/DS4Windows_3.3.3_x64.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 ds4windowscmd = https://github.com/Ryochan7/DS4Windows/releases/download/v3.3.3/DS4Windows_3.3.3_x64.zip<$SOURCEHOST/$ITEMNAME/releases/download/$ITEMNAME/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe

@@ -45,9 +45,12 @@ class MainWindow(QMainWindow):
 
         self._load_custom_fonts()
 
-        from Python.ui.theme_manager import ThemeManager
+        from Python.ui.theme_manager import ThemeManager, UICapabilityManager
         self.theme_manager = ThemeManager()
         self.theme_manager.apply_theme_from_config(self.config, QApplication.instance())
+        # Build UI capability flags from the active theme — used in _setup_ui and
+        # re-applied via apply_ui_capabilities() whenever the theme changes.
+        self.ui_caps = UICapabilityManager.from_config(self.config)
 
         self.indexing_cancelled = False
         self.data_manager = DataManager(self.config, self)
@@ -166,9 +169,54 @@ class MainWindow(QMainWindow):
 
             # Highlight unpopulated items in deployment tab with red color
             self.deployment_tab.highlight_unpopulated_items(self)
-        
+
+        # Apply Qlementine-specific UI enhancements (nav bar, popover QSS).
+        # This is a no-op when Qlementine is not the active theme.
+        self.apply_ui_capabilities()
+
         # Create status bar
         self.statusBar().showMessage("Ready")
+
+    def apply_ui_capabilities(self) -> None:
+        """Apply (or remove) Qlementine-specific UI enhancements based on the
+        current ``ui_caps`` flags.  Safe to call at any time, including after
+        a theme change at runtime.
+        """
+        from Python.ui.theme_manager import UICapabilityManager, _QLEMENTINE_TOOLTIP_QSS
+
+        # Refresh capability flags from current config.
+        self.ui_caps = UICapabilityManager.from_config(self.config)
+
+        # --- Navigation tab bar (Req 5) ---
+        if hasattr(self, 'tabs'):
+            if self.ui_caps.has_qlementine_navigation:
+                # Disable document mode so Qlementine renders a proper nav bar.
+                self.tabs.setDocumentMode(False)
+                self.tabs.tabBar().setExpanding(False)
+                self.tabs.tabBar().setDrawBase(False)
+            else:
+                # Restore defaults.
+                self.tabs.setDocumentMode(False)
+                self.tabs.tabBar().setExpanding(True)
+                self.tabs.tabBar().setDrawBase(True)
+
+        # --- Popover / tooltip QSS (Req 8) ---
+        app = QApplication.instance()
+        if app is not None:
+            if self.ui_caps.has_qlementine_popovers:
+                # Apply the Qlementine-compatible tooltip stylesheet fragment.
+                # Append rather than replace so it doesn't clobber other QSS.
+                existing_qss = app.styleSheet() or ""
+                marker = "/* qlementine-tooltip */"
+                if marker not in existing_qss:
+                    app.setStyleSheet(existing_qss + f"\n{marker}\n{_QLEMENTINE_TOOLTIP_QSS}")
+            else:
+                # Strip the tooltip fragment if a non-Qlementine theme is chosen.
+                existing_qss = app.styleSheet() or ""
+                marker = "/* qlementine-tooltip */"
+                if marker in existing_qss:
+                    start = existing_qss.find(marker)
+                    app.setStyleSheet(existing_qss[:start].rstrip())
 
     def _locate_and_exclude_manager_config(self):
         """Locate and exclude games from other managers' configurations"""

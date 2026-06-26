@@ -9,8 +9,7 @@ psutil
 pygame
 pyinstaller 
 cloudscraper 
-
-# Optional theming libraries (install any/all to enable additional themes)
-# PyQt6-Fluent-Widgets
-# qt-dark-theme
-# QDarkStyleSheet
+qdarkstyle
+PyQt6-Fluent-Widgets
+qtdarktheme
+PyQt6-Qlementine
