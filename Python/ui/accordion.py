@@ -10,7 +10,8 @@ class AccordionSection(QWidget):
     EXPANDED_MAX = 16777215  # Qt's QWIDGETSIZE_MAX
 
     def __init__(self, title: str, content: QWidget, animation_duration=200,
-                 start_expanded=False, qlementine_style: bool = False):
+                 start_expanded=False, qlementine_style: bool = False,
+                 max_height: int = None):
         """
         Args:
             title:            Header label text.
@@ -21,9 +22,11 @@ class AccordionSection(QWidget):
                               button styling (suppressed menu-indicator, rounded
                               border, bold header).  When False (default) the
                               existing appearance is preserved unchanged.
+            max_height:       Optional maximum height when expanded. If None, uses EXPANDED_MAX.
         """
         super().__init__()
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self._max_height = max_height if max_height is not None else self.EXPANDED_MAX
 
         self.toggle_button = QToolButton(text=title, checkable=True, checked=start_expanded)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
@@ -38,8 +41,8 @@ class AccordionSection(QWidget):
         self.content_area.setFrameShape(QFrame.Shape.NoFrame)
         self.content_area.setWidgetResizable(True)
         self.content_area.setMinimumHeight(0)
-        # When expanded use uncapped height; when collapsed use 0
-        initial_height = self.EXPANDED_MAX if start_expanded else 0
+        # When expanded use max_height; when collapsed use 0
+        initial_height = self._max_height if start_expanded else 0
         self.content_area.setMaximumHeight(initial_height)
         self.content_area.setWidget(content)
 
@@ -94,7 +97,7 @@ class AccordionSection(QWidget):
                     pass
 
         start_height = self.content_area.maximumHeight()
-        end_height = self.EXPANDED_MAX if checked else 0
+        end_height = self._max_height if checked else 0
 
         self.animation.stop()
         self.animation.setStartValue(start_height)

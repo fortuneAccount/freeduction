@@ -633,7 +633,6 @@ class CreationController:
         config.set('Launcher', 'hidetaskbar', str(game_data.get('hide_taskbar', False)))
         config.set('Launcher', 'borderless', game_data.get('options', '0'))
         config.set('Launcher', 'usekilllist', str(game_data.get('kill_list_enabled', False)))
-        config.set('Launcher', 'terminateborderlessonexit', str(game_data.get('terminate_borderless_on_exit', app_config.terminate_borderless_on_exit)))
         config.set('Launcher', 'killlist', game_data.get('kill_list', ''))
 
         # --- [Profiles] Section ---
@@ -685,6 +684,44 @@ class CreationController:
         config.set('DiscUnmount', 'discunmountpatharguments', game_data.get('disc_unmount_args', ''))
         config.set('DiscUnmount', 'discunmountpathrunwait', str(game_data.get('disc_unmount_wait', False)))
 
+        # --- [DiscMountCfg] Section ---
+        config.add_section('DiscMountCfg')
+        config.set('DiscMountCfg', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
+        config.set('DiscMountCfg', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
+
+        # --- [DiscUnmountCfg] Section ---
+        config.add_section('DiscUnmountCfg')
+        config.set('DiscUnmountCfg', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
+        config.set('DiscUnmountCfg', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
+
+        # --- [AudioApp] Section ---
+        config.add_section('AudioApp')
+        config.set('AudioApp', 'enableaudioapp', str(game_data.get('audio_app_enabled', False)))
+        config.set('AudioApp', 'audioapppath', self._get_app_path_for_ini('audio_app_path', game_data, game_profile_dir))
+        config.set('AudioApp', 'audioapppathoptions', game_data.get('audio_app_options', app_config.audio_app_options))
+        config.set('AudioApp', 'audioapppatharguments', game_data.get('audio_app_arguments', app_config.audio_app_arguments))
+        config.set('AudioApp', 'audioapppathrunwait', str(game_data.get('audio_app_run_wait', False)))
+
+        # --- [RunAudioConfig] Section ---
+        config.add_section('RunAudioConfig')
+        config.set('RunAudioConfig', 'enablerunaudioconfig', str(game_data.get('run_audio_config_enabled', False)))
+        config.set('RunAudioConfig', 'runaudioconfigpath', game_data.get('run_audio_config', ''))
+
+        # --- [ReturnAudioConfig] Section ---
+        config.add_section('ReturnAudioConfig')
+        config.set('ReturnAudioConfig', 'enablereturnaudioconfig', str(game_data.get('return_audio_config_enabled', False)))
+        config.set('ReturnAudioConfig', 'returnaudioconfigpath', game_data.get('return_audio_config', ''))
+
+        # --- [UnBorderConfig] Section ---
+        config.add_section('UnBorderConfig')
+        config.set('UnBorderConfig', 'enableunborderconfig', str(game_data.get('unborder_config_enabled', False)))
+        config.set('UnBorderConfig', 'unborderconfigpath', game_data.get('unborder_config', ''))
+
+        # --- [ReBorderConfig] Section ---
+        config.add_section('ReBorderConfig')
+        config.set('ReBorderConfig', 'enablereborderconfig', str(game_data.get('reborder_config_enabled', False)))
+        config.set('ReBorderConfig', 'reborderconfigpath', game_data.get('reborder_config', ''))
+
         # --- [ControllerMapper] Section ---
         config.add_section('ControllerMapper')
         config.set('ControllerMapper', 'enablecontrollermapper', str(game_data.get('controller_mapper_enabled', True)))
@@ -708,6 +745,10 @@ class CreationController:
         config.set('MultiMonitor', 'multimonitorpathoptions', game_data.get('multi_monitor_app_options', app_config.multi_monitor_tool_path_options))
         config.set('MultiMonitor', 'multimonitorpatharguments', game_data.get('multi_monitor_app_arguments', app_config.multi_monitor_tool_path_arguments))
         config.set('MultiMonitor', 'multimonitorpathrunwait', str(game_data.get('multi_monitor_app_run_wait', False)))
+
+        # --- [MonitorWizard] Section ---
+        config.add_section('MonitorWizard')
+        config.set('MonitorWizard', 'configpath', getattr(app_config, 'monitor_wizard_config_path', ''))
 
         # --- [CloudSync] Section ---
         config.add_section('CloudSync')
@@ -832,6 +873,13 @@ class CreationController:
             ('wincdemu', 'disc_mount_path', 'disc_mount_path'),
             ('rclone', 'cloud_app_path', 'cloud_app_path'),
             ('ludusavi', 'backup_app_path', 'backup_app_path'),
+            ('audioapp', 'audio_app_path', 'audio_tool_path'),
+            ('unborderconfig', 'unborder_config_path', 'unborder_config'),
+            ('reborderconfig', 'reborder_config_path', 'reborder_config'),
+            ('runaudioconfig', 'run_audio_config_path', 'run_audio_config'),
+            ('returnaudioconfig', 'return_audio_config_path', 'return_audio_config'),
+            ('discmountcfg', 'disc_mount_cfg_path', 'disc_mount_cfg'),
+            ('discunmountcfg', 'disc_unmount_cfg_path', 'disc_unmount_cfg'),
         ]
 
         for ini_key, data_key, config_key in app_source_map:

@@ -376,7 +376,6 @@ class GameLauncher:
             self.hide_taskbar = config.getboolean('Launcher', 'hidetaskbar', fallback=False)
             self.borderless = config.get('Launcher', 'borderless', fallback='0')
             self.use_kill_list = config.getboolean('Launcher', 'usekilllist', fallback=False)
-            self.terminate_borderless_on_exit = config.getboolean('Launcher', 'terminateborderlessonexit', fallback=False)
             self.kill_list_str = config.get('Launcher', 'killlist', fallback='')
             self.kill_list = [x.strip() for x in self.kill_list_str.split(',') if x.strip()]
         
@@ -405,6 +404,11 @@ class GameLauncher:
             self.multimonitor_tool = config.get('MultiMonitor', 'multimonitorpath', fallback='')
             self.multimonitor_options = config.get('MultiMonitor', 'multimonitorpathoptions', fallback='')
             self.multimonitor_arguments = config.get('MultiMonitor', 'multimonitorpatharguments', fallback='')
+
+        # Load MonitorWizard section
+        self.monitor_wizard_config_path = ''
+        if 'MonitorWizard' in config:
+            self.monitor_wizard_config_path = config.get('MonitorWizard', 'configpath', fallback='')
         
         # Load DiscMount section
         if 'DiscMount' in config:
@@ -419,7 +423,45 @@ class GameLauncher:
             self.disc_unmount_options = config.get('DiscUnmount', 'discunmountpathoptions', fallback='')
             self.disc_unmount_arguments = config.get('DiscUnmount', 'discunmountpatharguments', fallback='')
             self.disc_unmount_wait = config.getboolean('DiscUnmount', 'discunmountpathrunwait', fallback=False)
-        
+
+        # Load DiscMountCfg section
+        if 'DiscMountCfg' in config:
+            self.disc_mount_cfg_enabled = config.getboolean('DiscMountCfg', 'enablediscmountcfg', fallback=False)
+            self.disc_mount_cfg = config.get('DiscMountCfg', 'discmountcfgpath', fallback='')
+
+        # Load DiscUnmountCfg section
+        if 'DiscUnmountCfg' in config:
+            self.disc_unmount_cfg_enabled = config.getboolean('DiscUnmountCfg', 'enablediscunmountcfg', fallback=False)
+            self.disc_unmount_cfg = config.get('DiscUnmountCfg', 'discunmountcfgpath', fallback='')
+
+        # Load AudioApp section
+        if 'AudioApp' in config:
+            self.audio_app_enabled = config.getboolean('AudioApp', 'enableaudioapp', fallback=False)
+            self.audio_app = config.get('AudioApp', 'audioapppath', fallback='')
+            self.audio_app_options = config.get('AudioApp', 'audioapppathoptions', fallback='')
+            self.audio_app_arguments = config.get('AudioApp', 'audioapppatharguments', fallback='')
+            self.audio_app_run_wait = config.getboolean('AudioApp', 'audioapppathrunwait', fallback=False)
+
+        # Load RunAudioConfig section
+        if 'RunAudioConfig' in config:
+            self.run_audio_config_enabled = config.getboolean('RunAudioConfig', 'enablerunaudioconfig', fallback=False)
+            self.run_audio_config = config.get('RunAudioConfig', 'runaudioconfigpath', fallback='')
+
+        # Load ReturnAudioConfig section
+        if 'ReturnAudioConfig' in config:
+            self.return_audio_config_enabled = config.getboolean('ReturnAudioConfig', 'enablereturnaudioconfig', fallback=False)
+            self.return_audio_config = config.get('ReturnAudioConfig', 'returnaudioconfigpath', fallback='')
+
+        # Load UnBorderConfig section
+        if 'UnBorderConfig' in config:
+            self.unborder_config_enabled = config.getboolean('UnBorderConfig', 'enableunborderconfig', fallback=False)
+            self.unborder_config = config.get('UnBorderConfig', 'unborderconfigpath', fallback='')
+
+        # Load ReBorderConfig section
+        if 'ReBorderConfig' in config:
+            self.reborder_config_enabled = config.getboolean('ReBorderConfig', 'enablereborderconfig', fallback=False)
+            self.reborder_config = config.get('ReBorderConfig', 'reborderconfigpath', fallback='')
+
         # Load CloudSync configuration
         if 'CloudSync' in config:
             self.cloud_enabled = config.getboolean('CloudSync', 'enablecloudsync', fallback=False)
@@ -427,11 +469,6 @@ class GameLauncher:
             self.cloud_options = config.get('CloudSync', 'cloudsyncpathoptions', fallback='')
             self.cloud_arguments = config.get('CloudSync', 'cloudsyncpatharguments', fallback='')
             self.cloud_wait = config.getboolean('CloudSync', 'cloudsyncpathrunwait', fallback=False)
-            self.cloud_remote_name = config.get('CloudSync', 'remotename', fallback='')
-            self.cloud_user_prefix = config.get('CloudSync', 'userprefix', fallback='')
-            self.cloud_save_path = config.get('CloudSync', 'savepath', fallback='')
-            self.cloud_backup_on_launch = config.getboolean('CloudSync', 'backuponlaunch', fallback=False)
-            self.cloud_upload_on_exit = config.getboolean('CloudSync', 'uploadonexit', fallback=True)
         else:
             self.cloud_enabled = False
         
@@ -442,11 +479,6 @@ class GameLauncher:
             self.backup_options = config.get('LocalBackup', 'localbackuppathoptions', fallback='')
             self.backup_arguments = config.get('LocalBackup', 'localbackuppatharguments', fallback='')
             self.backup_wait = config.getboolean('LocalBackup', 'localbackuppathrunwait', fallback=False)
-            self.backup_local_prefix = config.get('LocalBackup', 'localprefix', fallback='')
-            self.backup_save_path = config.get('LocalBackup', 'savepath', fallback='')
-            self.backup_backup_on_launch = config.getboolean('LocalBackup', 'backuponlaunch', fallback=False)
-            self.backup_backup_on_exit = config.getboolean('LocalBackup', 'backuponexit', fallback=True)
-            self.backup_max_backups_new = config.getint('LocalBackup', 'maxbackups', fallback=5)
         else:
             self.backup_enabled = False
         
@@ -517,7 +549,8 @@ class GameLauncher:
                     "Pre1", 
                     "Pre2", 
                     "Pre3", 
-                    "Borderless"
+                    "Borderless",
+                    "Run-Audio"
                 ]
             
             # Get exit sequence
@@ -530,9 +563,11 @@ class GameLauncher:
                     "Post1", 
                     "Post2", 
                     "Post3", 
+                    "Return-Audio",
                     "Monitor-Config", 
                     "Taskbar",
-                    "Controller-Mapper"
+                    "Controller-Mapper",
+                    "Backup"
                 ]
         
         # Run path discovery if needed (discover save/config files from PCGW templates)

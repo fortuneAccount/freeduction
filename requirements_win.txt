@@ -13,7 +13,9 @@ pyinstaller
 cloudscraper
 pystray
 pillow
-qdarkstyle
-qtdarktheme
-PyQt6-Fluent-Widgets
-PyQt6-Qlementine
+
+#screeninfo
+#qdarkstyle
+#qtdarktheme
+#PyQt6-Fluent-Widgets
+#PyQt6-Qlementine

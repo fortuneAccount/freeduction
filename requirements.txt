@@ -9,7 +9,8 @@ psutil
 pygame
 pyinstaller 
 cloudscraper 
-qdarkstyle
-PyQt6-Fluent-Widgets
-qtdarktheme
-PyQt6-Qlementine
+#screeninfo
+#qdarkstyle
+#PyQt6-Fluent-Widgets
+#qtdarktheme
+#PyQt6-Qlementine

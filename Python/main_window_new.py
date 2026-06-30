@@ -301,21 +301,12 @@ class MainWindow(QMainWindow):
 
     @pyqtSlot(int)
     def _on_download_steam_json_requested(self, version: int):
-        """Handle request to download Steam JSON, with user confirmation."""
+        """Handle the invisible Steam JSON update workflow."""
         if self.steam_manager.is_downloading:
-            self.statusBar().showMessage("Download already in progress", 3000)
+            self.statusBar().showMessage("Update already in progress", 3000)
             return
 
-        output_file = constants.STEAM_JSON_FILE
-        if os.path.exists(output_file):
-            reply = QMessageBox.question(self, "Confirm Overwrite",
-                                         f"The file 'steam.json' already exists. Are you sure you want to download and replace it?",
-                                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                         QMessageBox.StandardButton.No)
-            if reply == QMessageBox.StandardButton.No:
-                return
-        
-        self.steam_manager.download_steam_json(version)
+        self.steam_manager.update_steam_json(version)
 
     @pyqtSlot()
     def _on_delete_steam_json_requested(self):

@@ -50,6 +50,13 @@ class AppConfig:
         self.disc_mount_path = ""
         self.disc_unmount_path = ""
         
+        # Disc mount/unmount config
+        self.disc_mount_cfg = ""
+        self.disc_unmount_cfg = ""
+        
+        # Audio tool
+        self.audio_tool_path = ""
+        
         # Cloud backup tools
         self.rclone_path = ""
         self.ludusavi_path = ""
@@ -71,6 +78,20 @@ class AppConfig:
         self.disc_mount_path_arguments = ""
         self.disc_unmount_path_options = ""
         self.disc_unmount_path_arguments = ""
+        
+        # Audio app options & arguments
+        self.audio_app_options = ""
+        self.audio_app_arguments = ""
+        
+        # Run/Return audio config options & arguments
+        self.run_audio_config_path_options = ""
+        self.run_audio_config_path_arguments = ""
+        self.return_audio_config_path_options = ""
+        self.return_audio_config_path_arguments = ""
+        
+        # Unborder/reborder config paths
+        self.unborder_config_path = ""
+        self.reborder_config_path = ""
         
         # Cloud backup options & arguments
         self.rclone_path_options = ""
@@ -102,6 +123,9 @@ class AppConfig:
         self.emusync_emulator_path = ""
         self.emusync_sync_on_launch = True
         self.emusync_sync_on_exit = True
+        
+        # Audio app run-wait
+        self.audio_app_run_wait = False
         
         # Game Backup Monitor-specific configuration
         self.gbm_backup_path = ""
@@ -180,9 +204,18 @@ class AppConfig:
         self.enable_post1 = False
         self.enable_post2 = False
         self.enable_post3 = False
+        self.enable_audio_app = False
+        self.enable_run_audio_config = False
+        self.enable_return_audio_config = False
+        self.enable_unborder_config = False
+        self.enable_reborder_config = False
+        self.disc_mount_cfg_enabled = False
+        self.disc_unmount_cfg_enabled = False
 
         # Other settings not directly on UI
         self.app_directory = ""
+        self.monitor_wizard_profiles = {}
+        self.monitor_wizard_config_path = ""
 
         # Default enabled states for various features
         self.defaults = {}

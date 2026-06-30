@@ -52,7 +52,8 @@ class PathConfigRow(QWidget):
 
     def __init__(self, config_key, is_directory=False, add_enabled=True,
                  add_run_wait=False, add_cen_lc=True, repo_items=None,
-                 use_combobox=True, qlementine_toggles: bool = False, parent=None):
+                 use_combobox=True, qlementine_toggles: bool = False, parent=None,
+                 empty_combo: bool = False):
         """
         Args:
             config_key:          Identifier used to look up this row's config value.
@@ -75,7 +76,8 @@ class PathConfigRow(QWidget):
         self._overwrite = True
         self.use_combobox = use_combobox
         self._qlementine_toggles = qlementine_toggles
-        
+        self.empty_combo = empty_combo
+
         layout = QHBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -152,7 +154,7 @@ class PathConfigRow(QWidget):
             self.cen_radio = self.lc_radio = self.mode_group = None
 
         # Populate from repo_items if available
-        if repo_items and self.use_combobox:
+        if repo_items and self.use_combobox and not self.empty_combo:
             # Only populate executables that exist on disk
             bin_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'bin')
             

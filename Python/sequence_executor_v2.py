@@ -2,6 +2,7 @@
 Refactored sequence executor using the plugin system
 """
 
+import json
 import os
 import platform
 import logging
@@ -12,7 +13,7 @@ if platform.system() == 'Windows':
     import win32gui
     import win32con
 
-from plugins.base_plugin import PluginConfig
+from Python.plugins.base_plugin import PluginConfig
 
 
 class SequenceExecutorV2:
@@ -95,6 +96,8 @@ class SequenceExecutorV2:
         if action_name in self.system_actions:
             self.system_actions[action_name]()
             return
+        
+        
         
         # Try plugin-based actions
         if action_name in self.plugin_actions:

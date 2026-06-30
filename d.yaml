@@ -1,0 +1,47 @@
+<monitors app-version="1.7.3.128" version="3" topology="Extend">
+    
+    
+    
+    
+    <monitor active="true" virtual="false" id="256" adapterHigh="0" adapterLow="223649075">
+        <name></name>
+        
+        <source id="0">
+            <name>\\.\DISPLAY7</name>
+            <path>\\?\PCI#VEN_1002&amp;DEV_1901&amp;SUBSYS_0DEB1028&amp;REV_C8#4&amp;17857bc2&amp;0&amp;0041#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}</path>
+        </source>
+        <size width="1920" height="1200"/>
+        <position left="0" top="0"/>
+        
+        <color value="32bpp"/>
+        
+        <rotation value="Identity"/>
+        
+        <scaling value="Aspect Ratio Centered Max"/>
+        
+        <refresh numerator="60" denominator="1"/>
+        
+        <scanlineorder value="Progressive"/>
+    </monitor>
+    
+    <monitor active="true" virtual="false" id="281" adapterHigh="0" adapterLow="223649075">
+        <name>100012589</name>
+        
+        <source id="1">
+            <name>\\.\DISPLAY8</name>
+            <path>\\?\PCI#VEN_1002&amp;DEV_1901&amp;SUBSYS_0DEB1028&amp;REV_C8#4&amp;17857bc2&amp;0&amp;0041#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}</path>
+        </source>
+        <size width="1920" height="1080"/>
+        <position left="1920" top="0"/>
+        
+        <color value="32bpp"/>
+        
+        <rotation value="Identity"/>
+        
+        <scaling value="Aspect Ratio Centered Max"/>
+        
+        <refresh numerator="60" denominator="1"/>
+        
+        <scanlineorder value="Progressive"/>
+    </monitor>
+</monitors>

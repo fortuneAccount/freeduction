@@ -1,0 +1,47 @@
+<monitors app-version="1.7.3.128" version="3" topology="Extend">
+    <!--The version identifies the format of the configuration file.-->
+    <!--topology=-->
+    <!--Internal, Clone, Extend, External-->
+    <!--The monitor ID attribute must be specified.-->
+    <monitor active="true" virtual="false" id="256" adapterHigh="0" adapterLow="223649075">
+        <name></name>
+        <!--source: the origin of the video signal-->
+        <source id="0">
+            <name>\\.\DISPLAY7</name>
+            <path>\\?\PCI#VEN_1002&amp;DEV_1901&amp;SUBSYS_0DEB1028&amp;REV_C8#4&amp;17857bc2&amp;0&amp;0041#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}</path>
+        </source>
+        <size width="1920" height="1200"/>
+        <position left="0" top="0"/>
+        <!--8bpp, 16bpp, 24bpp, 32bpp, Non-GDI-->
+        <color value="32bpp"/>
+        <!--Identity, 90-degreesCW, 180-degreesCW, 270-degreesCW-->
+        <rotation value="Identity"/>
+        <!--Identity, Centered, Stretched, Aspect Ratio Centered Max, Custom, Preferred-->
+        <scaling value="Aspect Ratio Centered Max"/>
+        <!--A value of 0/0 represents the optimal refresh rate. Scan-line-order must be Unspecified.-->
+        <refresh numerator="60" denominator="1"/>
+        <!--Unspecified, Progressive, Interlaced (upper field first), Interlaced (lower field first)-->
+        <scanlineorder value="Progressive"/>
+    </monitor>
+    <!--The monitor ID attribute must be specified.-->
+    <monitor active="true" virtual="false" id="281" adapterHigh="0" adapterLow="223649075">
+        <name>100012589</name>
+        <!--source: the origin of the video signal-->
+        <source id="1">
+            <name>\\.\DISPLAY8</name>
+            <path>\\?\PCI#VEN_1002&amp;DEV_1901&amp;SUBSYS_0DEB1028&amp;REV_C8#4&amp;17857bc2&amp;0&amp;0041#{5b45201d-f2f2-4f3b-85bb-30ff1f953599}</path>
+        </source>
+        <size width="1920" height="1080"/>
+        <position left="1920" top="0"/>
+        <!--8bpp, 16bpp, 24bpp, 32bpp, Non-GDI-->
+        <color value="32bpp"/>
+        <!--Identity, 90-degreesCW, 180-degreesCW, 270-degreesCW-->
+        <rotation value="Identity"/>
+        <!--Identity, Centered, Stretched, Aspect Ratio Centered Max, Custom, Preferred-->
+        <scaling value="Aspect Ratio Centered Max"/>
+        <!--A value of 0/0 represents the optimal refresh rate. Scan-line-order must be Unspecified.-->
+        <refresh numerator="60" denominator="1"/>
+        <!--Unspecified, Progressive, Interlaced (upper field first), Interlaced (lower field first)-->
+        <scanlineorder value="Progressive"/>
+    </monitor>
+</monitors>

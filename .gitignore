@@ -19,10 +19,12 @@ __pycache__/
 
 # Local configuration and logs
 *.ini
+*.cfg
 *.log
 *.amgp
-config.json
+*.json
 *.code-workspace
+!config.json
 
 # Index and cache files
 *.old

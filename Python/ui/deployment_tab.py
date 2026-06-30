@@ -134,46 +134,12 @@ class DeploymentTab(QWidget):
         left_layout = QVBoxLayout(left_col)
         left_layout.setContentsMargins(0, 0, 0, 0)
 
-        # Steam JSON Version
-        steam_version_layout = QHBoxLayout()
-        steam_version_label = QLabel("Steam JSON Version:")
-        self.steam_json_v1_radio = QRadioButton("v1")
-        self.steam_json_v2_radio = QRadioButton("v2")
-        self.steam_json_v2_radio.setChecked(True)
-        self.steam_version_group = QButtonGroup(self)
-        self.steam_version_group.addButton(self.steam_json_v1_radio)
-        self.steam_version_group.addButton(self.steam_json_v2_radio)
-        steam_version_layout.addWidget(steam_version_label)
-        steam_version_layout.addWidget(self.steam_json_v1_radio)
-        steam_version_layout.addWidget(self.steam_json_v2_radio)
-        steam_version_layout.addStretch()
-        left_layout.addLayout(steam_version_layout)
-
-        # Download & Process Buttons - Consolidated into flyout menu
+        # Steam update action
         steam_actions_layout = QHBoxLayout()
-        self.download_steam_json_button = QPushButton("Steam Actions ▼")
-        self.download_steam_json_button.setToolTip("Steam JSON management actions")
-        
-        # Create flyout menu
-        self.steam_actions_menu = QMenu()
-        self.download_v1_action = self.steam_actions_menu.addAction("Download steam.json (v1)")
-        self.download_v2_action = self.steam_actions_menu.addAction("Download steam.json (v2)")
-        self.steam_actions_menu.addSeparator()
-        self.process_json_action = self.steam_actions_menu.addAction("Process Json")
-        self.steam_actions_menu.addSeparator()
-        self.delete_json_action = self.steam_actions_menu.addAction("Delete steam.json")
-        self.delete_cache_action = self.steam_actions_menu.addAction("Delete Steam Caches")
-        self.steam_actions_menu.addSeparator()
-        self.refresh_status_action = self.steam_actions_menu.addAction("Refresh Status")
-        
-        # Convert button to tool button with menu
-        self.steam_actions_button = QToolButton()
-        self.steam_actions_button.setText("Steam Actions ▼")
-        self.steam_actions_button.setMenu(self.steam_actions_menu)
-        self.steam_actions_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup)
-        self.steam_actions_button.setMinimumHeight(30)
-        
-        steam_actions_layout.addWidget(self.steam_actions_button)
+        self.update_steam_button = QPushButton("Update")
+        self.update_steam_button.setToolTip("Check for a newer Steam database and rebuild the caches if needed")
+        self.update_steam_button.setMinimumHeight(30)
+        steam_actions_layout.addWidget(self.update_steam_button)
         steam_actions_layout.addStretch()
         left_layout.addLayout(steam_actions_layout)
 
@@ -315,7 +281,6 @@ class DeploymentTab(QWidget):
         # --- Connect Signals ---
         self.name_check_checkbox.stateChanged.connect(self.config_changed.emit)
         self.auto_flag_checkbox.stateChanged.connect(self.config_changed.emit)
-        self.steam_version_group.buttonClicked.connect(lambda: self.config_changed.emit())
         self.download_game_json_checkbox.stateChanged.connect(self.config_changed.emit)
         self.overwrite_game_json_checkbox.stateChanged.connect(self.config_changed.emit)
         self.download_pcgw_checkbox.stateChanged.connect(self.config_changed.emit)
@@ -325,13 +290,7 @@ class DeploymentTab(QWidget):
 
         self.create_button.clicked.connect(self.create_selected_requested.emit)
         
-        # Connect Steam Actions menu items
-        self.download_v1_action.triggered.connect(lambda: self._on_download_clicked(1))
-        self.download_v2_action.triggered.connect(lambda: self._on_download_clicked(2))
-        self.process_json_action.triggered.connect(self.process_steam_json_requested.emit)
-        self.delete_json_action.triggered.connect(self.delete_steam_json_requested.emit)
-        self.delete_cache_action.triggered.connect(self.delete_steam_cache_requested.emit)
-        self.refresh_status_action.triggered.connect(self.update_steam_status)
+        self.update_steam_button.clicked.connect(self._on_update_steam_clicked)
         
         # Connect name matching checkbox to update index button state
         self.name_check_checkbox.stateChanged.connect(self._update_index_button_state)
@@ -534,9 +493,9 @@ class DeploymentTab(QWidget):
                 config.overwrite_states[key] = False
         self.blockSignals(False)
 
-    def _on_download_clicked(self, version):
-        """Emit the download signal with the specified version."""
-        self.download_steam_json_requested.emit(version)
+    def _on_update_steam_clicked(self):
+        """Trigger the Steam update workflow."""
+        self.download_steam_json_requested.emit(2)
 
     def highlight_unpopulated_items(self, main_window):
         """Highlight enable checkboxes in red if their corresponding setup items are not populated."""
@@ -548,11 +507,6 @@ class DeploymentTab(QWidget):
 
         self.name_check_checkbox.setChecked(config.enable_name_matching)
         self.auto_flag_checkbox.setChecked(config.auto_flag_existing)
-        
-        if config.steam_json_version == 1:
-            self.steam_json_v1_radio.setChecked(True)
-        else:
-            self.steam_json_v2_radio.setChecked(True)
 
         self.download_game_json_checkbox.setChecked(config.download_game_json)
         self.overwrite_game_json_checkbox.setChecked(config.overwrite_game_json)
@@ -580,7 +534,7 @@ class DeploymentTab(QWidget):
         """Updates the AppConfig model with values from the UI widgets."""
         config.enable_name_matching = self.name_check_checkbox.isChecked()
         config.auto_flag_existing = self.auto_flag_checkbox.isChecked()
-        config.steam_json_version = 1 if self.steam_json_v1_radio.isChecked() else 2
+        config.steam_json_version = 2
 
         config.download_game_json = self.download_game_json_checkbox.isChecked()
         config.overwrite_game_json = self.overwrite_game_json_checkbox.isChecked()

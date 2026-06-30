@@ -81,7 +81,6 @@ class ConfigManager(QObject):
         config.source_dirs = self._scan_for_game_directories()
         config.profiles_dir, config.launchers_dir = self._find_or_create_profiles_launchers_dirs()
         self._detect_controller_mapper(config)
-        self._detect_multimonitor_tool(config)
         self._detect_borderless_gaming(config)
         self._detect_all_bin_tools(config)  # Auto-detect all tools in bin directory
 
@@ -319,19 +318,6 @@ class ConfigManager(QObject):
                 config.overwrite_states[config_attr] = True
                 config.deployment_path_modes[config_attr] = "LC"
                 logging.info(f"Using existing profile: {output_path}")
-
-    def _detect_multimonitor_tool(self, config: AppConfig):
-        project_dir = Path(constants.APP_ROOT_DIR)
-        bin_dir = project_dir / "bin"
-        
-        # Load options/arguments for applying defaults
-        options_args_map = self._load_options_arguments()
-        
-        mm_path = self._find_executable_recursive(bin_dir, MULTIMONITOR_EXES) or self._find_executable_recursive(project_dir, MULTIMONITOR_EXES)
-        if mm_path:
-            config.multi_monitor_tool_path = mm_path
-            logging.info(f"Found MultiMonitorTool: {mm_path}")
-            self._apply_tool_defaults(config, 'multi_monitor_tool_path', mm_path, options_args_map)
 
     def _detect_borderless_gaming(self, config: AppConfig):
         project_dir = Path(constants.APP_ROOT_DIR)

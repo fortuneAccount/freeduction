@@ -19,6 +19,7 @@ from Python.models import AppConfig
 from Python.ui.widgets import DragDropListWidget, PathConfigRow
 from Python.ui.accordion import AccordionSection
 from Python.ui.theme_manager import ThemeManager
+from Python.ui.display_wizard import DisplayWizard
 from Python import constants
     
 class DownloadThread(QThread):
@@ -197,7 +198,9 @@ class SetupTab(QWidget):
         "multimonitor_media_path", "pre1_path", "pre2_path", "pre3_path",
         "just_after_launch_path", "just_before_exit_path",
         "post1_path", "post2_path", "post3_path",
-        "cloud_sync_path", "local_backup_path", "audio_tool_path"
+        "cloud_sync_path", "local_backup_path", "audio_tool_path",
+        "disc_mount_cfg", "disc_unmount_cfg", "audio_game_cfg", "audio_mediacenter_cfg",
+        "unborder_config", "reborder_config"
     ]
 
     SEQUENCE_TOOLTIPS = {
@@ -219,6 +222,9 @@ class SetupTab(QWidget):
         "Cloud-Sync": "Runs the Cloud Sync application.",
         "JustAfterLaunch": "Runs immediately after game launches.",
         "JustBeforeExit": "Runs immediately before game exits.",
+        "RunAudio": "Runs the game audio application (pre-run).",
+        "ReturnAudio": "Runs the return audio application (post-run).",
+        "Backup": "Runs the local backup application.",
     }
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -443,12 +449,30 @@ class SetupTab(QWidget):
         # ── Tab 3: DISPLAY ───────────────────────────────────────────────────
         display_tab = QWidget()
         display_tab_layout = QVBoxLayout(display_tab)
-        display_group = QGroupBox("Multi-Monitor Tool")
+        display_group = QGroupBox("Monitor Configuration Tool")
         display_layout = QFormLayout(display_group)
         self.path_rows["multi_monitor_tool_path"] = PathConfigRow(
-            "multi_monitor_tool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"))
-        self.path_rows["multi_monitor_tool_path"].enabled_cb.setToolTip("Enable Multi-Monitor Tool")
-        self._add_path_row(display_layout, "Multi-Monitor App:", "multi_monitor_tool_path",
+            "multi_monitor_tool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
+        self.path_rows["multi_monitor_tool_path"].enabled_cb.setToolTip("Enable monitor configuration tool")
+
+        self.wizard_btn = QPushButton("Open Monitor Wizard")
+        self.wizard_btn.setToolTip("Open the monitor wizard to query supported resolutions, refresh rates, and bit depths")
+        self.wizard_btn.clicked.connect(self._on_wizard_button_clicked)
+        wizard_button_row = QWidget()
+        wizard_button_layout = QHBoxLayout(wizard_button_row)
+        wizard_button_layout.setContentsMargins(0, 0, 0, 0)
+        wizard_button_layout.addStretch()
+        wizard_button_layout.addWidget(self.wizard_btn)
+        wizard_button_layout.addStretch()
+        display_layout.addRow(wizard_button_row)
+
+        display_note = QLabel(
+            "Choose a display tool that can report supported resolutions, refresh rates, and bit depths for monitor presets."
+        )
+        display_note.setWordWrap(True)
+        display_layout.addRow(display_note)
+
+        self._add_path_row(display_layout, "Monitor Config Tool (resolution / refresh / bit depth):", "multi_monitor_tool_path",
                            self.path_rows["multi_monitor_tool_path"])
         self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
         display_layout.addRow("    MM Gaming Config:", self.path_rows["multimonitor_gaming_path"])
@@ -468,6 +492,16 @@ class SetupTab(QWidget):
         self.path_rows["borderless_gaming_path"].enabled_cb.setToolTip("Enable Borderless Windowing")
         self._add_path_row(windowing_layout, "Borderless Windowing:", "borderless_gaming_path",
                            self.path_rows["borderless_gaming_path"])
+        self.path_rows["unborder_config"] = PathConfigRow(
+            "unborder_config", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["unborder_config"].enabled_cb.setToolTip("Enable UnBorder Config")
+        self._add_path_row(windowing_layout, "UnBorder Config:", "unborder_config",
+                           self.path_rows["unborder_config"])
+        self.path_rows["reborder_config"] = PathConfigRow(
+            "reborder_config", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["reborder_config"].enabled_cb.setToolTip("Enable ReBorder Config")
+        self._add_path_row(windowing_layout, "ReBorder Config:", "reborder_config",
+                           self.path_rows["reborder_config"])
         windowing_tab_layout.addWidget(windowing_group)
         windowing_tab_layout.addStretch()
         paths_tabs.addTab(windowing_tab, "WINDOWING")
@@ -485,6 +519,18 @@ class SetupTab(QWidget):
             "disc_unmount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
         self.path_rows["disc_unmount_path"].enabled_cb.setToolTip("Overwrite Unmounting")
         self._add_path_row(disc_layout, "Disc-Unmount:", "disc_unmount_path", self.path_rows["disc_unmount_path"])
+        disc_layout.addRow(QLabel("<b>Disc Mount</b>"))
+        self.path_rows["disc_mount_cfg"] = PathConfigRow(
+            "disc_mount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["disc_mount_cfg"].enabled_cb.setToolTip("Enable Disc Mount Config File")
+        self._add_path_row(disc_layout, "Disc Mount:", "disc_mount_cfg",
+                           self.path_rows["disc_mount_cfg"])
+        disc_layout.addRow(QLabel("<b>Disc Unmount</b>"))
+        self.path_rows["disc_unmount_cfg"] = PathConfigRow(
+            "disc_unmount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["disc_unmount_cfg"].enabled_cb.setToolTip("Enable Disc Unmount Config File")
+        self._add_path_row(disc_layout, "Disc Unmount:", "disc_unmount_cfg",
+                           self.path_rows["disc_unmount_cfg"])
         disc_tab_layout.addWidget(disc_group)
         disc_tab_layout.addStretch()
         paths_tabs.addTab(disc_tab, "DISC-MOUNTING")
@@ -608,6 +654,18 @@ class SetupTab(QWidget):
         self.path_rows["audio_tool_path"].enabled_cb.setToolTip("Enable Audio Tool")
         self._add_path_row(audio_layout, "Audio Tool:", "audio_tool_path",
                            self.path_rows["audio_tool_path"])
+        audio_layout.addRow(QLabel("<b>Game-Audio:</b>"))
+        self.path_rows["audio_game_cfg"] = PathConfigRow(
+            "audio_game_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["audio_game_cfg"].enabled_cb.setToolTip("Enable Game Audio Config")
+        self._add_path_row(audio_layout, "Game-Audio:", "audio_game_cfg",
+                           self.path_rows["audio_game_cfg"])
+        audio_layout.addRow(QLabel("<b>MediaCenter/OS-Audio:</b>"))
+        self.path_rows["audio_mediacenter_cfg"] = PathConfigRow(
+            "audio_mediacenter_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["audio_mediacenter_cfg"].enabled_cb.setToolTip("Enable MediaCenter Audio Config")
+        self._add_path_row(audio_layout, "MediaCenter/OS-Audio:", "audio_mediacenter_cfg",
+                           self.path_rows["audio_mediacenter_cfg"])
         audio_tab_layout.addWidget(audio_group)
         audio_tab_layout.addStretch()
         paths_tabs.addTab(audio_tab, "AUDIO")
@@ -641,7 +699,7 @@ class SetupTab(QWidget):
         scripts_tab_layout.addStretch()
         paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
 
-        paths_section = AccordionSection("PATHS AND PROFILES", paths_widget)
+        paths_section = AccordionSection("PATHS AND PROFILES", paths_widget, max_height=400)
 
         # --- Section 3: Execution Sequence ---
         sequences_widget = QWidget()
@@ -954,13 +1012,14 @@ class SetupTab(QWidget):
         self.excluded_dirs_list.model().rowsMoved.connect(self.config_changed.emit)
         self.excluded_dirs_list.model().rowsInserted.connect(lambda: self.config_changed.emit())
         self.excluded_dirs_list.model().rowsRemoved.connect(self.config_changed.emit)
+
         # Path rows
         for key, row in self.path_rows.items():
             row.valueChanged.connect(self.config_changed.emit)
             row.valueChanged.connect(lambda k=key: self.setting_changed.emit(k))
             row.valueChanged.connect(self._update_sequence_item_colors)
             row.downloadRequested.connect(self._on_download_requested)
-        
+
         # Link disc mount and unmount comboboxes
         if "disc_mount_path" in self.path_rows and "disc_unmount_path" in self.path_rows:
             mount_row = self.path_rows["disc_mount_path"]
@@ -1115,6 +1174,23 @@ class SetupTab(QWidget):
         except Exception as e:
             logging.error(f"Error parsing options_arguments.set: {e}")
         return mapping
+
+    def _on_wizard_button_clicked(self):
+        """Open the monitor configuration wizard from the wizard button."""
+        row = self.path_rows.get("multi_monitor_tool_path")
+        if not row or not row.path:
+            QMessageBox.information(self, "Display Wizard", "Please select a display tool first.")
+            return
+
+        selected_path = (row.path or "").strip()
+        tool_name = os.path.basename(selected_path)
+        if tool_name and "." in tool_name:
+            tool_name = tool_name.rsplit(".", 1)[0]
+        if not tool_name:
+            tool_name = "MultiMonitorTool"
+
+        wizard = DisplayWizard(self, windowing_app_name=tool_name, tool_path=selected_path)
+        wizard.exec()
 
     def _on_download_requested(self, tool_name, tool_data):
         if tool_data.get("special") == "mount_disc":
@@ -1834,14 +1910,14 @@ exit 1
 
     def _reset_launch_sequence(self):
         self.launch_sequence_list.clear()
-        self.launch_sequence_list.addItems(["Cloud-Sync", "mount-disc", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless"])
+        self.launch_sequence_list.addItems(["Cloud-Sync", "mount-disc", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless", "RunAudio", "Backup"])
         self.config_changed.emit()
         self._update_list_tooltips(self.launch_sequence_list)
         self._update_sequence_item_colors()
 
     def _reset_exit_sequence(self):
         self.exit_sequence_list.clear()
-        self.exit_sequence_list.addItems(["Post1", "Post2", "Post3", "Monitor-Config", "Taskbar", "Controller-Mapper", "Unmount-disc", "Cloud-Sync"])
+        self.exit_sequence_list.addItems(["Post1", "Post2", "Post3", "Monitor-Config", "Taskbar", "Controller-Mapper", "Borderless", "ReturnAudio", "Unmount-disc", "Cloud-Sync", "Backup"])
         self.config_changed.emit()
         self._update_list_tooltips(self.exit_sequence_list)
         self._update_sequence_item_colors()
@@ -1853,9 +1929,9 @@ exit 1
         
         # Define full sets
         if sequence_type == "launch":
-            full_set = ["Cloud-Sync", "mount-disc", "Kill-Game", "Kill-List", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless"]
+            full_set = ["Cloud-Sync", "mount-disc", "Kill-Game", "Kill-List", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless", "RunAudio", "Backup"]
         else:
-            full_set = ["Post1", "Post2", "Post3", "Kill-Game", "Kill-List", "Monitor-Config", "Taskbar", "Controller-Mapper", "Borderless", "Unmount-disc", "Cloud-Sync"]
+            full_set = ["Post1", "Post2", "Post3", "Kill-Game", "Kill-List", "Monitor-Config", "Taskbar", "Controller-Mapper", "Borderless", "Unmount-disc", "Cloud-Sync", "ReturnAudio", "Backup"]
             
         current_items = [list_widget.item(i).text() for i in range(list_widget.count())]
         removed_items = [x for x in full_set if x not in current_items]
@@ -1990,6 +2066,9 @@ exit 1
             'Post3':             lambda: has_path('post3_path'),
             'JustAfterLaunch':   lambda: has_path('just_after_launch_path'),
             'JustBeforeExit':    lambda: has_path('just_before_exit_path'),
+            'RunAudio':          lambda: has_path('audio_tool_path'),
+            'ReturnAudio':       lambda: has_path('audio_tool_path'),
+            'Backup':            lambda: has_path('local_backup_path'),
         }
 
         for list_widget in (self.launch_sequence_list, self.exit_sequence_list):
@@ -2087,7 +2166,7 @@ exit 1
         launch_seq = config.launch_sequence if config.launch_sequence else []
         if not launch_seq:
             # Use defaults for new configs
-            launch_seq = ["Cloud-Sync", "mount-disc", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless"]
+            launch_seq = ["Cloud-Sync", "mount-disc", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Pre2", "Pre3", "Borderless", "RunAudio", "Backup"]
         else:
             # Migrate existing configs: add new items if missing
             if "Cloud-Sync" not in launch_seq:
@@ -2096,6 +2175,13 @@ exit 1
                 # Insert after Cloud-Sync
                 insert_pos = launch_seq.index("Cloud-Sync") + 1 if "Cloud-Sync" in launch_seq else 0
                 launch_seq.insert(insert_pos, "mount-disc")
+            if "RunAudio" not in launch_seq:
+                if "No-TB" in launch_seq:
+                    launch_seq.insert(launch_seq.index("No-TB") + 1, "RunAudio")
+                else:
+                    launch_seq.append("RunAudio")
+            if "Backup" not in launch_seq:
+                launch_seq.append("Backup")
         
         self.launch_sequence_list.addItems(launch_seq)
         self._update_list_tooltips(self.launch_sequence_list)
@@ -2105,7 +2191,7 @@ exit 1
         exit_seq = config.exit_sequence if config.exit_sequence else []
         if not exit_seq:
             # Use defaults for new configs
-            exit_seq = ["Post1", "Post2", "Post3", "Monitor-Config", "Taskbar", "Controller-Mapper", "Unmount-disc", "Cloud-Sync"]
+            exit_seq = ["Post1", "Post2", "Post3", "Monitor-Config", "Taskbar", "Controller-Mapper", "Unmount-disc", "Cloud-Sync", "ReturnAudio", "Backup"]
         else:
             # Migrate existing configs: add new items if missing
             if "Unmount-disc" not in exit_seq:
@@ -2117,6 +2203,13 @@ exit 1
                 exit_seq.insert(insert_pos, "Unmount-disc")
             if "Cloud-Sync" not in exit_seq:
                 exit_seq.append("Cloud-Sync")
+            if "ReturnAudio" not in exit_seq:
+                if "Borderless" in exit_seq:
+                    exit_seq.insert(exit_seq.index("Borderless") + 1, "ReturnAudio")
+                else:
+                    exit_seq.append("ReturnAudio")
+            if "Backup" not in exit_seq:
+                exit_seq.append("Backup")
         
         self.exit_sequence_list.addItems(exit_seq)
         self._update_list_tooltips(self.exit_sequence_list)
