@@ -19,7 +19,12 @@ __pycache__/
 .venv/
 # Local configuration and logs
 *.ini
+*_*.py
 *.cfg
+*.config
+*.conf
+*.xml
+*.yaml
 *.log
 *.amgp
 *.json
@@ -37,6 +42,7 @@ index_backups/
 cache/
 
 # IDE specific
+.agent.md
 .devcontainer/
 .vscode/
 .idea/
