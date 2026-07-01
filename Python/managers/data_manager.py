@@ -225,9 +225,11 @@ class DataManager(QObject):
             ('mm_desktop_profile', 'mm_desktop_profile_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
-            ('disc_unmount_path', 'disc_unmount_enabled'),
-            ('cloud_app_path', 'cloud_app_enabled'),
-            ('backup_app_path', 'backup_app_enabled'),
+            ('audio_app_path', 'audio_app_enabled'),
+            ('run_audio_config', 'run_audio_config_enabled'),
+            ('return_audio_config', 'return_audio_config_enabled'),
+            ('unborder_config', 'unborder_config_enabled'),
+            ('reborder_config', 'reborder_config_enabled'),
         ]
         
         # Sanitize each game's data

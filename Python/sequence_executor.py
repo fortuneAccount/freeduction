@@ -43,6 +43,9 @@ class SequenceExecutor:
             'Cloud-Sync': self.run_cloud_sync,
             'mount-disc': self.mount_disc,
             'Unmount-disc': self.unmount_disc,
+            'RunAudio': lambda: self.run_generic_app('audio_app', 'audio_app_run_wait', 'audio_app_options', 'audio_app_arguments'),
+            'ReturnAudio': lambda: self.run_generic_app('audio_app', 'audio_app_run_wait', 'audio_app_options', 'audio_app_arguments'),
+            'Backup': lambda: self.run_generic_app('backup_app', 'backup_wait', 'backup_options', 'backup_arguments'),
         }
 
         # Define explicit "off" or "restore" actions for the exit sequence
@@ -54,6 +57,7 @@ class SequenceExecutor:
             'Borderless': self.kill_borderless,
             'Cloud-Sync': self.run_cloud_sync,
             'Unmount-disc': self.unmount_disc,
+            'Backup': lambda: self.run_generic_app('backup_app', 'backup_wait', 'backup_options', 'backup_arguments'),
         }
 
     def _build_cmd(self, app_path: str, options: str = '', args: str = '') -> str:

@@ -676,14 +676,6 @@ class CreationController:
         config.set('DiscMount', 'discmountpatharguments', game_data.get('disc_mount_args', ''))
         config.set('DiscMount', 'discmountpathrunwait', str(game_data.get('disc_mount_wait', False)))
 
-        # --- [DiscUnmount] Section ---
-        config.add_section('DiscUnmount')
-        config.set('DiscUnmount', 'enablediscunmount', str(game_data.get('disc_unmount_enabled', False)))
-        config.set('DiscUnmount', 'discunmountpath', self._get_app_path_for_ini('disc_unmount_path', game_data, game_profile_dir))
-        config.set('DiscUnmount', 'discunmountpathoptions', game_data.get('disc_unmount_options', ''))
-        config.set('DiscUnmount', 'discunmountpatharguments', game_data.get('disc_unmount_args', ''))
-        config.set('DiscUnmount', 'discunmountpathrunwait', str(game_data.get('disc_unmount_wait', False)))
-
         # --- [DiscMountCfg] Section ---
         config.add_section('DiscMountCfg')
         config.set('DiscMountCfg', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
@@ -749,22 +741,6 @@ class CreationController:
         # --- [MonitorWizard] Section ---
         config.add_section('MonitorWizard')
         config.set('MonitorWizard', 'configpath', getattr(app_config, 'monitor_wizard_config_path', ''))
-
-        # --- [CloudSync] Section ---
-        config.add_section('CloudSync')
-        config.set('CloudSync', 'enablecloudsync', str(game_data.get('cloud_app_enabled', False)))
-        config.set('CloudSync', 'cloudsyncpath', self._get_app_path_for_ini('cloud_app_path', game_data, game_profile_dir))
-        config.set('CloudSync', 'cloudsyncpathoptions', game_data.get('cloud_app_options', ''))
-        config.set('CloudSync', 'cloudsyncpatharguments', game_data.get('cloud_app_args', ''))
-        config.set('CloudSync', 'cloudsyncpathrunwait', str(game_data.get('cloud_app_wait', False)))
-
-        # --- [LocalBackup] Section ---
-        config.add_section('LocalBackup')
-        config.set('LocalBackup', 'enablelocalbackup', str(game_data.get('backup_app_enabled', False)))
-        config.set('LocalBackup', 'localbackuppath', self._get_app_path_for_ini('backup_app_path', game_data, game_profile_dir))
-        config.set('LocalBackup', 'localbackuppathoptions', game_data.get('backup_app_options', ''))
-        config.set('LocalBackup', 'localbackuppatharguments', game_data.get('backup_app_args', ''))
-        config.set('LocalBackup', 'localbackuppathrunwait', str(game_data.get('backup_app_wait', False)))
 
         # --- [JustAfterLaunch] Section ---
         config.add_section('JustAfterLaunch')
@@ -871,15 +847,13 @@ class CreationController:
             ('borderless', 'borderless_windowing_path', 'borderless_gaming_path'),
             ('multimonitortool', 'multi_monitor_app_path', 'multi_monitor_tool_path'),
             ('wincdemu', 'disc_mount_path', 'disc_mount_path'),
-            ('rclone', 'cloud_app_path', 'cloud_app_path'),
-            ('ludusavi', 'backup_app_path', 'backup_app_path'),
             ('audioapp', 'audio_app_path', 'audio_tool_path'),
-            ('unborderconfig', 'unborder_config_path', 'unborder_config'),
-            ('reborderconfig', 'reborder_config_path', 'reborder_config'),
-            ('runaudioconfig', 'run_audio_config_path', 'run_audio_config'),
-            ('returnaudioconfig', 'return_audio_config_path', 'return_audio_config'),
-            ('discmountcfg', 'disc_mount_cfg_path', 'disc_mount_cfg'),
-            ('discunmountcfg', 'disc_unmount_cfg_path', 'disc_unmount_cfg'),
+            ('unborderconfig', 'unborder_config', 'unborder_config'),
+            ('reborderconfig', 'reborder_config', 'reborder_config'),
+            ('runaudioconfig', 'run_audio_config', 'run_audio_config'),
+            ('returnaudioconfig', 'return_audio_config', 'return_audio_config'),
+            ('discmountcfg', 'disc_mount_cfg', 'disc_mount_cfg'),
+            ('discunmountcfg', 'disc_unmount_cfg', 'disc_unmount_cfg'),
         ]
 
         for ini_key, data_key, config_key in app_source_map:

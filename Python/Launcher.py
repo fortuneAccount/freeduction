@@ -550,7 +550,7 @@ class GameLauncher:
                     "Pre2", 
                     "Pre3", 
                     "Borderless",
-                    "Run-Audio"
+                    "RunAudio"
                 ]
             
             # Get exit sequence
@@ -563,7 +563,7 @@ class GameLauncher:
                     "Post1", 
                     "Post2", 
                     "Post3", 
-                    "Return-Audio",
+                    "ReturnAudio",
                     "Monitor-Config", 
                     "Taskbar",
                     "Controller-Mapper",

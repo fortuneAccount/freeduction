@@ -57,6 +57,10 @@ class AppConfig:
         # Audio tool
         self.audio_tool_path = ""
         
+        # Audio config file paths
+        self.audio_game_cfg = ""
+        self.audio_mediacenter_cfg = ""
+        
         # Cloud backup tools
         self.rclone_path = ""
         self.ludusavi_path = ""
@@ -90,8 +94,8 @@ class AppConfig:
         self.return_audio_config_path_arguments = ""
         
         # Unborder/reborder config paths
-        self.unborder_config_path = ""
-        self.reborder_config_path = ""
+        self.unborder_config = ""
+        self.reborder_config = ""
         
         # Cloud backup options & arguments
         self.rclone_path_options = ""

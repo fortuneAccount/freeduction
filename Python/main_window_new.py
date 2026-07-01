@@ -25,6 +25,11 @@ class MainWindow(QMainWindow):
         """Initialize the main window"""
         super().__init__()
         
+        # Replace Windows bitmap fonts that fail DirectWrite rendering
+        from PyQt6.QtGui import QFont
+        QFont.insertSubstitution("Small Fonts", "Segoe UI")
+        QFont.insertSubstitution("Terminal", "Consolas")
+        
         self.plugin_mode = plugin_mode
         
         # Initialize managers
@@ -617,7 +622,6 @@ class MainWindow(QMainWindow):
             if game.get('run_as_admin') != self.config.run_as_admin: diffs.append("RAA")
             if game.get('hide_taskbar') != self.config.hide_taskbar: diffs.append("HTB")
             if game.get('kill_list_enabled') != self.config.use_kill_list: diffs.append("KLE")
-            if game.get('terminate_borderless_on_exit') != self.config.terminate_borderless_on_exit: diffs.append("TBE")
             
             mapping = [
                 ('controller_mapper_enabled', 'controller_mapper_path_enabled', 'CME'),

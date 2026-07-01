@@ -109,9 +109,28 @@ class ConfigManager(QObject):
             'profiles_dir_enabled': True,
             'launchers_dir_enabled': True,
             'disc_mount_path_enabled': True,
-            'disc_unmount_path_enabled': True,
-            'cloud_sync_path_enabled': True,
-            'local_backup_path_enabled': True,
+            'disc_mount_cfg_enabled': True,
+            'disc_unmount_cfg_enabled': True,
+            'audio_tool_path_enabled': True,
+            'audio_app_enabled': True,
+            'run_audio_config_enabled': True,
+            'return_audio_config_enabled': True,
+            'unborder_config_enabled': True,
+            'reborder_config_enabled': True,
+        }
+
+        config.run_wait_states = {
+            'controller_mapper_path_run_wait': False,
+            'borderless_gaming_path_run_wait': False,
+            'multi_monitor_tool_path_run_wait': False,
+            'just_after_launch_path_run_wait': False,
+            'just_before_exit_path_run_wait': False,
+            'pre1_path_run_wait': False, 'post1_path_run_wait': False,
+            'pre2_path_run_wait': False, 'post2_path_run_wait': False,
+            'pre3_path_run_wait': False, 'post3_path_run_wait': False,
+            'disc_mount_path_run_wait': False,
+            'audio_tool_path_run_wait': False,
+            'audio_app_run_wait': False,
         }
 
         # Set default run-wait states
@@ -353,11 +372,11 @@ class ConfigManager(QObject):
             'cloud_sync_path': ['rclone.exe', 'rclone', 'ludusavi.exe', 'ludusavi', 'syncthing.exe', 'syncthing', 'emusync.exe', 'emusync'],
             'local_backup_path': ['gamebackupmonitor.exe', 'GameBackupMonitor.exe', 'gamesavemanager.exe', 'GameSaveManager.exe', 'savestate.exe', 'SaveState.exe'],
             'disc_mount_path': ['imgdrive.exe', 'wincdemu.exe', 'osfmount.exe'],
-            'disc_unmount_path': ['imgdrive.exe', 'wincdemu.exe', 'osfmount.exe'],
             'wincdemu_exe_path': ['wincdemu.exe'],
             'imgdrive_exe_path': ['imgdrive.exe'],
             'osf_exe_path': ['osfmount.exe', 'osfmount'],
             'cdmage_exe_path': ['cdmage.exe'],
+            'audio_tool_path': ['audio_tool.exe', 'AudioTool.exe'],
         }
         
         logging.info("Auto-detecting tools in bin directory...")
@@ -445,10 +464,8 @@ class ConfigManager(QObject):
             'post3_path': ('post3_path_options', 'post3_path_arguments'),
             'just_after_launch_path': ('just_after_launch_path_options', 'just_after_launch_path_arguments'),
             'just_before_exit_path': ('just_before_exit_path_options', 'just_before_exit_path_arguments'),
-            'cloud_sync_path': ('cloud_sync_path_options', 'cloud_sync_path_arguments'),
-            'local_backup_path': ('local_backup_path_options', 'local_backup_path_arguments'),
             'disc_mount_path': ('disc_mount_path_options', 'disc_mount_path_arguments'),
-            'disc_unmount_path': ('disc_unmount_path_options', 'disc_unmount_path_arguments'),
+            'audio_tool_path': ('audio_app_options', 'audio_app_arguments'),
         }
         
         if config_attr not in attr_mapping:

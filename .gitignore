@@ -16,7 +16,7 @@ bin/Launcher.py.exe
 # Python cache
 __pycache__/
 *.py[cod]
-
+.venv/
 # Local configuration and logs
 *.ini
 *.cfg
@@ -24,7 +24,7 @@ __pycache__/
 *.amgp
 *.json
 *.code-workspace
-!config.json
+!steam.json
 
 # Index and cache files
 *.old

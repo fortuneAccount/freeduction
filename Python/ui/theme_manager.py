@@ -89,7 +89,7 @@ class DefaultProvider(ThemeProvider):
 # ---------------------------------------------------------------------------
 
 class FluentDarkProvider(ThemeProvider):
-    """Applies the Fluent Dark theme via qfluentwidgets."""
+    """Applies the Fluent Dark theme via qfluentwidgets and qdarktheme stylesheet."""
 
     @property
     def name(self) -> str:
@@ -97,15 +97,17 @@ class FluentDarkProvider(ThemeProvider):
 
     def apply(self, app) -> None:
         from qfluentwidgets import setTheme, Theme  # type: ignore[import]
+        import qdarktheme  # type: ignore[import]
         setTheme(Theme.DARK)
+        app.setStyleSheet(qdarktheme.load_stylesheet("dark"))
 
     @classmethod
     def is_available(cls) -> bool:
-        return importlib.util.find_spec("qfluentwidgets") is not None
+        return importlib.util.find_spec("qfluentwidgets") is not None and importlib.util.find_spec("qdarktheme") is not None
 
 
 class FluentLightProvider(ThemeProvider):
-    """Applies the Fluent Light theme via qfluentwidgets."""
+    """Applies the Fluent Light theme via qfluentwidgets and qdarktheme stylesheet."""
 
     @property
     def name(self) -> str:
@@ -113,11 +115,13 @@ class FluentLightProvider(ThemeProvider):
 
     def apply(self, app) -> None:
         from qfluentwidgets import setTheme, Theme  # type: ignore[import]
+        import qdarktheme  # type: ignore[import]
         setTheme(Theme.LIGHT)
+        app.setStyleSheet(qdarktheme.load_stylesheet("light"))
 
     @classmethod
     def is_available(cls) -> bool:
-        return importlib.util.find_spec("qfluentwidgets") is not None
+        return importlib.util.find_spec("qfluentwidgets") is not None and importlib.util.find_spec("qdarktheme") is not None
 
 
 # ---------------------------------------------------------------------------

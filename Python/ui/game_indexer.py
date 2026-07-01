@@ -165,7 +165,6 @@ def _process_executable(
             'hide_taskbar': config.hide_taskbar,
             'kill_list_enabled': config.use_kill_list,
             'kill_list': ",".join(kill_list),
-            'terminate_borderless_on_exit': config.terminate_borderless_on_exit,
 
             # Paths from setup tab (only if enabled)
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
@@ -180,7 +179,7 @@ def _process_executable(
             'just_before_exit_path': config.just_before_exit_path if config.defaults.get('just_before_exit_path_enabled', True) else "",
             'pre1_path': config.pre1_path if config.defaults.get('pre1_path_enabled', True) else "", 'pre2_path': config.pre2_path if config.defaults.get('pre2_path_enabled', True) else "", 'pre3_path': config.pre3_path if config.defaults.get('pre3_path_enabled', True) else "",
             'post1_path': config.post1_path if config.defaults.get('post1_path_enabled', True) else "", 'post2_path': config.post2_path if config.defaults.get('post2_path_enabled', True) else "", 'post3_path': config.post3_path if config.defaults.get('post3_path_enabled', True) else "",
-            'disc_mount_path': config.disc_mount_path if config.defaults.get('disc_mount_path_enabled', True) else "", 'disc_unmount_path': config.disc_unmount_path if config.defaults.get('disc_unmount_path_enabled', True) else "",
+            'disc_mount_path': config.disc_mount_path if config.defaults.get('disc_mount_path_enabled', True) else "",
             'launcher_executable': config.launcher_executable if config.defaults.get('launcher_executable_enabled', True) else "",
 
             # Enabled states from setup tab (defaults)
@@ -191,7 +190,7 @@ def _process_executable(
             'just_before_exit_enabled': config.defaults.get('just_before_exit_path_enabled', True),
             'pre_1_enabled': config.defaults.get('pre1_path_enabled', True), 'pre_2_enabled': config.defaults.get('pre2_path_enabled', True), 'pre_3_enabled': config.defaults.get('pre3_path_enabled', True),
             'post_1_enabled': config.defaults.get('post1_path_enabled', True), 'post_2_enabled': config.defaults.get('post2_path_enabled', True), 'post_3_enabled': config.defaults.get('post3_path_enabled', True),
-            'disc_mount_enabled': config.defaults.get('disc_mount_path_enabled', True), 'disc_unmount_enabled': config.defaults.get('disc_unmount_path_enabled', True),
+            'disc_mount_enabled': config.defaults.get('disc_mount_path_enabled', True),
             'launcher_executable_enabled': config.defaults.get('launcher_executable_enabled', True),
 
             # Profile enabled states
@@ -214,7 +213,6 @@ def _process_executable(
             'post_2_overwrite': config.overwrite_states.get('post2_path', True),
             'post_3_overwrite': config.overwrite_states.get('post3_path', True),
             'disc_mount_overwrite': config.overwrite_states.get('disc_mount_path', True),
-            'disc_unmount_overwrite': config.overwrite_states.get('disc_unmount_path', True),
             'player1_profile_overwrite': config.overwrite_states.get('p1_profile_path', True),
             'player2_profile_overwrite': config.overwrite_states.get('p2_profile_path', True),
             'mediacenter_profile_overwrite': config.overwrite_states.get('mediacenter_profile_path', True),
@@ -230,7 +228,16 @@ def _process_executable(
             'just_before_exit_run_wait': config.run_wait_states.get('just_before_exit_path_run_wait', False),
             'pre_1_run_wait': config.run_wait_states.get('pre1_path_run_wait', False), 'pre_2_run_wait': config.run_wait_states.get('pre2_path_run_wait', False), 'pre_3_run_wait': config.run_wait_states.get('pre3_path_run_wait', False),
             'post_1_run_wait': config.run_wait_states.get('post1_path_run_wait', False), 'post_2_run_wait': config.run_wait_states.get('post2_path_run_wait', False), 'post_3_run_wait': config.run_wait_states.get('post3_path_run_wait', False),
-            'disc_mount_run_wait': config.run_wait_states.get('disc_mount_path_run_wait', False), 'disc_unmount_run_wait': config.run_wait_states.get('disc_unmount_path_run_wait', False),
+            'disc_mount_run_wait': config.run_wait_states.get('disc_mount_path_run_wait', False),
+
+            'disc_mount_cfg': getattr(config, 'disc_mount_cfg', ''), 'disc_mount_cfg_enabled': config.defaults.get('disc_mount_cfg_enabled', True), 'disc_mount_cfg_overwrite': config.overwrite_states.get('disc_mount_cfg', True),
+            'disc_unmount_cfg': getattr(config, 'disc_unmount_cfg', ''), 'disc_unmount_cfg_enabled': config.defaults.get('disc_unmount_cfg_enabled', True), 'disc_unmount_cfg_overwrite': config.overwrite_states.get('disc_unmount_cfg', True),
+            'audio_app_path': getattr(config, 'audio_tool_path', ''), 'audio_app_enabled': config.defaults.get('audio_tool_path_enabled', True), 'audio_app_overwrite': config.overwrite_states.get('audio_tool_path', True),
+            'audio_app_options': getattr(config, 'audio_app_options', ''), 'audio_app_arguments': getattr(config, 'audio_app_arguments', ''), 'audio_app_run_wait': getattr(config, 'audio_app_run_wait', False),
+            'run_audio_config': getattr(config, 'run_audio_config', ''), 'run_audio_config_enabled': config.defaults.get('run_audio_config_enabled', True), 'run_audio_config_overwrite': config.overwrite_states.get('run_audio_config', True),
+            'return_audio_config': getattr(config, 'return_audio_config', ''), 'return_audio_config_enabled': config.defaults.get('return_audio_config_enabled', True), 'return_audio_config_overwrite': config.overwrite_states.get('return_audio_config', True),
+            'unborder_config': getattr(config, 'unborder_config', ''), 'unborder_config_enabled': config.defaults.get('unborder_config_enabled', True), 'unborder_config_overwrite': config.overwrite_states.get('unborder_config', True),
+            'reborder_config': getattr(config, 'reborder_config', ''), 'reborder_config_enabled': config.defaults.get('reborder_config_enabled', True), 'reborder_config_overwrite': config.overwrite_states.get('reborder_config', True),
         }
         return game_data
     except PermissionError:

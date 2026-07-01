@@ -288,13 +288,10 @@ class EditorTab(QWidget):
             "Exec Order", "Term Order",
             "ISO Path",
             "Disc-Mount", "Opts", "Args", "Wait",
-            "Disc-Unmount", "Opts", "Args", "Wait",
             "Mount-Cfg", "Unmount-Cfg",
             "Audio-App", "Opts", "Args", "Wait",
             "Run Audio Config", "Return Audio Config",
             "UnBorder Config", "ReBorder Config",
-            "Cloud-App", "Opts", "Args", "Wait",
-            "Backup-App", "Opts", "Args", "Wait",
         ]
         self.table.setHorizontalHeaderLabels(headers)
 
@@ -323,13 +320,10 @@ class EditorTab(QWidget):
             "Termination Sequence Order",
             "Path to ISO file to mount before launch",
             "Path to disc mounting script/executable", "Disc-Mount Options", "Disc-Mount Arguments", "Wait for Disc-Mount?",
-            "Path to disc unmounting script/executable", "Disc-Unmount Options", "Disc-Unmount Arguments", "Wait for Disc-Unmount?",
             "Mount configuration file path", "Unmount configuration file path",
             "Path to audio application executable", "Audio App Options", "Audio App Arguments", "Wait for Audio App?",
             "Run Audio Config file path", "Return Audio Config file path",
             "UnBorder Config file path", "ReBorder Config file path",
-            "Path to cloud sync script/executable", "Cloud Options", "Cloud Arguments", "Wait for Cloud?",
-            "Path to backup script/executable", "Backup Options", "Backup Arguments", "Wait for Backup?",
         ]
         for i, tooltip in enumerate(tooltips):
             item = self.table.horizontalHeaderItem(i)
@@ -347,7 +341,7 @@ class EditorTab(QWidget):
                           constants.EditorCols.POST1_RUN_WAIT.value, constants.EditorCols.PRE2_RUN_WAIT.value,
                           constants.EditorCols.POST2_RUN_WAIT.value, constants.EditorCols.PRE3_RUN_WAIT.value,
                           constants.EditorCols.POST3_RUN_WAIT.value, constants.EditorCols.DM_RUN_WAIT.value,
-                          constants.EditorCols.AUDIO_APP_RUN_WAIT.value, constants.EditorCols.DU_RUN_WAIT.value]
+                          constants.EditorCols.AUDIO_APP_RUN_WAIT.value]
 
             for col in rw_columns:
                 # Automatically resize Wait columns to fit content
@@ -830,9 +824,7 @@ class EditorTab(QWidget):
             # Populate from config
             'run_as_admin': config.run_as_admin,
             'hide_taskbar': config.hide_taskbar,
-            'terminate_borderless_on_exit': config.terminate_borderless_on_exit,
-
-            # Controller Mapper
+            'kill_list_enabled': config.use_kill_list,
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'controller_mapper_enabled': config.defaults.get('controller_mapper_path_enabled', True),
             'controller_mapper_overwrite': config.overwrite_states.get('controller_mapper_path', True),
@@ -929,10 +921,6 @@ class EditorTab(QWidget):
             # Disc Mount
             'disc_mount_path': config.disc_mount_path if config.defaults.get('disc_mount_path_enabled', True) else "", 'disc_mount_enabled': config.defaults.get('disc_mount_path_enabled', True), 'disc_mount_overwrite': config.overwrite_states.get('disc_mount_path', True),
             'disc_mount_options': config.disc_mount_path_options, 'disc_mount_arguments': config.disc_mount_path_arguments, 'disc_mount_run_wait': config.run_wait_states.get('disc_mount_path_run_wait', False),
-
-            # Disc Unmount
-            'disc_unmount_path': config.disc_unmount_path if config.defaults.get('disc_unmount_path_enabled', True) else "", 'disc_unmount_enabled': config.defaults.get('disc_unmount_path_enabled', True), 'disc_unmount_overwrite': config.overwrite_states.get('disc_unmount_path', True),
-            'disc_unmount_options': config.disc_unmount_path_options, 'disc_unmount_arguments': config.disc_unmount_path_arguments, 'disc_unmount_run_wait': config.run_wait_states.get('disc_unmount_path_run_wait', False),
             
             # Disc Mount Config
             'disc_mount_cfg': '', 'disc_mount_cfg_enabled': True, 'disc_mount_cfg_overwrite': True,
@@ -1025,7 +1013,11 @@ class EditorTab(QWidget):
             constants.EditorCols.PRE2_PATH.value, constants.EditorCols.POST2_PATH.value,
             constants.EditorCols.PRE3_PATH.value, constants.EditorCols.POST3_PATH.value,
             constants.EditorCols.LAUNCHER_EXE.value,
-            constants.EditorCols.ISO_PATH.value
+            constants.EditorCols.ISO_PATH.value,
+            constants.EditorCols.DM_MOUNT_CFG.value, constants.EditorCols.DM_UNMOUNT_CFG.value,
+            constants.EditorCols.AUDIO_APP_PATH.value, constants.EditorCols.RUN_AUDIO_CONFIG.value,
+            constants.EditorCols.RETURN_AUDIO_CONFIG.value, constants.EditorCols.UNBORDER_CONFIG.value,
+            constants.EditorCols.REBORDER_CONFIG.value
         }
         
         if col in path_cols:
@@ -2110,16 +2102,6 @@ class EditorTab(QWidget):
             (constants.EditorCols.POST2_PATH, [constants.EditorCols.POST2_OPTIONS, constants.EditorCols.POST2_ARGUMENTS, constants.EditorCols.POST2_RUN_WAIT]),
             (constants.EditorCols.PRE3_PATH, [constants.EditorCols.PRE3_OPTIONS, constants.EditorCols.PRE3_ARGUMENTS, constants.EditorCols.PRE3_RUN_WAIT]),
             (constants.EditorCols.POST3_PATH, [constants.EditorCols.POST3_OPTIONS, constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT]),
-            # Cloud Sync group
-            (constants.EditorCols.CLOUD_APP_PATH, [constants.EditorCols.CLOUD_OPTIONS, constants.EditorCols.CLOUD_ARGUMENTS, constants.EditorCols.CLOUD_RUN_WAIT,
-                                                    constants.EditorCols.CLOUD_REMOTE_NAME, constants.EditorCols.CLOUD_USER_PREFIX, 
-                                                    constants.EditorCols.CLOUD_LOCAL_SAVE_PATH, constants.EditorCols.CLOUD_BACKUP_ON_LAUNCH, 
-                                                    constants.EditorCols.CLOUD_UPLOAD_ON_EXIT]),
-            # Local Backup group
-            (constants.EditorCols.BACKUP_APP_PATH, [constants.EditorCols.BACKUP_OPTIONS, constants.EditorCols.BACKUP_ARGUMENTS, constants.EditorCols.BACKUP_RUN_WAIT,
-                                                     constants.EditorCols.BACKUP_LOCAL_PREFIX, constants.EditorCols.BACKUP_LOCAL_SAVE_PATH,
-                                                     constants.EditorCols.BACKUP_ON_LAUNCH, constants.EditorCols.BACKUP_ON_EXIT, 
-                                                     constants.EditorCols.BACKUP_MAX_BACKUPS]),
         ]
         # Launcher Executable group
         groups.append((constants.EditorCols.LAUNCHER_EXE, [constants.EditorCols.LAUNCHER_EXE_OPTIONS, constants.EditorCols.LAUNCHER_EXE_ARGUMENTS]))
@@ -2201,9 +2183,9 @@ class EditorTab(QWidget):
             game['borderless_windowing_options'] = self.table.item(row, col).text()
         elif col == constants.EditorCols.BW_ARGUMENTS.value:
             game['borderless_windowing_arguments'] = self.table.item(row, col).text()
-elif col == constants.EditorCols.BW_RUN_WAIT.value:
-             game['borderless_windowing_run_wait'] = self._get_checkbox_value(row, col)
-         elif col == constants.EditorCols.MM_PATH.value:
+        elif col == constants.EditorCols.BW_RUN_WAIT.value:
+            game['borderless_windowing_run_wait'] = self._get_checkbox_value(row, col)
+        elif col == constants.EditorCols.MM_PATH.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['multi_monitor_app_enabled'] = en
             game['multi_monitor_app_path'] = path
@@ -2400,36 +2382,6 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
             game['disc_unmount_cfg_enabled'] = en
             game['disc_unmount_cfg'] = path
             game['disc_unmount_cfg_overwrite'] = ov
-        
-        # Cloud Sync columns
-        elif col == constants.EditorCols.CLOUD_APP_PATH.value:
-            en, path, ov = self._get_merged_path_data(row, col)
-            game['cloud_app_enabled'] = en
-            game['cloud_app_path'] = path
-            game['cloud_app_overwrite'] = ov
-        elif col == constants.EditorCols.CLOUD_OPTIONS.value:
-            item = self.table.item(row, col)
-            game['cloud_options'] = item.text() if item else ""
-        elif col == constants.EditorCols.CLOUD_ARGUMENTS.value:
-            item = self.table.item(row, col)
-            game['cloud_arguments'] = item.text() if item else ""
-        elif col == constants.EditorCols.CLOUD_RUN_WAIT.value:
-            game['cloud_run_wait'] = self._get_checkbox_value(row, col)
-        
-        # Local Backup columns
-        elif col == constants.EditorCols.BACKUP_APP_PATH.value:
-            en, path, ov = self._get_merged_path_data(row, col)
-            game['backup_app_enabled'] = en
-            game['backup_app_path'] = path
-            game['backup_app_overwrite'] = ov
-        elif col == constants.EditorCols.BACKUP_OPTIONS.value:
-            item = self.table.item(row, col)
-            game['backup_options'] = item.text() if item else ""
-        elif col == constants.EditorCols.BACKUP_ARGUMENTS.value:
-            item = self.table.item(row, col)
-            game['backup_arguments'] = item.text() if item else ""
-        elif col == constants.EditorCols.BACKUP_RUN_WAIT.value:
-            game['backup_run_wait'] = self._get_checkbox_value(row, col)
 
     def swap_lc_cen_selected(self):
         """Swap between LC (>) and CEN (<) for selected path cells."""
@@ -2655,9 +2607,11 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
             ('mm_desktop_profile', 'mm_desktop_profile_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
-            ('disc_unmount_path', 'disc_unmount_enabled'),
-            ('cloud_app_path', 'cloud_app_enabled'),
-            ('backup_app_path', 'backup_app_enabled'),
+            ('audio_app_path', 'audio_app_enabled'),
+            ('run_audio_config', 'run_audio_config_enabled'),
+            ('return_audio_config', 'return_audio_config_enabled'),
+            ('unborder_config', 'unborder_config_enabled'),
+            ('reborder_config', 'reborder_config_enabled'),
         ]
         
         for game in sanitized:
@@ -2798,7 +2752,7 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
         self.table.setItem(row_num, constants.EditorCols.BW_ARGUMENTS.value, QTableWidgetItem(game.get('borderless_windowing_arguments', '')))
         self.table.setCellWidget(row_num, constants.EditorCols.BW_RUN_WAIT.value, self._create_checkbox_widget(game.get('borderless_windowing_run_wait', bw_run_wait), row_num, constants.EditorCols.BW_RUN_WAIT.value))
         
-# Multi-monitor App (CheckBox, Path with symbol, RunWait)
+        # Multi-monitor App (CheckBox, Path with symbol, RunWait)
         mm_symbol, mm_run_wait = self._get_propagation_symbol_and_run_wait('multi_monitor_tool_path')
         mm_path = f"{mm_symbol} {game.get('multi_monitor_app_path', '').lstrip('<> ')}"
         self.table.setCellWidget(row_num, constants.EditorCols.MM_PATH.value, self._create_merged_path_widget(game.get('multi_monitor_app_enabled', True), mm_path, game.get('multi_monitor_app_overwrite', True), row_num, constants.EditorCols.MM_PATH.value))
@@ -2918,23 +2872,13 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
         self.table.setItem(row_num, constants.EditorCols.DM_ARGUMENTS.value, QTableWidgetItem(game.get('disc_mount_arguments', '')))
         self.table.setCellWidget(row_num, constants.EditorCols.DM_RUN_WAIT.value, self._create_checkbox_widget(game.get('disc_mount_run_wait', dm_run_wait), row_num, constants.EditorCols.DM_RUN_WAIT.value))
 
-        # Disc-Unmount (CheckBox, Path with symbol, RunWait)
-        du_symbol, du_run_wait = self._get_propagation_symbol_and_run_wait('disc_unmount_path')
-        du_path = f"{du_symbol} {game.get('disc_unmount_path', '').lstrip('<> ')}"
-        self.table.setCellWidget(row_num, constants.EditorCols.DU_PATH.value, self._create_merged_path_widget(game.get('disc_unmount_enabled', True), du_path, game.get('disc_unmount_overwrite', True), row_num, constants.EditorCols.DU_PATH.value))
-        self.table.setItem(row_num, constants.EditorCols.DU_OPTIONS.value, QTableWidgetItem(game.get('disc_unmount_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.DU_ARGUMENTS.value, QTableWidgetItem(game.get('disc_unmount_arguments', '')))
-        self.table.setCellWidget(row_num, constants.EditorCols.DU_RUN_WAIT.value, self._create_checkbox_widget(game.get('disc_unmount_run_wait', du_run_wait), row_num, constants.EditorCols.DU_RUN_WAIT.value))
-
-# Disc-Mount Config
+        dm_mount_cfg = get_path_display('disc_mount_cfg', 'disc_mount_path')
         dm_mount_cfg = get_path_display('disc_mount_cfg', 'disc_mount_path')
         self.table.setCellWidget(row_num, constants.EditorCols.DM_MOUNT_CFG.value, self._create_merged_path_widget(game.get('disc_mount_cfg_enabled', True), dm_mount_cfg, game.get('disc_mount_cfg_overwrite', True), row_num, constants.EditorCols.DM_MOUNT_CFG.value))
         
-        # Disc-Unmount Config
-        dm_unmount_cfg = get_path_display('disc_unmount_cfg', 'disc_unmount_path')
+        dm_unmount_cfg = get_path_display('disc_unmount_cfg', 'disc_mount_path')
         self.table.setCellWidget(row_num, constants.EditorCols.DM_UNMOUNT_CFG.value, self._create_merged_path_widget(game.get('disc_unmount_cfg_enabled', True), dm_unmount_cfg, game.get('disc_unmount_cfg_overwrite', True), row_num, constants.EditorCols.DM_UNMOUNT_CFG.value))
         
-        # Audio App
         audio_symbol, audio_run_wait = self._get_propagation_symbol_and_run_wait('audio_app_path')
         audio_path = f"{audio_symbol} {game.get('audio_app_path', '').lstrip('<> ')}"
         self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_APP_PATH.value, self._create_merged_path_widget(game.get('audio_app_enabled', True), audio_path, game.get('audio_app_overwrite', True), row_num, constants.EditorCols.AUDIO_APP_PATH.value))
@@ -2958,34 +2902,6 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
         reborder_cfg = get_path_display('reborder_config', 'audio_app_path')
         self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CONFIG.value, self._create_merged_path_widget(game.get('reborder_config_enabled', True), reborder_cfg, game.get('reborder_config_overwrite', True), row_num, constants.EditorCols.REBORDER_CONFIG.value))
         
-        # Cloud Sync columns
-        cloud_symbol, cloud_run_wait = self._get_propagation_symbol_and_run_wait('rclone_app')
-        cloud_path = f"{cloud_symbol} {game.get('cloud_app_path', '').lstrip('<> ')}"
-        self.table.setCellWidget(row_num, constants.EditorCols.CLOUD_APP_PATH.value, 
-            self._create_merged_path_widget(game.get('cloud_app_enabled', True), cloud_path, 
-            game.get('cloud_app_overwrite', True), row_num, constants.EditorCols.CLOUD_APP_PATH.value))
-        
-        self.table.setItem(row_num, constants.EditorCols.CLOUD_OPTIONS.value, 
-            QTableWidgetItem(game.get('cloud_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.CLOUD_ARGUMENTS.value, 
-            QTableWidgetItem(game.get('cloud_arguments', '')))
-        self.table.setCellWidget(row_num, constants.EditorCols.CLOUD_RUN_WAIT.value, 
-            self._create_checkbox_widget(game.get('cloud_run_wait', cloud_run_wait), row_num, constants.EditorCols.CLOUD_RUN_WAIT.value))
-        
-        # Local Backup columns
-        backup_symbol, backup_run_wait = self._get_propagation_symbol_and_run_wait('ludusavi_app')
-        backup_path = f"{backup_symbol} {game.get('backup_app_path', '').lstrip('<> ')}"
-        self.table.setCellWidget(row_num, constants.EditorCols.BACKUP_APP_PATH.value, 
-            self._create_merged_path_widget(game.get('backup_app_enabled', True), backup_path, 
-            game.get('backup_app_overwrite', True), row_num, constants.EditorCols.BACKUP_APP_PATH.value))
-        
-        self.table.setItem(row_num, constants.EditorCols.BACKUP_OPTIONS.value, 
-            QTableWidgetItem(game.get('backup_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.BACKUP_ARGUMENTS.value, 
-            QTableWidgetItem(game.get('backup_arguments', '')))
-        self.table.setCellWidget(row_num, constants.EditorCols.BACKUP_RUN_WAIT.value, 
-            self._create_checkbox_widget(game.get('backup_run_wait', backup_run_wait), row_num, constants.EditorCols.BACKUP_RUN_WAIT.value))
-
         # Apply styling
         self._apply_styling(row_num, game, duplicates)
 
@@ -3103,19 +3019,22 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
                 constants.EditorCols.POST3_PATH, constants.EditorCols.POST3_OPTIONS, 
                 constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT
             ]),
-            ('Cloud-Sync', 'cloud_app_path', [
-                constants.EditorCols.CLOUD_APP_PATH, constants.EditorCols.CLOUD_OPTIONS, 
-                constants.EditorCols.CLOUD_ARGUMENTS, constants.EditorCols.CLOUD_RUN_WAIT
-            ]),
             ('mount-disc', 'iso_path', [
                 constants.EditorCols.ISO_PATH, constants.EditorCols.DM_PATH, 
                 constants.EditorCols.DM_OPTIONS, constants.EditorCols.DM_ARGUMENTS, 
-                constants.EditorCols.DM_RUN_WAIT
+                constants.EditorCols.DM_RUN_WAIT,
+                constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG
             ]),
-            ('Unmount-disc', 'iso_path', [
-                constants.EditorCols.DU_PATH, constants.EditorCols.DU_OPTIONS, 
-                constants.EditorCols.DU_ARGUMENTS, constants.EditorCols.DU_RUN_WAIT
-            ])
+            ('RunAudio', 'audio_app_path', [
+                constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.AUDIO_APP_OPTIONS, 
+                constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT,
+                constants.EditorCols.RUN_AUDIO_CONFIG, constants.EditorCols.RETURN_AUDIO_CONFIG
+            ]),
+            ('Borderless', 'borderless_windowing_path', [
+                constants.EditorCols.BW_PATH, constants.EditorCols.BW_OPTIONS, 
+                constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT,
+                constants.EditorCols.UNBORDER_CONFIG, constants.EditorCols.REBORDER_CONFIG
+            ]),
         ]
         
         for seq_key, path_key, cols in element_styles:
@@ -3151,39 +3070,34 @@ elif col == constants.EditorCols.BW_RUN_WAIT.value:
         """Extract all game data from the table, sanitizing disabled paths."""
         # Deep copy to avoid modifying original_data
         import copy
-sanitized_data = copy.deepcopy(self.original_data)
-         
-         # Define path fields and their corresponding enabled flags
-         path_enabled_pairs = [
-             ('controller_mapper_path', 'controller_mapper_enabled'),
-             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-             ('multi_monitor_app_path', 'multi_monitor_app_enabled'),
-             ('just_after_launch_path', 'just_after_launch_enabled'),
-             ('just_before_exit_path', 'just_before_exit_enabled'),
-             ('pre1_path', 'pre_1_enabled'),
-             ('pre2_path', 'pre_2_enabled'),
-             ('pre3_path', 'pre_3_enabled'),
-             ('post1_path', 'post_1_enabled'),
-             ('post2_path', 'post_2_enabled'),
-             ('post3_path', 'post_3_enabled'),
-             ('player1_profile', 'player1_profile_enabled'),
-             ('player2_profile', 'player2_profile_enabled'),
-             ('mediacenter_profile', 'mediacenter_profile_enabled'),
-             ('mm_game_profile', 'mm_game_profile_enabled'),
-             ('mm_desktop_profile', 'mm_desktop_profile_enabled'),
-             ('launcher_executable', 'launcher_executable_enabled'),
-             ('disc_mount_path', 'disc_mount_enabled'),
-             ('disc_unmount_path', 'disc_unmount_enabled'),
-             ('audio_app_path', 'audio_app_enabled'),
-             ('run_audio_config', 'run_audio_config_enabled'),
-             ('return_audio_config', 'return_audio_config_enabled'),
-             ('unborder_config', 'unborder_config_enabled'),
-             ('reborder_config', 'reborder_config_enabled'),
-             ('cloud_app_path', 'cloud_app_enabled'),
-             ('backup_app_path', 'backup_app_enabled'),
-         ]
+        sanitized_data = copy.deepcopy(self.original_data)
         
-        # Sanitize each game's data
+        path_enabled_pairs = [
+            ('controller_mapper_path', 'controller_mapper_enabled'),
+            ('borderless_windowing_path', 'borderless_windowing_enabled'),
+            ('multi_monitor_app_path', 'multi_monitor_app_enabled'),
+            ('just_after_launch_path', 'just_after_launch_enabled'),
+            ('just_before_exit_path', 'just_before_exit_enabled'),
+            ('pre1_path', 'pre_1_enabled'),
+            ('pre2_path', 'pre_2_enabled'),
+            ('pre3_path', 'pre_3_enabled'),
+            ('post1_path', 'post_1_enabled'),
+            ('post2_path', 'post_2_enabled'),
+            ('post3_path', 'post_3_enabled'),
+            ('player1_profile', 'player1_profile_enabled'),
+            ('player2_profile', 'player2_profile_enabled'),
+            ('mediacenter_profile', 'mediacenter_profile_enabled'),
+            ('mm_game_profile', 'mm_game_profile_enabled'),
+            ('mm_desktop_profile', 'mm_desktop_profile_enabled'),
+            ('launcher_executable', 'launcher_executable_enabled'),
+            ('disc_mount_path', 'disc_mount_enabled'),
+            ('audio_app_path', 'audio_app_enabled'),
+            ('run_audio_config', 'run_audio_config_enabled'),
+            ('return_audio_config', 'return_audio_config_enabled'),
+            ('unborder_config', 'unborder_config_enabled'),
+            ('reborder_config', 'reborder_config_enabled'),
+        ]
+        
         for game in sanitized_data:
             for path_key, enabled_key in path_enabled_pairs:
                 # If the enabled flag is False, clear the path
@@ -3442,7 +3356,6 @@ sanitized_data = copy.deepcopy(self.original_data)
         game_data['hide_taskbar'] = config.getboolean('Options', 'HideTaskbar', fallback=False)
         game_data['options'] = config.get('Options', 'Borderless', fallback='0')
         game_data['kill_list_enabled'] = config.getboolean('Options', 'UseKillList', fallback=False)
-        game_data['terminate_borderless_on_exit'] = config.getboolean('Options', 'TerminateBorderlessOnExit', fallback=False)
         game_data['kill_list'] = config.get('Options', 'KillList', fallback='')
         
         # Helper for paths

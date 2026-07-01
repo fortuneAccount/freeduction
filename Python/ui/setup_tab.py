@@ -519,17 +519,15 @@ class SetupTab(QWidget):
             "disc_unmount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
         self.path_rows["disc_unmount_path"].enabled_cb.setToolTip("Overwrite Unmounting")
         self._add_path_row(disc_layout, "Disc-Unmount:", "disc_unmount_path", self.path_rows["disc_unmount_path"])
-        disc_layout.addRow(QLabel("<b>Disc Mount</b>"))
         self.path_rows["disc_mount_cfg"] = PathConfigRow(
             "disc_mount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["disc_mount_cfg"].enabled_cb.setToolTip("Enable Disc Mount Config File")
-        self._add_path_row(disc_layout, "Disc Mount:", "disc_mount_cfg",
+        self._add_path_row(disc_layout, "    Mount Config:", "disc_mount_cfg",
                            self.path_rows["disc_mount_cfg"])
-        disc_layout.addRow(QLabel("<b>Disc Unmount</b>"))
         self.path_rows["disc_unmount_cfg"] = PathConfigRow(
             "disc_unmount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["disc_unmount_cfg"].enabled_cb.setToolTip("Enable Disc Unmount Config File")
-        self._add_path_row(disc_layout, "Disc Unmount:", "disc_unmount_cfg",
+        self._add_path_row(disc_layout, "    Unmount Config:", "disc_unmount_cfg",
                            self.path_rows["disc_unmount_cfg"])
         disc_tab_layout.addWidget(disc_group)
         disc_tab_layout.addStretch()
@@ -654,17 +652,15 @@ class SetupTab(QWidget):
         self.path_rows["audio_tool_path"].enabled_cb.setToolTip("Enable Audio Tool")
         self._add_path_row(audio_layout, "Audio Tool:", "audio_tool_path",
                            self.path_rows["audio_tool_path"])
-        audio_layout.addRow(QLabel("<b>Game-Audio:</b>"))
         self.path_rows["audio_game_cfg"] = PathConfigRow(
             "audio_game_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["audio_game_cfg"].enabled_cb.setToolTip("Enable Game Audio Config")
-        self._add_path_row(audio_layout, "Game-Audio:", "audio_game_cfg",
+        self._add_path_row(audio_layout, "    Game-Audio:", "audio_game_cfg",
                            self.path_rows["audio_game_cfg"])
-        audio_layout.addRow(QLabel("<b>MediaCenter/OS-Audio:</b>"))
         self.path_rows["audio_mediacenter_cfg"] = PathConfigRow(
             "audio_mediacenter_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["audio_mediacenter_cfg"].enabled_cb.setToolTip("Enable MediaCenter Audio Config")
-        self._add_path_row(audio_layout, "MediaCenter/OS-Audio:", "audio_mediacenter_cfg",
+        self._add_path_row(audio_layout, "    MediaCenter/OS-Audio:", "audio_mediacenter_cfg",
                            self.path_rows["audio_mediacenter_cfg"])
         audio_tab_layout.addWidget(audio_group)
         audio_tab_layout.addStretch()
