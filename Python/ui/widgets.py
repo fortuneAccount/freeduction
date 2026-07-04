@@ -1,7 +1,7 @@
 from PyQt6.QtWidgets import (QListWidget, QAbstractItemView, QWidget, QHBoxLayout,
                              QCheckBox, QLineEdit, QPushButton, QRadioButton, QComboBox,
                              QButtonGroup, QFileDialog, QToolButton, QMenu, QSizePolicy)
-from PyQt6.QtCore import pyqtSignal
+from PyQt6.QtCore import pyqtSignal, Qt
 import os
 
 def _find_dir_case_insensitive(parent_dir, dir_name):
@@ -295,6 +295,11 @@ class PathConfigRow(QWidget):
     @property
     def path(self):
         if self.use_combobox:
+            current_idx = self.combo.currentIndex()
+            if current_idx >= 0:
+                data = self.combo.itemData(current_idx, Qt.ItemDataRole.UserRole)
+                if data:
+                    return data
             return self.combo.currentText()
         else:
             return self.line_edit.text()

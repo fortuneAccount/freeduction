@@ -7,7 +7,7 @@ import shutil
 import subprocess
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QGroupBox, QLabel, QFormLayout, QPushButton,
-    QComboBox, QHBoxLayout, QCheckBox, QTabWidget,
+    QComboBox, QHBoxLayout, QCheckBox, QTabWidget, QSizePolicy,
     QFileDialog, QApplication, QSpinBox, QMessageBox, QMenu, QInputDialog,
     QDialog, QDialogButtonBox, QLineEdit, QProgressDialog, QGridLayout, QDoubleSpinBox,
     QStyle, QFontComboBox
@@ -454,16 +454,20 @@ class SetupTab(QWidget):
         self.path_rows["multi_monitor_tool_path"] = PathConfigRow(
             "multi_monitor_tool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
         self.path_rows["multi_monitor_tool_path"].enabled_cb.setToolTip("Enable monitor configuration tool")
+        
+        native_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'bin', 'multimonitortool', 'multimonitortool.exe')
+        if os.path.exists(native_path) and self.path_rows["multi_monitor_tool_path"].combo.findText("NATIVE") == -1:
+            self.path_rows["multi_monitor_tool_path"].combo.addItem("NATIVE")
+            self.path_rows["multi_monitor_tool_path"].combo.setItemData(0, native_path, Qt.ItemDataRole.UserRole)
 
         self.wizard_btn = QPushButton("Open Monitor Wizard")
         self.wizard_btn.setToolTip("Open the monitor wizard to query supported resolutions, refresh rates, and bit depths")
         self.wizard_btn.clicked.connect(self._on_wizard_button_clicked)
+        self.wizard_btn.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         wizard_button_row = QWidget()
         wizard_button_layout = QHBoxLayout(wizard_button_row)
         wizard_button_layout.setContentsMargins(0, 0, 0, 0)
-        wizard_button_layout.addStretch()
         wizard_button_layout.addWidget(self.wizard_btn)
-        wizard_button_layout.addStretch()
         display_layout.addRow(wizard_button_row)
 
         display_note = QLabel(
@@ -472,7 +476,7 @@ class SetupTab(QWidget):
         display_note.setWordWrap(True)
         display_layout.addRow(display_note)
 
-        self._add_path_row(display_layout, "Monitor Config Tool (resolution / refresh / bit depth):", "multi_monitor_tool_path",
+        self._add_path_row(display_layout, "Monitor-Config App:", "multi_monitor_tool_path",
                            self.path_rows["multi_monitor_tool_path"])
         self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
         display_layout.addRow("    MM Gaming Config:", self.path_rows["multimonitor_gaming_path"])

@@ -44,9 +44,7 @@ magpie = https://github.com/Blinue/Magpie/releases/download/v0.12.1/Magpie-v0.12
 
 
 [DISPLAY]
-multimonitortool = https://www.nirsoft.net/utils/multimonitortool-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 multires = https://www.entechtaiwan.com/files/multires.exe<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
-changescreenresolution = https://www.tools.taubenkorb.at/change-screen-resolution/ChangeScreenResolution.exe|$EXTRACTLOC|$ITEMNAME.exe
 displaychanger = $EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|dc2.exe
 magpie = https://github.com/Blinue/Magpie/releases/download/v0.12.1/Magpie-v0.12.1-x64.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe
 clickmonitorddc = https://github.com/chrismah/ClickMonitorDDC7.2/raw/refs/heads/master/files/ClickMonitorDDC_7_2.zip<$EXHOST/$ITEMNAME/raw/refs/heads/main/$ITEMNAME.7z|$EXTRACTLOC|$ITEMNAME.exe

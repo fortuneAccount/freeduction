@@ -23,7 +23,7 @@
     "defaults": {
         "controller_mapper_path_enabled": true,
         "borderless_gaming_path_enabled": true,
-        "multi_monitor_tool_path_enabled": false,
+        "multi_monitor_tool_path_enabled": true,
         "just_after_launch_path_enabled": false,
         "just_before_exit_path_enabled": false,
         "pre1_path_enabled": false,
@@ -35,8 +35,8 @@
         "p1_profile_path_enabled": true,
         "p2_profile_path_enabled": true,
         "mediacenter_profile_path_enabled": true,
-        "multimonitor_gaming_path_enabled": false,
-        "multimonitor_media_path_enabled": false,
+        "multimonitor_gaming_path_enabled": true,
+        "multimonitor_media_path_enabled": true,
         "profiles_dir_enabled": true,
         "launchers_dir_enabled": true,
         "disc_mount_path_enabled": false,
@@ -170,7 +170,7 @@
         "Pre3",
         "Backup"
     ],
-    "launcher_executable": "",
+    "launcher_executable": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\bin\\Launcher.exe",
     "launcher_executable_arguments": "",
     "launcher_executable_options": "",
     "launchers_dir": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\Launchers",
@@ -185,18 +185,71 @@
     "ludusavi_path_options": "",
     "mediacenter_profile_mode": "CEN",
     "mediacenter_profile_path": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\MediaCenter.amgp",
-    "monitor_wizard_config_path": "",
-    "monitor_wizard_profiles": {},
-    "multi_monitor_tool_path": "",
+    "monitor_wizard_config_path": "C:/Users/jesse/Documents/gitHub/freeduction/G_MON.cfg",
+    "monitor_wizard_profiles": {
+        "Desktop / Exit State": {
+            "1": {
+                "name": "\\\\.\\DISPLAY1",
+                "enabled": true,
+                "resolution": "1920x1080",
+                "refresh": "60",
+                "bit_depth": "32bit",
+                "position_x": 0,
+                "position_y": 0,
+                "orientation": "0",
+                "primary": true,
+                "display_flags": "0"
+            },
+            "2": {
+                "name": "\\\\.\\DISPLAY2",
+                "enabled": true,
+                "resolution": "1920x1080",
+                "refresh": "60",
+                "bit_depth": "32bit",
+                "position_x": 1920,
+                "position_y": 0,
+                "orientation": "0",
+                "primary": false,
+                "display_flags": "0"
+            }
+        },
+        "Game / Running State": {
+            "1": {
+                "name": "\\\\.\\DISPLAY1",
+                "enabled": true,
+                "resolution": "1920x1080",
+                "refresh": "60",
+                "bit_depth": "32bit",
+                "position_x": 0,
+                "position_y": 0,
+                "orientation": "0",
+                "primary": true,
+                "display_flags": "0"
+            },
+            "2": {
+                "name": "\\\\.\\DISPLAY2",
+                "enabled": false,
+                "resolution": "0x0",
+                "refresh": "0",
+                "bit_depth": "0",
+                "position_x": 0,
+                "position_y": 0,
+                "orientation": "0",
+                "primary": false,
+                "display_flags": "0"
+            }
+        }
+    },
+    "multi_monitor_tool_path": "C:\\Users\\jesse\\Documents\\gitHub\\freeduction\\bin\\multimonitortool\\multimonitortool.exe",
     "multi_monitor_tool_path_arguments": "",
     "multi_monitor_tool_path_options": "",
     "multimonitor_gaming_mode": "CEN",
-    "multimonitor_gaming_path": "",
+    "multimonitor_gaming_path": "C:/Users/jesse/Documents/gitHub/freeduction/G_MON.cfg",
     "multimonitor_media_mode": "CEN",
-    "multimonitor_media_path": "",
+    "multimonitor_media_path": "C:/Users/jesse/Documents/gitHub/freeduction/DT_MC.cfg",
     "native_mount_path": "",
     "osf_exe_path": "",
-    "overwrite_artwork": false,
+    "overwrite_artwork": true,
     "overwrite_game_json": false,
     "overwrite_pcgw_metadata": false,
     "overwrite_states": {
@@ -257,7 +310,7 @@
     "reborder_config": "",
     "return_audio_config_path_arguments": "",
     "return_audio_config_path_options": "",
-    "run_as_admin": true,
+    "run_as_admin": false,
     "run_audio_config_path_arguments": "",
     "run_audio_config_path_options": "",
     "run_wait_states": {
@@ -281,17 +334,16 @@
     "savestate_auto_backup": false,
     "savestate_backup_path": "",
     "source_dirs": [
-        "C:\\Games",
-        "K:\\Games"
+        "C:\\Games"
     ],
     "steam_json_path": "",
     "steam_json_version": 2,
     "syncthing_auto_start": false,
     "syncthing_sync_folder": "",
     "terminate_borderless_on_exit": true,
-    "ui_font_family": "Century Gothic",
-    "ui_font_size": 10,
-    "ui_theme": "qdarktheme_light",
+    "ui_font_family": "Segoe UI",
+    "ui_font_size": 9,
+    "ui_theme": "default",
     "unborder_config": "",
     "use_kill_list": true,
     "wincdemu_exe_path": ""

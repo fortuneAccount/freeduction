@@ -6,6 +6,10 @@ arguments = --next --profile-controller 2 --profile
 options = 
 arguments = 
 
+[NATIVE]
+options = /loadconfig 
+arguments = 
+
 [borderlessgaming]
 options = 
 arguments = 
