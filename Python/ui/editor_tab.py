@@ -91,12 +91,12 @@ class RemoveProfilesDialog(QDialog):
         
         btn_layout = QHBoxLayout()
         sel_all = QPushButton("Select All")
-        sel_all.clicked.connect(lambda: [self.list_widget.item(i).setCheckState(Qt.CheckState.Checked) for i in range(self.list_widget.count())])
+        sel_all.clicked.connect(lambda: [item.setCheckState(Qt.CheckState.Checked) for i in range(self.list_widget.count()) if (item := self.list_widget.item(i))])
         sel_filtered = QPushButton("Select All Filtered")
         sel_filtered.setToolTip("Only visible items in the current list are affected.")
         sel_filtered.clicked.connect(self.select_all_filtered)
         sel_none = QPushButton("Select None")
-        sel_none.clicked.connect(lambda: [self.list_widget.item(i).setCheckState(Qt.CheckState.Unchecked) for i in range(self.list_widget.count())])
+        sel_none.clicked.connect(lambda: [item.setCheckState(Qt.CheckState.Unchecked) for i in range(self.list_widget.count()) if (item := self.list_widget.item(i))])
         btn_layout.addWidget(sel_all)
         btn_layout.addWidget(sel_filtered)
         btn_layout.addWidget(sel_none)
@@ -114,7 +114,7 @@ class RemoveProfilesDialog(QDialog):
         layout.addWidget(self.buttons)
 
     def get_selected_folders(self):
-        return [self.list_widget.item(i).text() for i in range(self.list_widget.count()) if self.list_widget.item(i).checkState() == Qt.CheckState.Checked]
+        return [item.text() for i in range(self.list_widget.count()) if (item := self.list_widget.item(i)) and item.checkState() == Qt.CheckState.Checked]
     
     def get_delete_physical_state(self):
         return self.delete_physical_checkbox.isChecked()
@@ -122,8 +122,7 @@ class RemoveProfilesDialog(QDialog):
     def refresh_list(self):
         checked_names = set()
         for i in range(self.list_widget.count()):
-            it = self.list_widget.item(i)
-            if it.checkState() == Qt.CheckState.Checked:
+            if (it := self.list_widget.item(i)) and it.checkState() == Qt.CheckState.Checked:
                 checked_names.add(it.text())
 
         search_text = self.search_edit.text().lower()
@@ -432,8 +431,8 @@ class EditorTab(QWidget):
             elif text in ("opts", "args", "wait"):
                 item.setFont(italic_font)
 
-        header = self.table.horizontalHeader()
-        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        header = self.table.horizontalHeader()  # type: ignore[assignment]
+        header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # type: ignore[union-attr]
 
         # Shorten width for Enabled (En) and Run/Wait (Rw) columns to save space
         try:
@@ -447,7 +446,7 @@ class EditorTab(QWidget):
 
             for col in rw_columns:
                 # Automatically resize Wait columns to fit content
-                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)
+                header.setSectionResizeMode(col, QHeaderView.ResizeMode.ResizeToContents)  # type: ignore[union-attr]
             
             self.table.setColumnWidth(constants.EditorCols.RUN_AS_ADMIN.value, 60)
 
@@ -462,10 +461,10 @@ class EditorTab(QWidget):
                     self.table.setColumnWidth(col, 40)
         except Exception:
             pass
-        header.setFirstSectionMovable(False)
-        header.setStretchLastSection(False)
-        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        header.customContextMenuRequested.connect(self.on_header_context_menu)
+        header.setFirstSectionMovable(False)  # type: ignore[union-attr]
+        header.setStretchLastSection(False)  # type: ignore[union-attr]
+        header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)  # type: ignore[union-attr]
+        header.customContextMenuRequested.connect(self.on_header_context_menu)  # type: ignore[union-attr]
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
@@ -506,10 +505,10 @@ class EditorTab(QWidget):
         self.profiles_flyout_btn = QPushButton("Profiles... ▼")
         self.profiles_flyout_menu = QMenu(self)
         
-        self.import_profiles_action = self.profiles_flyout_menu.addAction("Import")
+        self.import_profiles_action = self.profiles_flyout_menu.addAction("Import")  # type: ignore[assignment]
         self.import_profiles_action.triggered.connect(self.import_profiles)
         
-        self.cleanup_profiles_action = self.profiles_flyout_menu.addAction("Cleanup")
+        self.cleanup_profiles_action = self.profiles_flyout_menu.addAction("Cleanup")  # type: ignore[assignment]
         self.cleanup_profiles_action.triggered.connect(self.remove_items_matching_profiles)
         self.profiles_flyout_btn.setMenu(self.profiles_flyout_menu)
         buttons_layout.addWidget(self.profiles_flyout_btn)
@@ -535,7 +534,7 @@ class EditorTab(QWidget):
         self.table.cellClicked.connect(self.on_cell_clicked)
         self.table.itemChanged.connect(self.on_item_changed)
 
-    def showEvent(self, event):
+    def showEvent(self, event):  # type: ignore[override]
         super().showEvent(event)
         if self.is_dirty:
             self.refresh_view()
@@ -636,18 +635,26 @@ class EditorTab(QWidget):
                 for g in self.original_data
                 if g.get('name_override', '').strip()
             )
-            def sort_key(item):
+        if key == '_dup_name_override':
+            import collections as _c
+            _name_counts = _c.Counter(
+                g.get('name_override', '').strip().lower()
+                for g in self.original_data
+                if g.get('name_override', '').strip()
+            )
+        else:
+            _name_counts = None
+
+        def sort_key(item):
+            if key == '_dup_name_override' and _name_counts:
                 no = item.get('name_override', '').strip().lower()
-                count = name_counts.get(no, 0)
-                # Sort duplicates first (count > 1), then alphabetically within each bucket
+                count = _name_counts.get(no, 0)
                 return (0 if count > 1 else 1, no)
-        elif key == '_parent_folder':
-            def sort_key(item):
+            elif key == '_parent_folder':
                 directory = item.get('directory', '')
                 parent = os.path.basename(os.path.normpath(directory)).lower() if directory else ''
                 return parent
-        else:
-            def sort_key(item):
+            else:
                 val = item.get(key)
                 if val is None:
                     return ""
@@ -1047,7 +1054,7 @@ class EditorTab(QWidget):
 
     def on_header_context_menu(self, position):
         """Handle context menu for column headers."""
-        index = self.table.horizontalHeader().logicalIndexAt(position)
+        index = self.table.horizontalHeader().logicalIndexAt(position)  # type: ignore[union-attr]
         if index < 0:
             return
 
@@ -1055,7 +1062,7 @@ class EditorTab(QWidget):
         select_col_action = menu.addAction("Select Column")
         resize_col_action = menu.addAction("Resize to Contents")
         
-        action = menu.exec(self.table.horizontalHeader().mapToGlobal(position))
+        action = menu.exec(self.table.horizontalHeader().mapToGlobal(position))  # type: ignore[union-attr]
         
         if action == select_col_action:
             self.table.selectColumn(index)
@@ -1163,7 +1170,7 @@ class EditorTab(QWidget):
             search_iso_action.triggered.connect(lambda: self.search_disc_images_selected(row))
 
         # Append to Kill List Action (for selection)
-        selected_rows = self.table.selectionModel().selectedRows()
+        selected_rows = self.table.selectionModel().selectedRows()  # type: ignore[union-attr]
         if len(selected_rows) > 0:
              append_kill_action = menu.addAction(f"Append to Kill List ({len(selected_rows)} items)")
              append_kill_action.triggered.connect(self.open_append_kill_list_dialog)
@@ -1320,7 +1327,7 @@ class EditorTab(QWidget):
                 path = ""
                 
                 # Get path from widget or item
-                widget = self.table.cellWidget(row, col)
+                widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
                 if widget:
                     le = widget.findChild(QLineEdit)
                     if le: path = le.text()
@@ -1752,7 +1759,7 @@ class EditorTab(QWidget):
         """Open file dialog for a specific cell."""
         # Get current path to set initial directory
         current_path = ""
-        widget = self.table.cellWidget(row, col)
+        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
             le = widget.findChild(QLineEdit)
             if le:
@@ -2261,7 +2268,7 @@ class EditorTab(QWidget):
             item = self.table.item(row, col)
             game['steam_id'] = item.text() if item else ""
         elif col == constants.EditorCols.NAME_OVERRIDE.value:
-            widget = self.table.cellWidget(row, col)
+            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
             if isinstance(widget, QComboBox):
                 game['name_override'] = widget.currentText()
             else:
@@ -2281,9 +2288,9 @@ class EditorTab(QWidget):
             game['controller_mapper_path'] = path
             game['controller_mapper_overwrite'] = ov
         elif col == constants.EditorCols.CM_OPTIONS.value:
-            game['controller_mapper_options'] = self.table.item(row, col).text()
+            game['controller_mapper_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.CM_ARGUMENTS.value:
-            game['controller_mapper_arguments'] = self.table.item(row, col).text()
+            game['controller_mapper_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.CM_RUN_WAIT.value:
             game['controller_mapper_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.BW_PATH.value:
@@ -2292,9 +2299,9 @@ class EditorTab(QWidget):
             game['borderless_windowing_path'] = path
             game['borderless_windowing_overwrite'] = ov
         elif col == constants.EditorCols.BW_OPTIONS.value:
-            game['borderless_windowing_options'] = self.table.item(row, col).text()
+            game['borderless_windowing_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.BW_ARGUMENTS.value:
-            game['borderless_windowing_arguments'] = self.table.item(row, col).text()
+            game['borderless_windowing_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.BW_RUN_WAIT.value:
             game['borderless_windowing_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.MM_PATH.value:
@@ -2303,9 +2310,9 @@ class EditorTab(QWidget):
             game['multi_monitor_app_path'] = path
             game['multi_monitor_app_overwrite'] = ov
         elif col == constants.EditorCols.MM_OPTIONS.value:
-            game['multi_monitor_app_options'] = self.table.item(row, col).text()
+            game['multi_monitor_app_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.MM_ARGUMENTS.value:
-            game['multi_monitor_app_arguments'] = self.table.item(row, col).text()
+            game['multi_monitor_app_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.MM_RUN_WAIT.value:
             game['multi_monitor_app_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.HIDE_TASKBAR.value:
@@ -2341,9 +2348,9 @@ class EditorTab(QWidget):
             game['just_after_launch_path'] = path
             game['just_after_launch_overwrite'] = ov
         elif col == constants.EditorCols.JA_OPTIONS.value:
-            game['just_after_launch_options'] = self.table.item(row, col).text()
+            game['just_after_launch_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.JA_ARGUMENTS.value:
-            game['just_after_launch_arguments'] = self.table.item(row, col).text()
+            game['just_after_launch_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.JA_RUN_WAIT.value:
             game['just_after_launch_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.JB_PATH.value:
@@ -2352,9 +2359,9 @@ class EditorTab(QWidget):
             game['just_before_exit_path'] = path
             game['just_before_exit_overwrite'] = ov
         elif col == constants.EditorCols.JB_OPTIONS.value:
-            game['just_before_exit_options'] = self.table.item(row, col).text()
+            game['just_before_exit_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.JB_ARGUMENTS.value:
-            game['just_before_exit_arguments'] = self.table.item(row, col).text()
+            game['just_before_exit_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.JB_RUN_WAIT.value:
             game['just_before_exit_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.PRE1_PATH.value:
@@ -2363,9 +2370,9 @@ class EditorTab(QWidget):
             game['pre1_path'] = path
             game['pre_1_overwrite'] = ov
         elif col == constants.EditorCols.PRE1_OPTIONS.value:
-            game['pre1_options'] = self.table.item(row, col).text()
+            game['pre1_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE1_ARGUMENTS.value:
-            game['pre1_arguments'] = self.table.item(row, col).text()
+            game['pre1_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE1_RUN_WAIT.value:
             game['pre_1_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.POST1_PATH.value:
@@ -2374,9 +2381,9 @@ class EditorTab(QWidget):
             game['post1_path'] = path
             game['post_1_overwrite'] = ov
         elif col == constants.EditorCols.POST1_OPTIONS.value:
-            game['post1_options'] = self.table.item(row, col).text()
+            game['post1_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST1_ARGUMENTS.value:
-            game['post1_arguments'] = self.table.item(row, col).text()
+            game['post1_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST1_RUN_WAIT.value:
             game['post_1_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.PRE2_PATH.value:
@@ -2385,9 +2392,9 @@ class EditorTab(QWidget):
             game['pre2_path'] = path
             game['pre_2_overwrite'] = ov
         elif col == constants.EditorCols.PRE2_OPTIONS.value:
-            game['pre2_options'] = self.table.item(row, col).text()
+            game['pre2_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE2_ARGUMENTS.value:
-            game['pre2_arguments'] = self.table.item(row, col).text()
+            game['pre2_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE2_RUN_WAIT.value:
             game['pre_2_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.POST2_PATH.value:
@@ -2396,9 +2403,9 @@ class EditorTab(QWidget):
             game['post2_path'] = path
             game['post_2_overwrite'] = ov
         elif col == constants.EditorCols.POST2_OPTIONS.value:
-            game['post2_options'] = self.table.item(row, col).text()
+            game['post2_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST2_ARGUMENTS.value:
-            game['post2_arguments'] = self.table.item(row, col).text()
+            game['post2_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST2_RUN_WAIT.value:
             game['post_2_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.PRE3_PATH.value:
@@ -2407,9 +2414,9 @@ class EditorTab(QWidget):
             game['pre3_path'] = path
             game['pre_3_overwrite'] = ov
         elif col == constants.EditorCols.PRE3_OPTIONS.value:
-            game['pre3_options'] = self.table.item(row, col).text()
+            game['pre3_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE3_ARGUMENTS.value:
-            game['pre3_arguments'] = self.table.item(row, col).text()
+            game['pre3_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PRE3_RUN_WAIT.value:
             game['pre_3_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.POST3_PATH.value:
@@ -2418,9 +2425,9 @@ class EditorTab(QWidget):
             game['post3_path'] = path
             game['post_3_overwrite'] = ov
         elif col == constants.EditorCols.POST3_OPTIONS.value:
-            game['post3_options'] = self.table.item(row, col).text()
+            game['post3_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST3_ARGUMENTS.value:
-            game['post3_arguments'] = self.table.item(row, col).text()
+            game['post3_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.POST3_RUN_WAIT.value:
             game['post_3_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.KILL_LIST.value:
@@ -2434,11 +2441,11 @@ class EditorTab(QWidget):
             game['launcher_executable'] = path
             game['launcher_executable_overwrite'] = ov
         elif col == constants.EditorCols.LAUNCHER_EXE_OPTIONS.value:
-            game['launcher_executable_options'] = self.table.item(row, col).text()
+            game['launcher_executable_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.LAUNCHER_EXE_ARGUMENTS.value:
-            game['launcher_executable_arguments'] = self.table.item(row, col).text()
+            game['launcher_executable_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.ISO_PATH.value:
-            widget = self.table.cellWidget(row, col)
+            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
             if widget:
                 combo = widget.findChild(QComboBox)
                 if combo:
@@ -2480,54 +2487,54 @@ class EditorTab(QWidget):
             game['unborder_config'] = path
             game['unborder_config_overwrite'] = ov
         elif col == constants.EditorCols.UNBORDER_CONFIG_OPTIONS.value:
-            game['unborder_config_options'] = self.table.item(row, col).text()
+            game['unborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS.value:
-            game['unborder_config_arguments'] = self.table.item(row, col).text()
+            game['unborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.REBORDER_CONFIG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['reborder_config_enabled'] = en
             game['reborder_config'] = path
             game['reborder_config_overwrite'] = ov
         elif col == constants.EditorCols.REBORDER_CONFIG_OPTIONS.value:
-            game['reborder_config_options'] = self.table.item(row, col).text()
+            game['reborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.REBORDER_CONFIG_ARGUMENTS.value:
-            game['reborder_config_arguments'] = self.table.item(row, col).text()
+            game['reborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_GAME_CONFIG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['audio_game_cfg_enabled'] = en
             game['audio_game_cfg'] = path
             game['audio_game_cfg_overwrite'] = ov
         elif col == constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value:
-            game['audio_game_cfg_options'] = self.table.item(row, col).text()
+            game['audio_game_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value:
-            game['audio_game_cfg_arguments'] = self.table.item(row, col).text()
+            game['audio_game_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['audio_mediacenter_cfg_enabled'] = en
             game['audio_mediacenter_cfg'] = path
             game['audio_mediacenter_cfg_overwrite'] = ov
         elif col == constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value:
-            game['audio_mediacenter_cfg_options'] = self.table.item(row, col).text()
+            game['audio_mediacenter_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value:
-            game['audio_mediacenter_cfg_arguments'] = self.table.item(row, col).text()
+            game['audio_mediacenter_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.DM_MOUNT_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['disc_mount_cfg_enabled'] = en
             game['disc_mount_cfg'] = path
             game['disc_mount_cfg_overwrite'] = ov
         elif col == constants.EditorCols.DM_MOUNT_CFG_OPTIONS.value:
-            game['disc_mount_cfg_options'] = self.table.item(row, col).text()
+            game['disc_mount_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS.value:
-            game['disc_mount_cfg_arguments'] = self.table.item(row, col).text()
+            game['disc_mount_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.DM_UNMOUNT_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['disc_unmount_cfg_enabled'] = en
             game['disc_unmount_cfg'] = path
             game['disc_unmount_cfg_overwrite'] = ov
         elif col == constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS.value:
-            game['disc_unmount_cfg_options'] = self.table.item(row, col).text()
+            game['disc_unmount_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS.value:
-            game['disc_unmount_cfg_arguments'] = self.table.item(row, col).text()
+            game['disc_unmount_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
 
     def swap_lc_cen_selected(self):
         """Swap between LC (>) and CEN (<) for selected path cells."""
@@ -2641,7 +2648,7 @@ class EditorTab(QWidget):
         """Update a widget's visual state without triggering data sync."""
         self.table.blockSignals(True)
         if col == constants.EditorCols.INCLUDE.value:
-            widget = self.table.cellWidget(row, col)
+            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
             if widget:
                 cb = widget.findChild(QCheckBox)
                 if cb: cb.setChecked(value)
@@ -2649,7 +2656,7 @@ class EditorTab(QWidget):
 
     def _get_checkbox_value(self, row: int, col: int) -> bool:
         """Get checkbox value from a cell widget."""
-        widget = self.table.cellWidget(row, col)
+        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
             checkbox = widget.findChild(QCheckBox)
             if checkbox:
@@ -2658,7 +2665,7 @@ class EditorTab(QWidget):
 
     def _get_merged_path_data(self, row: int, col: int):
         """Extract enabled, path, and overwrite from a merged widget."""
-        widget = self.table.cellWidget(row, col)
+        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
             cbs = widget.findChildren(QCheckBox)
             enabled = cbs[0].isChecked() if len(cbs) > 0 else False
@@ -2674,7 +2681,7 @@ class EditorTab(QWidget):
         return False, "", False
 
     def _swap_lc_cen_cell(self, row, col):
-        widget = self.table.cellWidget(row, col)
+        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
             le = widget.findChild(QLineEdit)
             if le:
@@ -3339,7 +3346,7 @@ class EditorTab(QWidget):
         self.main_window._on_editor_table_edited(None)
 
     def _get_cell_state(self, row, col):
-        widget = self.table.cellWidget(row, col)
+        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
             cbs = widget.findChildren(QCheckBox)
             if len(cbs) >= 2: # Merged
@@ -3365,7 +3372,7 @@ class EditorTab(QWidget):
         if not state: return
         
         if state['type'] == 'merged':
-            widget = self.table.cellWidget(row, col)
+            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
             if widget:
                 cbs = widget.findChildren(QCheckBox)
                 if len(cbs) >= 2:
@@ -3375,7 +3382,7 @@ class EditorTab(QWidget):
                     if le: le.setText(state['path'])
         
         elif state['type'] == 'checkbox':
-            widget = self.table.cellWidget(row, col)
+            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
             if widget:
                 cbs = widget.findChildren(QCheckBox)
                 if cbs:

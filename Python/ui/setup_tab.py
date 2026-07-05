@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QComboBox, QHBoxLayout, QCheckBox, QTabWidget, QSizePolicy,
     QFileDialog, QApplication, QSpinBox, QMessageBox, QMenu, QInputDialog,
     QDialog, QDialogButtonBox, QLineEdit, QProgressDialog, QGridLayout, QDoubleSpinBox,
-    QStyle, QFontComboBox, QStackedWidget, QScrollArea, QFrame
+    QStyle, QFontComboBox, QStackedWidget, QScrollArea, QFrame  
 )
 import re
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
@@ -2464,4 +2464,4 @@ exit 1
         """Open the Plugin Manager dialog"""
         from Python.ui.plugin_manager_dialog import PluginManagerDialog
         dialog = PluginManagerDialog(self)
-        dialog.exec()
+        dialog.exec
