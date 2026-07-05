@@ -17,11 +17,14 @@ PATH_KEYS = [
     "profiles_dir", "launchers_dir", "launcher_executable",
     "controller_mapper_path", "borderless_gaming_path", "multi_monitor_tool_path",
     "just_after_launch_path", "just_before_exit_path",
-    "disc_mount_path",
+    "disc_mount_path", "disc_mount_cfg", "disc_unmount_cfg",
     "p1_profile_path", "p2_profile_path", "mediacenter_profile_path",
     "multimonitor_gaming_path", "multimonitor_media_path",
     "pre1_path", "post1_path", "pre2_path", "post2_path", "pre3_path", 
-    "post3_path"
+    "post3_path",
+    "cloud_sync_path", "local_backup_path", "audio_tool_path",
+    "audio_game_cfg", "audio_mediacenter_cfg",
+    "unborder_config", "reborder_config"
 ]
 
 PATH_LABELS = {
@@ -34,6 +37,8 @@ PATH_LABELS = {
     "just_after_launch_path": "Overwrite Just After Launch",
     "just_before_exit_path": "Overwrite Just Before Exit",
     "disc_mount_path": "Overwrite Disc-Mount",
+    "disc_mount_cfg": "Overwrite Disc-Mount Config",
+    "disc_unmount_cfg": "Overwrite Disc-Unmount Config",
     "p1_profile_path": "Overwrite Player 1 Profile",
     "p2_profile_path": "Overwrite Player 2 Profile",
     "mediacenter_profile_path": "Overwrite Media Center Profile",
@@ -44,7 +49,14 @@ PATH_LABELS = {
     "pre2_path": "Overwrite Pre-Launch App 2",
     "post2_path": "Overwrite Post-Launch App 2",
     "pre3_path": "Overwrite Pre-Launch App 3",
-    "post3_path": "Overwrite Post-Launch App 3"
+    "post3_path": "Overwrite Post-Launch App 3",
+    "cloud_sync_path": "Overwrite Cloud-Sync App",
+    "local_backup_path": "Overwrite Local-Backup App",
+    "audio_tool_path": "Overwrite Audio Tool",
+    "audio_game_cfg": "Overwrite Audio Game Config",
+    "audio_mediacenter_cfg": "Overwrite Audio MediaCenter Config",
+    "unborder_config": "Overwrite Unborder Config",
+    "reborder_config": "Overwrite Reborder Config"
 }
 
 class LogViewerDialog(QDialog):
@@ -533,7 +545,6 @@ class DeploymentTab(QWidget):
         """Updates the AppConfig model with values from the UI widgets."""
         config.enable_name_matching = self.name_check_checkbox.isChecked()
         config.auto_flag_existing = self.auto_flag_checkbox.isChecked()
-        config.steam_json_version = 2
 
         config.download_game_json = self.download_game_json_checkbox.isChecked()
         config.overwrite_game_json = self.overwrite_game_json_checkbox.isChecked()

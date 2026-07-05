@@ -231,13 +231,19 @@ def _process_executable(
             'disc_mount_run_wait': config.run_wait_states.get('disc_mount_path_run_wait', False),
 
             'disc_mount_cfg': getattr(config, 'disc_mount_cfg', ''), 'disc_mount_cfg_enabled': config.defaults.get('disc_mount_cfg_enabled', True), 'disc_mount_cfg_overwrite': config.overwrite_states.get('disc_mount_cfg', True),
+            'disc_mount_cfg_options': getattr(config, 'disc_mount_cfg_options', ''), 'disc_mount_cfg_arguments': getattr(config, 'disc_mount_cfg_arguments', ''),
             'disc_unmount_cfg': getattr(config, 'disc_unmount_cfg', ''), 'disc_unmount_cfg_enabled': config.defaults.get('disc_unmount_cfg_enabled', True), 'disc_unmount_cfg_overwrite': config.overwrite_states.get('disc_unmount_cfg', True),
+            'disc_unmount_cfg_options': getattr(config, 'disc_unmount_cfg_options', ''), 'disc_unmount_cfg_arguments': getattr(config, 'disc_unmount_cfg_arguments', ''),
             'audio_app_path': getattr(config, 'audio_tool_path', ''), 'audio_app_enabled': config.defaults.get('audio_tool_path_enabled', True), 'audio_app_overwrite': config.overwrite_states.get('audio_tool_path', True),
             'audio_app_options': getattr(config, 'audio_app_options', ''), 'audio_app_arguments': getattr(config, 'audio_app_arguments', ''), 'audio_app_run_wait': getattr(config, 'audio_app_run_wait', False),
-            'run_audio_config': getattr(config, 'run_audio_config', ''), 'run_audio_config_enabled': config.defaults.get('run_audio_config_enabled', True), 'run_audio_config_overwrite': config.overwrite_states.get('run_audio_config', True),
-            'return_audio_config': getattr(config, 'return_audio_config', ''), 'return_audio_config_enabled': config.defaults.get('return_audio_config_enabled', True), 'return_audio_config_overwrite': config.overwrite_states.get('return_audio_config', True),
+            'audio_game_cfg': getattr(config, 'audio_game_cfg', ''), 'audio_game_cfg_enabled': config.defaults.get('audio_game_cfg_enabled', True), 'audio_game_cfg_overwrite': config.overwrite_states.get('audio_game_cfg', True),
+            'audio_game_cfg_options': getattr(config, 'audio_game_cfg_options', ''), 'audio_game_cfg_arguments': getattr(config, 'audio_game_cfg_arguments', ''),
+            'audio_mediacenter_cfg': getattr(config, 'audio_mediacenter_cfg', ''), 'audio_mediacenter_cfg_enabled': config.defaults.get('audio_mediacenter_cfg_enabled', True), 'audio_mediacenter_cfg_overwrite': config.overwrite_states.get('audio_mediacenter_cfg', True),
+            'audio_mediacenter_cfg_options': getattr(config, 'audio_mediacenter_cfg_options', ''), 'audio_mediacenter_cfg_arguments': getattr(config, 'audio_mediacenter_cfg_arguments', ''),
             'unborder_config': getattr(config, 'unborder_config', ''), 'unborder_config_enabled': config.defaults.get('unborder_config_enabled', True), 'unborder_config_overwrite': config.overwrite_states.get('unborder_config', True),
+            'unborder_config_options': getattr(config, 'unborder_config_options', ''), 'unborder_config_arguments': getattr(config, 'unborder_config_arguments', ''),
             'reborder_config': getattr(config, 'reborder_config', ''), 'reborder_config_enabled': config.defaults.get('reborder_config_enabled', True), 'reborder_config_overwrite': config.overwrite_states.get('reborder_config', True),
+            'reborder_config_options': getattr(config, 'reborder_config_options', ''), 'reborder_config_arguments': getattr(config, 'reborder_config_arguments', ''),
         }
         return game_data
     except PermissionError:

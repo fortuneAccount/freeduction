@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (
     QComboBox, QHBoxLayout, QCheckBox, QTabWidget, QSizePolicy,
     QFileDialog, QApplication, QSpinBox, QMessageBox, QMenu, QInputDialog,
     QDialog, QDialogButtonBox, QLineEdit, QProgressDialog, QGridLayout, QDoubleSpinBox,
-    QStyle, QFontComboBox
+    QStyle, QFontComboBox, QStackedWidget, QScrollArea, QFrame
 )
 import re
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
@@ -193,7 +193,7 @@ class SetupTab(QWidget):
     
     PATH_ATTRIBUTES = [
         "profiles_dir", "launchers_dir", "launcher_executable", "controller_mapper_path",
-        "borderless_gaming_path", "multi_monitor_tool_path", "disc_mount_path", "disc_unmount_path", "p1_profile_path",
+        "borderless_gaming_path", "multi_monitor_tool_path", "disc_mount_path", "p1_profile_path",
         "p2_profile_path", "mediacenter_profile_path", "multimonitor_gaming_path",
         "multimonitor_media_path", "pre1_path", "pre2_path", "pre3_path",
         "just_after_launch_path", "just_before_exit_path",
@@ -437,11 +437,11 @@ class SetupTab(QWidget):
         self._add_path_row(mapper_layout, "Controller Mapper:", "controller_mapper_path",
                            self.path_rows["controller_mapper_path"])
         self.path_rows["p1_profile_path"] = PathConfigRow("p1_profile_path", add_enabled=True)
-        mapper_layout.addRow("    Player 1 Profile:", self.path_rows["p1_profile_path"])
+        self._add_path_row(mapper_layout, "    Player 1 Profile:", "p1_profile_path", self.path_rows["p1_profile_path"])
         self.path_rows["p2_profile_path"] = PathConfigRow("p2_profile_path", add_enabled=True)
-        mapper_layout.addRow("    Player 2 Profile:", self.path_rows["p2_profile_path"])
+        self._add_path_row(mapper_layout, "    Player 2 Profile:", "p2_profile_path", self.path_rows["p2_profile_path"])
         self.path_rows["mediacenter_profile_path"] = PathConfigRow("mediacenter_profile_path", add_enabled=True)
-        mapper_layout.addRow("    Media Center Profile:", self.path_rows["mediacenter_profile_path"])
+        self._add_path_row(mapper_layout, "    Media Center Profile:", "mediacenter_profile_path", self.path_rows["mediacenter_profile_path"])
         mapping_tab_layout.addWidget(mapper_group)
         mapping_tab_layout.addStretch()
         paths_tabs.addTab(mapping_tab, "MAPPING")
@@ -479,9 +479,9 @@ class SetupTab(QWidget):
         self._add_path_row(display_layout, "Monitor-Config App:", "multi_monitor_tool_path",
                            self.path_rows["multi_monitor_tool_path"])
         self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
-        display_layout.addRow("    MM Gaming Config:", self.path_rows["multimonitor_gaming_path"])
+        self._add_path_row(display_layout, "    MM Gaming Config:", "multimonitor_gaming_path", self.path_rows["multimonitor_gaming_path"])
         self.path_rows["multimonitor_media_path"] = PathConfigRow("multimonitor_media_path", add_enabled=True)
-        display_layout.addRow("    MM Desktop Config:", self.path_rows["multimonitor_media_path"])
+        self._add_path_row(display_layout, "    MM Desktop Config:", "multimonitor_media_path", self.path_rows["multimonitor_media_path"])
         display_tab_layout.addWidget(display_group)
         display_tab_layout.addStretch()
         paths_tabs.addTab(display_tab, "DISPLAY")
@@ -519,10 +519,6 @@ class SetupTab(QWidget):
             "disc_mount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
         self.path_rows["disc_mount_path"].enabled_cb.setToolTip("Overwrite Mounting")
         self._add_path_row(disc_layout, "Disc-Mount:", "disc_mount_path", self.path_rows["disc_mount_path"])
-        self.path_rows["disc_unmount_path"] = PathConfigRow(
-            "disc_unmount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
-        self.path_rows["disc_unmount_path"].enabled_cb.setToolTip("Overwrite Unmounting")
-        self._add_path_row(disc_layout, "Disc-Unmount:", "disc_unmount_path", self.path_rows["disc_unmount_path"])
         self.path_rows["disc_mount_cfg"] = PathConfigRow(
             "disc_mount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["disc_mount_cfg"].enabled_cb.setToolTip("Enable Disc Mount Config File")
@@ -551,27 +547,46 @@ class SetupTab(QWidget):
         self.path_rows["local_backup_path"].enabled_cb.setToolTip("Enable Local Backup")
         self._add_path_row(local_backup_form, "Local Backup:", "local_backup_path",
                            self.path_rows["local_backup_path"])
-        # Save State sub-section
-        local_backup_form.addRow(QLabel("<b>Save State:</b>"))
+
+        # Tool-specific settings via QStackedWidget
+        self.local_backup_tool_combo = QComboBox()
+        self.local_backup_tool_combo.addItems(["Save State", "Game Save Manager", "Game Backup Monitor"])
+        self.local_backup_tool_combo.currentIndexChanged.connect(self._on_local_backup_tool_changed)
+
+        self.local_backup_stack = QStackedWidget()
+
+        # Page 0: Save State
+        savestate_page = QWidget()
+        savestate_layout = QFormLayout(savestate_page)
         self.savestate_backup_path_row = PathConfigRow("savestate_backup_path", is_directory=True, add_enabled=False)
-        local_backup_form.addRow("Backup Directory:", self.savestate_backup_path_row)
+        savestate_layout.addRow("Backup Directory:", self.savestate_backup_path_row)
         self.savestate_auto_backup_cb = QCheckBox("Auto Backup")
         self.savestate_auto_backup_cb.setChecked(True)
-        local_backup_form.addRow("", self.savestate_auto_backup_cb)
-        # Game Save Manager sub-section
-        local_backup_form.addRow(QLabel("<b>Game Save Manager:</b>"))
+        savestate_layout.addRow("", self.savestate_auto_backup_cb)
+        self.local_backup_stack.addWidget(savestate_page)
+
+        # Page 1: Game Save Manager
+        gsm_page = QWidget()
+        gsm_layout = QFormLayout(gsm_page)
         self.gsm_backup_path_row = PathConfigRow("gsm_backup_path", is_directory=True, add_enabled=False)
-        local_backup_form.addRow("Backup Directory:", self.gsm_backup_path_row)
+        gsm_layout.addRow("Backup Directory:", self.gsm_backup_path_row)
         self.gsm_backup_on_exit_cb = QCheckBox("Backup on Exit")
         self.gsm_backup_on_exit_cb.setChecked(True)
-        local_backup_form.addRow("", self.gsm_backup_on_exit_cb)
-        # Game Backup Monitor sub-section
-        local_backup_form.addRow(QLabel("<b>Game Backup Monitor:</b>"))
+        gsm_layout.addRow("", self.gsm_backup_on_exit_cb)
+        self.local_backup_stack.addWidget(gsm_page)
+
+        # Page 2: Game Backup Monitor
+        gbm_page = QWidget()
+        gbm_layout = QFormLayout(gbm_page)
         self.gbm_backup_path_row = PathConfigRow("gbm_backup_path", is_directory=True, add_enabled=False)
-        local_backup_form.addRow("Backup Directory:", self.gbm_backup_path_row)
+        gbm_layout.addRow("Backup Directory:", self.gbm_backup_path_row)
         self.gbm_monitor_on_launch_cb = QCheckBox("Monitor on Launch")
         self.gbm_monitor_on_launch_cb.setChecked(True)
-        local_backup_form.addRow("", self.gbm_monitor_on_launch_cb)
+        gbm_layout.addRow("", self.gbm_monitor_on_launch_cb)
+        self.local_backup_stack.addWidget(gbm_page)
+
+        local_backup_form.addRow("Tool:", self.local_backup_tool_combo)
+        local_backup_form.addRow(self.local_backup_stack)
         local_backup_tab_layout.addWidget(local_backup_group)
         local_backup_tab_layout.addStretch()
         paths_tabs.addTab(local_backup_tab, "LOCAL-BACKUP")
@@ -590,54 +605,76 @@ class SetupTab(QWidget):
         self.path_rows["cloud_sync_path"].enabled_cb.setToolTip("Enable Cloud Sync/Backup")
         self._add_path_row(cloud_sync_form, "Cloud Sync:", "cloud_sync_path",
                            self.path_rows["cloud_sync_path"])
-        # Rclone sub-section
-        cloud_sync_form.addRow(QLabel("<b>Rclone:</b>"))
+
+        # Tool-specific settings via QStackedWidget
+        self.cloud_sync_tool_combo = QComboBox()
+        self.cloud_sync_tool_combo.addItems(["Rclone", "Ludusavi", "Syncthing", "EmuSync"])
+        self.cloud_sync_tool_combo.currentIndexChanged.connect(self._on_cloud_sync_tool_changed)
+
+        self.cloud_sync_stack = QStackedWidget()
+
+        # Page 0: Rclone
+        rclone_page = QWidget()
+        rclone_layout = QFormLayout(rclone_page)
         self.rclone_remote_name_edit = QLineEdit()
         self.rclone_remote_name_edit.setPlaceholderText("e.g., gdrive:")
-        cloud_sync_form.addRow("Remote Name:", self.rclone_remote_name_edit)
+        rclone_layout.addRow("Remote Name:", self.rclone_remote_name_edit)
         self.rclone_local_path_row = PathConfigRow("rclone_local_path", is_directory=True, add_enabled=False)
-        cloud_sync_form.addRow("Local Save Path:", self.rclone_local_path_row)
+        rclone_layout.addRow("Local Save Path:", self.rclone_local_path_row)
         self.rclone_remote_path_edit = QLineEdit()
         self.rclone_remote_path_edit.setPlaceholderText("e.g., GameSaves/MyGame")
-        cloud_sync_form.addRow("Remote Path:", self.rclone_remote_path_edit)
+        rclone_layout.addRow("Remote Path:", self.rclone_remote_path_edit)
         self.rclone_sync_mode_combo = QComboBox()
         self.rclone_sync_mode_combo.addItems(["sync", "copy", "copyto"])
         self.rclone_sync_mode_combo.setToolTip("sync=bidirectional, copy=upload only, copyto=download only")
-        cloud_sync_form.addRow("Sync Mode:", self.rclone_sync_mode_combo)
+        rclone_layout.addRow("Sync Mode:", self.rclone_sync_mode_combo)
         self.rclone_backup_on_launch_cb = QCheckBox("Backup on Launch (download saves)")
-        cloud_sync_form.addRow("", self.rclone_backup_on_launch_cb)
+        rclone_layout.addRow("", self.rclone_backup_on_launch_cb)
         self.rclone_backup_on_exit_cb = QCheckBox("Backup on Exit (upload saves)")
         self.rclone_backup_on_exit_cb.setChecked(True)
-        cloud_sync_form.addRow("", self.rclone_backup_on_exit_cb)
-        # Ludusavi sub-section
-        cloud_sync_form.addRow(QLabel("<b>Ludusavi:</b>"))
+        rclone_layout.addRow("", self.rclone_backup_on_exit_cb)
+        self.cloud_sync_stack.addWidget(rclone_page)
+
+        # Page 1: Ludusavi
+        ludusavi_page = QWidget()
+        ludusavi_layout = QFormLayout(ludusavi_page)
         self.ludusavi_backup_path_row = PathConfigRow("ludusavi_backup_path", is_directory=True, add_enabled=False)
-        cloud_sync_form.addRow("Backup Directory:", self.ludusavi_backup_path_row)
+        ludusavi_layout.addRow("Backup Directory:", self.ludusavi_backup_path_row)
         self.ludusavi_game_name_edit = QLineEdit()
         self.ludusavi_game_name_edit.setPlaceholderText("Leave empty for auto-detection")
-        cloud_sync_form.addRow("Game Name:", self.ludusavi_game_name_edit)
+        ludusavi_layout.addRow("Game Name:", self.ludusavi_game_name_edit)
         self.ludusavi_backup_on_launch_cb = QCheckBox("Restore on Launch")
-        cloud_sync_form.addRow("", self.ludusavi_backup_on_launch_cb)
+        ludusavi_layout.addRow("", self.ludusavi_backup_on_launch_cb)
         self.ludusavi_backup_on_exit_cb = QCheckBox("Backup on Exit")
         self.ludusavi_backup_on_exit_cb.setChecked(True)
-        cloud_sync_form.addRow("", self.ludusavi_backup_on_exit_cb)
-        # Syncthing sub-section
-        cloud_sync_form.addRow(QLabel("<b>Syncthing:</b>"))
+        ludusavi_layout.addRow("", self.ludusavi_backup_on_exit_cb)
+        self.cloud_sync_stack.addWidget(ludusavi_page)
+
+        # Page 2: Syncthing
+        syncthing_page = QWidget()
+        syncthing_layout = QFormLayout(syncthing_page)
         self.syncthing_sync_folder_row = PathConfigRow("syncthing_sync_folder", is_directory=True, add_enabled=False)
-        cloud_sync_form.addRow("Sync Folder:", self.syncthing_sync_folder_row)
+        syncthing_layout.addRow("Sync Folder:", self.syncthing_sync_folder_row)
         self.syncthing_auto_start_cb = QCheckBox("Auto Start with Game")
         self.syncthing_auto_start_cb.setChecked(True)
-        cloud_sync_form.addRow("", self.syncthing_auto_start_cb)
-        # EmuSync sub-section
-        cloud_sync_form.addRow(QLabel("<b>EmuSync:</b>"))
+        syncthing_layout.addRow("", self.syncthing_auto_start_cb)
+        self.cloud_sync_stack.addWidget(syncthing_page)
+
+        # Page 3: EmuSync
+        emusync_page = QWidget()
+        emusync_layout = QFormLayout(emusync_page)
         self.emusync_emulator_path_row = PathConfigRow("emusync_emulator_path", is_directory=True, add_enabled=False)
-        cloud_sync_form.addRow("Emulator Directory:", self.emusync_emulator_path_row)
+        emusync_layout.addRow("Emulator Directory:", self.emusync_emulator_path_row)
         self.emusync_sync_on_launch_cb = QCheckBox("Sync on Launch")
         self.emusync_sync_on_launch_cb.setChecked(True)
-        cloud_sync_form.addRow("", self.emusync_sync_on_launch_cb)
+        emusync_layout.addRow("", self.emusync_sync_on_launch_cb)
         self.emusync_sync_on_exit_cb = QCheckBox("Sync on Exit")
         self.emusync_sync_on_exit_cb.setChecked(True)
-        cloud_sync_form.addRow("", self.emusync_sync_on_exit_cb)
+        emusync_layout.addRow("", self.emusync_sync_on_exit_cb)
+        self.cloud_sync_stack.addWidget(emusync_page)
+
+        cloud_sync_form.addRow("Tool:", self.cloud_sync_tool_combo)
+        cloud_sync_form.addRow(self.cloud_sync_stack)
         cloud_sync_tab_layout.addWidget(cloud_sync_group)
         cloud_sync_tab_layout.addStretch()
         paths_tabs.addTab(cloud_sync_tab, "CLOUD-SYNC")
@@ -1020,15 +1057,6 @@ class SetupTab(QWidget):
             row.valueChanged.connect(self._update_sequence_item_colors)
             row.downloadRequested.connect(self._on_download_requested)
 
-        # Link disc mount and unmount comboboxes
-        if "disc_mount_path" in self.path_rows and "disc_unmount_path" in self.path_rows:
-            mount_row = self.path_rows["disc_mount_path"]
-            unmount_row = self.path_rows["disc_unmount_path"]
-            if mount_row.combo and unmount_row.combo:
-                mount_row.combo.currentTextChanged.connect(
-                    lambda text: self._sync_disc_unmount(text)
-                )
-        
         for key, row in self.path_rows.items():
             if row.use_combobox:
                 row.combo.lineEdit().textChanged.connect(lambda text, k=key: self._on_path_text_changed(k, text))
@@ -2055,7 +2083,7 @@ exit 1
             'Monitor-Config':    lambda: has_path('multi_monitor_tool_path'),
             'Cloud-Sync':        lambda: has_path('cloud_sync_path'),
             'mount-disc':        lambda: has_path('disc_mount_path'),
-            'Unmount-disc':      lambda: has_path('disc_unmount_path'),
+            'Unmount-disc':      lambda: has_path('disc_mount_path') or bool(getattr(config, 'disc_unmount_cfg', '') and config.defaults.get('disc_unmount_cfg_enabled', True)),
             'Kill-Game':         lambda: True,
             'Kill-List':         lambda: config.use_kill_list,
             'Pre1':              lambda: has_path('pre1_path'),
@@ -2405,23 +2433,16 @@ exit 1
         if hasattr(self.main_window, 'config'):
             self.main_window.config.editor_font_size = size
             self.config_changed.emit()
+    def _on_local_backup_tool_changed(self, index):
+        self.local_backup_stack.setCurrentIndex(index)
+
+    def _on_cloud_sync_tool_changed(self, index):
+        self.cloud_sync_stack.setCurrentIndex(index)
+
     def _on_path_text_changed(self, config_key, new_path):
         """Updates options and arguments if the new path matches a known tool."""
         if not new_path:
             return
-
-    def _sync_disc_unmount(self, mount_path):
-        """Sync disc unmount path with disc mount path."""
-        if not mount_path:
-            return
-        
-        unmount_row = self.path_rows.get("disc_unmount_path")
-        if unmount_row and unmount_row.combo:
-            # Set the same executable for unmount
-            unmount_row.combo.setCurrentText(mount_path)
-            # Enable the unmount row if mount is set
-            if unmount_row.enabled_cb:
-                unmount_row.enabled_cb.setChecked(True)
 
     def _log_plugin_info(self):
         """Log information about registered plugins"""

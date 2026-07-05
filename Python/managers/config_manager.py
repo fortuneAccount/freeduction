@@ -112,9 +112,8 @@ class ConfigManager(QObject):
             'disc_mount_cfg_enabled': True,
             'disc_unmount_cfg_enabled': True,
             'audio_tool_path_enabled': True,
-            'audio_app_enabled': True,
-            'run_audio_config_enabled': True,
-            'return_audio_config_enabled': True,
+            'audio_game_cfg_enabled': True,
+            'audio_mediacenter_cfg_enabled': True,
             'unborder_config_enabled': True,
             'reborder_config_enabled': True,
         }
@@ -130,21 +129,6 @@ class ConfigManager(QObject):
             'pre3_path_run_wait': False, 'post3_path_run_wait': False,
             'disc_mount_path_run_wait': False,
             'audio_tool_path_run_wait': False,
-            'audio_app_run_wait': False,
-        }
-
-        # Set default run-wait states
-        config.run_wait_states = {
-            'controller_mapper_path_run_wait': False,
-            'borderless_gaming_path_run_wait': False,
-            'multi_monitor_tool_path_run_wait': False,
-            'just_after_launch_path_run_wait': False,
-            'just_before_exit_path_run_wait': False,
-            'pre1_path_run_wait': False, 'post1_path_run_wait': False,
-            'pre2_path_run_wait': False, 'post2_path_run_wait': False,
-            'pre3_path_run_wait': False, 'post3_path_run_wait': False,
-            'disc_mount_path_run_wait': False,
-            'disc_unmount_path_run_wait': False,
             'cloud_sync_path_run_wait': False,
             'local_backup_path_run_wait': False,
         }
@@ -153,7 +137,10 @@ class ConfigManager(QObject):
         # Only profiles_dir and launchers_dir should be True by default
         config.overwrite_states = {
             "profiles_dir": True,
-            "launchers_dir": True
+            "launchers_dir": True,
+            "p1_profile_path": True,
+            "p2_profile_path": True,
+            "mediacenter_profile_path": True
         }
 
         # Set default deployment tab options
@@ -164,7 +151,6 @@ class ConfigManager(QObject):
         config.run_as_admin = True
         config.enable_name_matching = True
         config.auto_flag_existing = True
-        config.steam_json_version = 2
         config.create_overwrite_joystick_profiles = True
 
         logging.info("First-time setup complete.")
@@ -466,6 +452,11 @@ class ConfigManager(QObject):
             'just_before_exit_path': ('just_before_exit_path_options', 'just_before_exit_path_arguments'),
             'disc_mount_path': ('disc_mount_path_options', 'disc_mount_path_arguments'),
             'audio_tool_path': ('audio_app_options', 'audio_app_arguments'),
+            'p1_profile_path': ('p1_profile_path_options', 'p1_profile_path_arguments'),
+            'p2_profile_path': ('p2_profile_path_options', 'p2_profile_path_arguments'),
+            'mediacenter_profile_path': ('mediacenter_profile_path_options', 'mediacenter_profile_path_arguments'),
+            'multimonitor_gaming_path': ('multimonitor_gaming_path_options', 'multimonitor_gaming_path_arguments'),
+            'multimonitor_media_path': ('multimonitor_media_path_options', 'multimonitor_media_path_arguments'),
         }
         
         if config_attr not in attr_mapping:

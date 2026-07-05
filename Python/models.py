@@ -26,7 +26,6 @@ class AppConfig:
         self.mediacenter_profile_path = ""
         self.multimonitor_gaming_path = ""
         self.multimonitor_media_path = ""
-        self.steam_json_path = ""
         self.filtered_steam_cache_path = ""
         
         # Pre/Post launch apps
@@ -48,7 +47,6 @@ class AppConfig:
         self.imgdrive_exe_path = ""
         self.custom_mount_path = ""
         self.disc_mount_path = ""
-        self.disc_unmount_path = ""
         
         # Disc mount/unmount config
         self.disc_mount_cfg = ""
@@ -73,6 +71,16 @@ class AppConfig:
         self.borderless_gaming_path_arguments = ""
         self.multi_monitor_tool_path_options = ""
         self.multi_monitor_tool_path_arguments = ""
+        self.p1_profile_path_options = ""
+        self.p1_profile_path_arguments = ""
+        self.p2_profile_path_options = ""
+        self.p2_profile_path_arguments = ""
+        self.mediacenter_profile_path_options = ""
+        self.mediacenter_profile_path_arguments = ""
+        self.multimonitor_gaming_path_options = ""
+        self.multimonitor_gaming_path_arguments = ""
+        self.multimonitor_media_path_options = ""
+        self.multimonitor_media_path_arguments = ""
         
         self.just_after_launch_path_options = ""
         self.just_after_launch_path_arguments = ""
@@ -80,8 +88,6 @@ class AppConfig:
         self.just_before_exit_path_arguments = ""
         self.disc_mount_path_options = ""
         self.disc_mount_path_arguments = ""
-        self.disc_unmount_path_options = ""
-        self.disc_unmount_path_arguments = ""
         
         # Audio app options & arguments
         self.audio_app_options = ""
@@ -93,9 +99,23 @@ class AppConfig:
         self.return_audio_config_path_options = ""
         self.return_audio_config_path_arguments = ""
         
+        # Config file options & arguments
+        self.disc_mount_cfg_options = ""
+        self.disc_mount_cfg_arguments = ""
+        self.disc_unmount_cfg_options = ""
+        self.disc_unmount_cfg_arguments = ""
+        self.audio_game_cfg_options = ""
+        self.audio_game_cfg_arguments = ""
+        self.audio_mediacenter_cfg_options = ""
+        self.audio_mediacenter_cfg_arguments = ""
+        
         # Unborder/reborder config paths
         self.unborder_config = ""
         self.reborder_config = ""
+        self.unborder_config_options = ""
+        self.unborder_config_arguments = ""
+        self.reborder_config_options = ""
+        self.reborder_config_arguments = ""
         
         # Cloud backup options & arguments
         self.rclone_path_options = ""
@@ -188,7 +208,6 @@ class AppConfig:
         self.enable_name_matching = True
         self.fuzzy_match_cutoff = 0.6
         self.auto_flag_existing = True
-        self.steam_json_version = 2
         self.use_kill_list = True
         self.terminate_borderless_on_exit = True
 
@@ -215,11 +234,22 @@ class AppConfig:
         self.enable_reborder_config = False
         self.disc_mount_cfg_enabled = False
         self.disc_unmount_cfg_enabled = False
+        self.cloud_sync_path_options = ""
+        self.cloud_sync_path_arguments = ""
+        self.local_backup_path_options = ""
+        self.local_backup_path_arguments = ""
+        self.multimonitor_gaming_path_enabled = True
+        self.multimonitor_media_path_enabled = True
+        self.p1_profile_path_enabled = True
+        self.p2_profile_path_enabled = True
+        self.mediacenter_profile_path_enabled = True
+        self.audio_game_cfg_enabled = False
+        self.audio_mediacenter_cfg_enabled = False
+        self.unborder_config_enabled = False
+        self.reborder_config_enabled = False
 
         # Other settings not directly on UI
         self.app_directory = ""
-        self.monitor_wizard_profiles = {}
-        self.monitor_wizard_config_path = ""
 
         # Default enabled states for various features
         self.defaults = {}
@@ -228,7 +258,10 @@ class AppConfig:
         # Default to False except for profiles_dir and launchers_dir
         self.overwrite_states = {
             "profiles_dir": True,
-            "launchers_dir": True
+            "launchers_dir": True,
+            "p1_profile_path": True,
+            "p2_profile_path": True,
+            "mediacenter_profile_path": True
         }
 
         # Default run-wait states for various features

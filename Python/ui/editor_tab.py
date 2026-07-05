@@ -14,7 +14,7 @@ import re
 import difflib
 import datetime
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtGui import QColor, QBrush
+from PyQt6.QtGui import QColor, QBrush, QFont
 from Python import constants
 from Python.managers.index_manager import backup_index
 
@@ -268,67 +268,169 @@ class EditorTab(QWidget):
         headers = [
             "Create", "Name", "Dir", "SteamID",
             "NameOverride", "opts", "args", "AsAdmin",
-            "Mapper", "Opts", "Args", "Wait",
-            "Windowing", "Opts", "Args", "Wait",
-            "Multi-Monitor", "Opts", "Args", "Wait",
+            "Mapper", "opts", "args", "wait",
+            "Windowing", "opts", "args", "wait",
+            "Multi-Monitor", "opts", "args", "wait",
             "Hide TB",
             "MM Game", "MM Desktop",
             "Player 1", "Player 2", "MediaCenter",
-            "JAL", "Opts", "Args", "Wait",
-            "JBE", "Opts", "Args", "Wait",
-            "Pre1", "Opts", "Args", "Wait",
-            "Post1", "Opts", "Args", "Wait",
-            "Pre2", "Opts", "Args", "Wait",
-            "Post2", "Opts", "Args", "Wait",
-            "Pre3", "Opts", "Args", "Wait",
-            "Post3", "Opts", "Args", "Wait",
+            "JAL", "opts", "args", "wait",
+            "JBE", "opts", "args", "wait",
+            "Pre1", "opts", "args", "wait",
+            "Post1", "opts", "args", "wait",
+            "Pre2", "opts", "args", "wait",
+            "Post2", "opts", "args", "wait",
+            "Pre3", "opts", "args", "wait",
+            "Post3", "opts", "args", "wait",
             "Kill List",
             "Launcher Exe",
-            "LE-Opts", "LE-Args",
+            "opts", "args",
             "Exec Order", "Term Order",
             "ISO Path",
-            "Disc-Mount", "Opts", "Args", "Wait",
-            "Mount-Cfg", "Unmount-Cfg",
-            "Audio-App", "Opts", "Args", "Wait",
+            "Disc-Mount", "opts", "args", "wait",
+            "Mount-Cfg", "opts", "args",
+            "Unmount-Cfg", "opts", "args",
+            "Audio-App", "opts", "args", "wait",
             "Run Audio Config", "Return Audio Config",
-            "UnBorder Config", "ReBorder Config",
+            "UnBorder Config", "opts", "args",
+            "ReBorder Config", "opts", "args",
+            "Audio Game", "opts", "args",
+            "Audio MC", "opts", "args",
         ]
         self.table.setHorizontalHeaderLabels(headers)
 
         tooltips = [
-            "Include this game in the creation process", "Executable name", "Game directory", "Steam AppID",
-            "Display name for the launcher", "Additional launch options", "Command line arguments for the game", "Run game as administrator",
-            "Path to controller mapper profile/executable", "Mapper Options", "Mapper Arguments", "Wait for Controller Mapper to finish?",
-            "Path to Borderless Gaming executable", "Borderless Options", "Borderless Arguments", "Wait for Borderless Gaming to finish?",
-            "Path to Multi-Monitor tool", "MM Options", "MM Arguments", "Wait for Multi-Monitor tool?",
-            "Hide Windows Taskbar while game is running",
-            "Monitor configuration for Game", "Monitor configuration for Desktop",
-            "Controller profile for Player 1", "Controller profile for Player 2", "Controller profile for Media Center",
-            "App to run immediately after game launch", "JA Options", "JA Arguments", "Wait for this app?",
-            "App to run just before game exits", "JB Options", "JB Arguments", "Wait for this app?",
-            "Pre-launch script 1", "Pre1 Options", "Pre1 Arguments", "Wait for Pre1?",
-            "Post-launch script 1", "Post1 Options", "Post1 Arguments", "Wait for Post1?",
-            "Pre-launch script 2", "Pre2 Options", "Pre2 Arguments", "Wait for Pre2?",
-            "Post-launch script 2", "Post2 Options", "Post2 Arguments", "Wait for Post2?",
-            "Pre-launch script 3", "Pre3 Options", "Pre3 Arguments", "Wait for Pre3?",
-            "Post-launch script 3", "Post3 Options", "Post3 Arguments", "Wait for Post3?",
-            "Comma-separated list of processes to kill (Checked = Enabled)",
-            "Custom Launcher Executable to use/copy",
-            "Launcher Executable Options",
-            "Launcher Executable Arguments",
-            "Execution Sequence Order",
-            "Termination Sequence Order",
-            "Path to ISO file to mount before launch",
-            "Path to disc mounting script/executable", "Disc-Mount Options", "Disc-Mount Arguments", "Wait for Disc-Mount?",
-            "Mount configuration file path", "Unmount configuration file path",
-            "Path to audio application executable", "Audio App Options", "Audio App Arguments", "Wait for Audio App?",
-            "Run Audio Config file path", "Return Audio Config file path",
-            "UnBorder Config file path", "ReBorder Config file path",
+            "Include this game in the creation process",
+            "Executable name",
+            "Game directory",
+            "Steam AppID",
+            "Display name for the launcher",
+            "Additional command-line options for the game executable",
+            "Command-line arguments for the game executable",
+            "Run game as administrator",
+            "Path to the Controller Mapper application (e.g. AntimicroX)",
+            "Options passed to the Controller Mapper application",
+            "Arguments passed to the Controller Mapper application",
+            "Wait for the Controller Mapper application to finish before continuing",
+            "Path to the Borderless Windowing application (e.g. Borderless Gaming)",
+            "Options passed to the Borderless Windowing application",
+            "Arguments passed to the Borderless Windowing application",
+            "Wait for the Borderless Windowing application to finish before continuing",
+            "Path to the Multi-Monitor tool application (e.g. MultiMonitorTool)",
+            "Options passed to the Multi-Monitor tool application",
+            "Arguments passed to the Multi-Monitor tool application",
+            "Wait for the Multi-Monitor tool application to finish before continuing",
+            "Hide the Windows Taskbar while the game is running",
+            "Config file path for Multi-Monitor Gaming profile",
+            "Config file path for Multi-Monitor Desktop profile",
+            "Controller profile path for Player 1",
+            "Controller profile path for Player 2",
+            "Controller profile path for Media Center",
+            "Path to the application to run immediately after game launch",
+            "Options passed to the Just After Launch application",
+            "Arguments passed to the Just After Launch application",
+            "Wait for the Just After Launch application to finish before continuing",
+            "Path to the application to run just before game exits",
+            "Options passed to the Just Before Exit application",
+            "Arguments passed to the Just Before Exit application",
+            "Wait for the Just Before Exit application to finish before continuing",
+            "Path to Pre-Launch script/application 1",
+            "Options passed to Pre-Launch App 1",
+            "Arguments passed to Pre-Launch App 1",
+            "Wait for Pre-Launch App 1 to finish before continuing",
+            "Path to Post-Launch script/application 1",
+            "Options passed to Post-Launch App 1",
+            "Arguments passed to Post-Launch App 1",
+            "Wait for Post-Launch App 1 to finish before continuing",
+            "Path to Pre-Launch script/application 2",
+            "Options passed to Pre-Launch App 2",
+            "Arguments passed to Pre-Launch App 2",
+            "Wait for Pre-Launch App 2 to finish before continuing",
+            "Path to Post-Launch script/application 2",
+            "Options passed to Post-Launch App 2",
+            "Arguments passed to Post-Launch App 2",
+            "Wait for Post-Launch App 2 to finish before continuing",
+            "Path to Pre-Launch script/application 3",
+            "Options passed to Pre-Launch App 3",
+            "Arguments passed to Pre-Launch App 3",
+            "Wait for Pre-Launch App 3 to finish before continuing",
+            "Path to Post-Launch script/application 3",
+            "Options passed to Post-Launch App 3",
+            "Arguments passed to Post-Launch App 3",
+            "Wait for Post-Launch App 3 to finish before continuing",
+            "Comma-separated list of processes to kill when game exits (Checked = Enabled)",
+            "Custom launcher executable path (can differ from the game executable)",
+            "Options passed to the custom launcher executable",
+            "Arguments passed to the custom launcher executable",
+            "Execution sequence order string (read-only list of launch sequence items)",
+            "Termination sequence order string (read-only list of exit sequence items)",
+            "Path to ISO file to mount before game launch",
+            "Path to the Disc-Mount application (e.g. imgdrive, WinCDEmu, OSFMount)",
+            "Options passed to the Disc-Mount application",
+            "Arguments passed to the Disc-Mount application",
+            "Wait for the Disc-Mount application to finish before continuing",
+            "Path to the Disc-Mount configuration file (.cfg)",
+            "Options for the Disc-Mount configuration file tool",
+            "Arguments for the Disc-Mount configuration file tool",
+            "Path to the Disc-Unmount configuration file (.cfg)",
+            "Options for the Disc-Unmount configuration file tool",
+            "Arguments for the Disc-Unmount configuration file tool",
+            "Path to the Audio Tool application (e.g. AudioTool.exe)",
+            "Options passed to the Audio Tool application",
+            "Arguments passed to the Audio Tool application",
+            "Wait for the Audio Tool application to finish before continuing",
+            "Path to the Run Audio configuration file",
+            "Path to the Return Audio configuration file",
+            "Path to the UnBorder configuration file",
+            "Options for the UnBorder configuration file tool",
+            "Arguments for the UnBorder configuration file tool",
+            "Path to the ReBorder configuration file",
+            "Options for the ReBorder configuration file tool",
+            "Arguments for the ReBorder configuration file tool",
+            "Path to the Audio Game configuration file",
+            "Options for the Audio Game configuration file tool",
+            "Arguments for the Audio Game configuration file tool",
+            "Path to the Audio MediaCenter configuration file",
+            "Options for the Audio MediaCenter configuration file tool",
+            "Arguments for the Audio MediaCenter configuration file tool",
         ]
         for i, tooltip in enumerate(tooltips):
             item = self.table.horizontalHeaderItem(i)
             if item:
                 item.setToolTip(tooltip)
+
+        # App column indices (path columns for applications) — bold
+        app_header_cols = {
+            constants.EditorCols.CM_PATH.value,
+            constants.EditorCols.BW_PATH.value,
+            constants.EditorCols.MM_PATH.value,
+            constants.EditorCols.JA_PATH.value,
+            constants.EditorCols.JB_PATH.value,
+            constants.EditorCols.PRE1_PATH.value,
+            constants.EditorCols.POST1_PATH.value,
+            constants.EditorCols.PRE2_PATH.value,
+            constants.EditorCols.POST2_PATH.value,
+            constants.EditorCols.PRE3_PATH.value,
+            constants.EditorCols.POST3_PATH.value,
+            constants.EditorCols.LAUNCHER_EXE.value,
+            constants.EditorCols.DM_PATH.value,
+            constants.EditorCols.AUDIO_APP_PATH.value,
+        }
+        base_font = self.table.font()
+        italic_font = QFont(base_font)
+        italic_font.setItalic(True)
+        italic_font.setPointSize(max(1, base_font.pointSize() - 1))
+        for i in range(self.table.columnCount()):
+            item = self.table.horizontalHeaderItem(i)
+            if not item:
+                continue
+            text = item.text().lower()
+            if i in app_header_cols:
+                f = QFont(base_font)
+                f.setBold(True)
+                item.setFont(f)
+            elif text in ("opts", "args", "wait"):
+                item.setFont(italic_font)
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
@@ -354,12 +456,13 @@ class EditorTab(QWidget):
             for col in shrink_cols:
                 self.table.setColumnWidth(col, 40)
             
-            # Shrink new option/arg columns
+            # Shrink opts/args/wait columns
             for col in range(self.table.columnCount()):
-                if "Opts" in headers[col] or "Args" in headers[col]:
+                if headers[col].lower() in ("opts", "args", "wait"):
                     self.table.setColumnWidth(col, 40)
         except Exception:
             pass
+        header.setFirstSectionMovable(False)
         header.setStretchLastSection(False)
         header.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         header.customContextMenuRequested.connect(self.on_header_context_menu)
@@ -2102,9 +2205,18 @@ class EditorTab(QWidget):
             (constants.EditorCols.POST2_PATH, [constants.EditorCols.POST2_OPTIONS, constants.EditorCols.POST2_ARGUMENTS, constants.EditorCols.POST2_RUN_WAIT]),
             (constants.EditorCols.PRE3_PATH, [constants.EditorCols.PRE3_OPTIONS, constants.EditorCols.PRE3_ARGUMENTS, constants.EditorCols.PRE3_RUN_WAIT]),
             (constants.EditorCols.POST3_PATH, [constants.EditorCols.POST3_OPTIONS, constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT]),
+            (constants.EditorCols.DM_PATH, [constants.EditorCols.DM_OPTIONS, constants.EditorCols.DM_ARGUMENTS, constants.EditorCols.DM_RUN_WAIT]),
+            (constants.EditorCols.AUDIO_APP_PATH, [constants.EditorCols.AUDIO_APP_OPTIONS, constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT]),
         ]
         # Launcher Executable group
         groups.append((constants.EditorCols.LAUNCHER_EXE, [constants.EditorCols.LAUNCHER_EXE_OPTIONS, constants.EditorCols.LAUNCHER_EXE_ARGUMENTS]))
+        # Config file groups (no run_wait columns)
+        groups.append((constants.EditorCols.DM_MOUNT_CFG, [constants.EditorCols.DM_MOUNT_CFG_OPTIONS, constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.DM_UNMOUNT_CFG, [constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.UNBORDER_CONFIG, [constants.EditorCols.UNBORDER_CONFIG_OPTIONS, constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS]))
+        groups.append((constants.EditorCols.REBORDER_CONFIG, [constants.EditorCols.REBORDER_CONFIG_OPTIONS, constants.EditorCols.REBORDER_CONFIG_ARGUMENTS]))
+        groups.append((constants.EditorCols.AUDIO_GAME_CONFIG, [constants.EditorCols.AUDIO_GAME_CFG_OPTIONS, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.AUDIO_MEDIACENTER_CONFIG, [constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS]))
 
         for path_col_enum, extra_cols_enums in groups:
             path_col = path_col_enum.value
@@ -2367,21 +2479,55 @@ class EditorTab(QWidget):
             game['unborder_config_enabled'] = en
             game['unborder_config'] = path
             game['unborder_config_overwrite'] = ov
+        elif col == constants.EditorCols.UNBORDER_CONFIG_OPTIONS.value:
+            game['unborder_config_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS.value:
+            game['unborder_config_arguments'] = self.table.item(row, col).text()
         elif col == constants.EditorCols.REBORDER_CONFIG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['reborder_config_enabled'] = en
             game['reborder_config'] = path
             game['reborder_config_overwrite'] = ov
+        elif col == constants.EditorCols.REBORDER_CONFIG_OPTIONS.value:
+            game['reborder_config_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.REBORDER_CONFIG_ARGUMENTS.value:
+            game['reborder_config_arguments'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.AUDIO_GAME_CONFIG.value:
+            en, path, ov = self._get_merged_path_data(row, col)
+            game['audio_game_cfg_enabled'] = en
+            game['audio_game_cfg'] = path
+            game['audio_game_cfg_overwrite'] = ov
+        elif col == constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value:
+            game['audio_game_cfg_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value:
+            game['audio_game_cfg_arguments'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value:
+            en, path, ov = self._get_merged_path_data(row, col)
+            game['audio_mediacenter_cfg_enabled'] = en
+            game['audio_mediacenter_cfg'] = path
+            game['audio_mediacenter_cfg_overwrite'] = ov
+        elif col == constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value:
+            game['audio_mediacenter_cfg_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value:
+            game['audio_mediacenter_cfg_arguments'] = self.table.item(row, col).text()
         elif col == constants.EditorCols.DM_MOUNT_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['disc_mount_cfg_enabled'] = en
             game['disc_mount_cfg'] = path
             game['disc_mount_cfg_overwrite'] = ov
+        elif col == constants.EditorCols.DM_MOUNT_CFG_OPTIONS.value:
+            game['disc_mount_cfg_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS.value:
+            game['disc_mount_cfg_arguments'] = self.table.item(row, col).text()
         elif col == constants.EditorCols.DM_UNMOUNT_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['disc_unmount_cfg_enabled'] = en
             game['disc_unmount_cfg'] = path
             game['disc_unmount_cfg_overwrite'] = ov
+        elif col == constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS.value:
+            game['disc_unmount_cfg_options'] = self.table.item(row, col).text()
+        elif col == constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS.value:
+            game['disc_unmount_cfg_arguments'] = self.table.item(row, col).text()
 
     def swap_lc_cen_selected(self):
         """Swap between LC (>) and CEN (<) for selected path cells."""
@@ -2873,11 +3019,14 @@ class EditorTab(QWidget):
         self.table.setCellWidget(row_num, constants.EditorCols.DM_RUN_WAIT.value, self._create_checkbox_widget(game.get('disc_mount_run_wait', dm_run_wait), row_num, constants.EditorCols.DM_RUN_WAIT.value))
 
         dm_mount_cfg = get_path_display('disc_mount_cfg', 'disc_mount_path')
-        dm_mount_cfg = get_path_display('disc_mount_cfg', 'disc_mount_path')
         self.table.setCellWidget(row_num, constants.EditorCols.DM_MOUNT_CFG.value, self._create_merged_path_widget(game.get('disc_mount_cfg_enabled', True), dm_mount_cfg, game.get('disc_mount_cfg_overwrite', True), row_num, constants.EditorCols.DM_MOUNT_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.DM_MOUNT_CFG_OPTIONS.value, QTableWidgetItem(game.get('disc_mount_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('disc_mount_cfg_arguments', '')))
         
         dm_unmount_cfg = get_path_display('disc_unmount_cfg', 'disc_mount_path')
         self.table.setCellWidget(row_num, constants.EditorCols.DM_UNMOUNT_CFG.value, self._create_merged_path_widget(game.get('disc_unmount_cfg_enabled', True), dm_unmount_cfg, game.get('disc_unmount_cfg_overwrite', True), row_num, constants.EditorCols.DM_UNMOUNT_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS.value, QTableWidgetItem(game.get('disc_unmount_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('disc_unmount_cfg_arguments', '')))
         
         audio_symbol, audio_run_wait = self._get_propagation_symbol_and_run_wait('audio_app_path')
         audio_path = f"{audio_symbol} {game.get('audio_app_path', '').lstrip('<> ')}"
@@ -2897,11 +3046,52 @@ class EditorTab(QWidget):
         # UnBorder Config
         unborder_cfg = get_path_display('unborder_config', 'audio_app_path')
         self.table.setCellWidget(row_num, constants.EditorCols.UNBORDER_CONFIG.value, self._create_merged_path_widget(game.get('unborder_config_enabled', True), unborder_cfg, game.get('unborder_config_overwrite', True), row_num, constants.EditorCols.UNBORDER_CONFIG.value))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CONFIG_OPTIONS.value, QTableWidgetItem(game.get('unborder_config_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS.value, QTableWidgetItem(game.get('unborder_config_arguments', '')))
         
         # ReBorder Config
         reborder_cfg = get_path_display('reborder_config', 'audio_app_path')
         self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CONFIG.value, self._create_merged_path_widget(game.get('reborder_config_enabled', True), reborder_cfg, game.get('reborder_config_overwrite', True), row_num, constants.EditorCols.REBORDER_CONFIG.value))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CONFIG_OPTIONS.value, QTableWidgetItem(game.get('reborder_config_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CONFIG_ARGUMENTS.value, QTableWidgetItem(game.get('reborder_config_arguments', '')))
         
+        # Audio Game Config
+        audio_game_cfg = get_path_display('audio_game_cfg', 'audio_tool_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_GAME_CONFIG.value, self._create_merged_path_widget(game.get('audio_game_cfg_enabled', True), audio_game_cfg, game.get('audio_game_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_GAME_CONFIG.value))
+        self.table.setItem(row_num, constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value, QTableWidgetItem(game.get('audio_game_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('audio_game_cfg_arguments', '')))
+        
+        # Audio MediaCenter Config
+        audio_mc_cfg = get_path_display('audio_mediacenter_cfg', 'audio_tool_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value, self._create_merged_path_widget(game.get('audio_mediacenter_cfg_enabled', True), audio_mc_cfg, game.get('audio_mediacenter_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value))
+        self.table.setItem(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value, QTableWidgetItem(game.get('audio_mediacenter_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('audio_mediacenter_cfg_arguments', '')))
+        
+        # Rich tooltip for Create checkbox — shows Name-Override + executable name
+        create_widget = self.table.cellWidget(row_num, constants.EditorCols.INCLUDE.value)
+        if create_widget:
+            cb = create_widget.findChild(QCheckBox)
+            if cb:
+                name_ov = game.get('name_override', '') or ''
+                exe_name = game.get('name', '') or ''
+                no_item = self.table.item(row_num, constants.EditorCols.NAME_OVERRIDE.value)
+                no_widget = self.table.cellWidget(row_num, constants.EditorCols.NAME_OVERRIDE.value)
+                bg = QColor(Qt.GlobalColor.white)
+                if no_item and no_item.background().color().isValid():
+                    bg = no_item.background().color()
+                elif isinstance(no_widget, QComboBox):
+                    bg = no_widget.palette().color(no_widget.backgroundRole())
+                r, g, b = bg.red(), bg.green(), bg.blue()
+                comp = QColor(255 - r, 255 - g, 255 - b)
+                cb.setToolTip(
+                    f'<div style="background-color: rgba({r},{g},{b},128); '
+                    f'color: rgb({comp.red()},{comp.green()},{comp.blue()}); '
+                    f'font-weight: bold; padding: 4px;">'
+                    f'Name Override: {name_ov}<br>'
+                    f'Executable: {exe_name}'
+                    f'</div>'
+                )
+
         # Apply styling
         self._apply_styling(row_num, game, duplicates)
 

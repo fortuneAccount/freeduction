@@ -405,34 +405,25 @@ class GameLauncher:
             self.multimonitor_options = config.get('MultiMonitor', 'multimonitorpathoptions', fallback='')
             self.multimonitor_arguments = config.get('MultiMonitor', 'multimonitorpatharguments', fallback='')
 
-        # Load MonitorWizard section
-        self.monitor_wizard_config_path = ''
-        if 'MonitorWizard' in config:
-            self.monitor_wizard_config_path = config.get('MonitorWizard', 'configpath', fallback='')
-        
         # Load DiscMount section
         if 'DiscMount' in config:
             self.disc_mount_app = config.get('DiscMount', 'discmountpath', fallback='')
             self.disc_mount_options = config.get('DiscMount', 'discmountpathoptions', fallback='')
             self.disc_mount_arguments = config.get('DiscMount', 'discmountpatharguments', fallback='')
             self.disc_mount_wait = config.getboolean('DiscMount', 'discmountpathrunwait', fallback=False)
-        
-        # Load DiscUnmount section
-        if 'DiscUnmount' in config:
-            self.disc_unmount_app = config.get('DiscUnmount', 'discunmountpath', fallback='')
-            self.disc_unmount_options = config.get('DiscUnmount', 'discunmountpathoptions', fallback='')
-            self.disc_unmount_arguments = config.get('DiscUnmount', 'discunmountpatharguments', fallback='')
-            self.disc_unmount_wait = config.getboolean('DiscUnmount', 'discunmountpathrunwait', fallback=False)
-
         # Load DiscMountCfg section
         if 'DiscMountCfg' in config:
             self.disc_mount_cfg_enabled = config.getboolean('DiscMountCfg', 'enablediscmountcfg', fallback=False)
             self.disc_mount_cfg = config.get('DiscMountCfg', 'discmountcfgpath', fallback='')
+            self.disc_mount_cfg_options = config.get('DiscMountCfg', 'discmountcfgpathoptions', fallback='')
+            self.disc_mount_cfg_arguments = config.get('DiscMountCfg', 'discmountcfgpatharguments', fallback='')
 
         # Load DiscUnmountCfg section
         if 'DiscUnmountCfg' in config:
             self.disc_unmount_cfg_enabled = config.getboolean('DiscUnmountCfg', 'enablediscunmountcfg', fallback=False)
             self.disc_unmount_cfg = config.get('DiscUnmountCfg', 'discunmountcfgpath', fallback='')
+            self.disc_unmount_cfg_options = config.get('DiscUnmountCfg', 'discunmountcfgpathoptions', fallback='')
+            self.disc_unmount_cfg_arguments = config.get('DiscUnmountCfg', 'discunmountcfgpatharguments', fallback='')
 
         # Load AudioApp section
         if 'AudioApp' in config:
@@ -456,11 +447,29 @@ class GameLauncher:
         if 'UnBorderConfig' in config:
             self.unborder_config_enabled = config.getboolean('UnBorderConfig', 'enableunborderconfig', fallback=False)
             self.unborder_config = config.get('UnBorderConfig', 'unborderconfigpath', fallback='')
+            self.unborder_config_options = config.get('UnBorderConfig', 'unborderconfigpathoptions', fallback='')
+            self.unborder_config_arguments = config.get('UnBorderConfig', 'unborderconfigpatharguments', fallback='')
 
         # Load ReBorderConfig section
         if 'ReBorderConfig' in config:
             self.reborder_config_enabled = config.getboolean('ReBorderConfig', 'enablereborderconfig', fallback=False)
             self.reborder_config = config.get('ReBorderConfig', 'reborderconfigpath', fallback='')
+            self.reborder_config_options = config.get('ReBorderConfig', 'reborderconfigpathoptions', fallback='')
+            self.reborder_config_arguments = config.get('ReBorderConfig', 'reborderconfigpatharguments', fallback='')
+
+        # Load AudioGameCfg section
+        if 'AudioGameCfg' in config:
+            self.audio_game_cfg_enabled = config.getboolean('AudioGameCfg', 'enableaudiogamecfg', fallback=False)
+            self.audio_game_cfg = config.get('AudioGameCfg', 'audiogamecfgpath', fallback='')
+            self.audio_game_cfg_options = config.get('AudioGameCfg', 'audiogamecfgpathoptions', fallback='')
+            self.audio_game_cfg_arguments = config.get('AudioGameCfg', 'audiogamecfgpatharguments', fallback='')
+
+        # Load AudioMediacenterCfg section
+        if 'AudioMediacenterCfg' in config:
+            self.audio_mediacenter_cfg_enabled = config.getboolean('AudioMediacenterCfg', 'enableaudiomediacentercfg', fallback=False)
+            self.audio_mediacenter_cfg = config.get('AudioMediacenterCfg', 'audiomediacentercfgpath', fallback='')
+            self.audio_mediacenter_cfg_options = config.get('AudioMediacenterCfg', 'audiomediacentercfgpathoptions', fallback='')
+            self.audio_mediacenter_cfg_arguments = config.get('AudioMediacenterCfg', 'audiomediacentercfgpatharguments', fallback='')
 
         # Load CloudSync configuration
         if 'CloudSync' in config:

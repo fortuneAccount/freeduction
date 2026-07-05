@@ -680,11 +680,15 @@ class CreationController:
         config.add_section('DiscMountCfg')
         config.set('DiscMountCfg', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
         config.set('DiscMountCfg', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
+        config.set('DiscMountCfg', 'discmountcfgpathoptions', game_data.get('disc_mount_cfg_options', ''))
+        config.set('DiscMountCfg', 'discmountcfgpatharguments', game_data.get('disc_mount_cfg_arguments', ''))
 
         # --- [DiscUnmountCfg] Section ---
         config.add_section('DiscUnmountCfg')
         config.set('DiscUnmountCfg', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
         config.set('DiscUnmountCfg', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
+        config.set('DiscUnmountCfg', 'discunmountcfgpathoptions', game_data.get('disc_unmount_cfg_options', ''))
+        config.set('DiscUnmountCfg', 'discunmountcfgpatharguments', game_data.get('disc_unmount_cfg_arguments', ''))
 
         # --- [AudioApp] Section ---
         config.add_section('AudioApp')
@@ -708,11 +712,29 @@ class CreationController:
         config.add_section('UnBorderConfig')
         config.set('UnBorderConfig', 'enableunborderconfig', str(game_data.get('unborder_config_enabled', False)))
         config.set('UnBorderConfig', 'unborderconfigpath', game_data.get('unborder_config', ''))
+        config.set('UnBorderConfig', 'unborderconfigpathoptions', game_data.get('unborder_config_options', ''))
+        config.set('UnBorderConfig', 'unborderconfigpatharguments', game_data.get('unborder_config_arguments', ''))
 
         # --- [ReBorderConfig] Section ---
         config.add_section('ReBorderConfig')
         config.set('ReBorderConfig', 'enablereborderconfig', str(game_data.get('reborder_config_enabled', False)))
         config.set('ReBorderConfig', 'reborderconfigpath', game_data.get('reborder_config', ''))
+        config.set('ReBorderConfig', 'reborderconfigpathoptions', game_data.get('reborder_config_options', ''))
+        config.set('ReBorderConfig', 'reborderconfigpatharguments', game_data.get('reborder_config_arguments', ''))
+
+        # --- [AudioGameCfg] Section ---
+        config.add_section('AudioGameCfg')
+        config.set('AudioGameCfg', 'enableaudiogamecfg', str(game_data.get('audio_game_cfg_enabled', False)))
+        config.set('AudioGameCfg', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
+        config.set('AudioGameCfg', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
+        config.set('AudioGameCfg', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
+
+        # --- [AudioMediacenterCfg] Section ---
+        config.add_section('AudioMediacenterCfg')
+        config.set('AudioMediacenterCfg', 'enableaudiomediacentercfg', str(game_data.get('audio_mediacenter_cfg_enabled', False)))
+        config.set('AudioMediacenterCfg', 'audiomediacentercfgpath', game_data.get('audio_mediacenter_cfg', ''))
+        config.set('AudioMediacenterCfg', 'audiomediacentercfgpathoptions', game_data.get('audio_mediacenter_cfg_options', ''))
+        config.set('AudioMediacenterCfg', 'audiomediacentercfgpatharguments', game_data.get('audio_mediacenter_cfg_arguments', ''))
 
         # --- [ControllerMapper] Section ---
         config.add_section('ControllerMapper')
@@ -737,10 +759,6 @@ class CreationController:
         config.set('MultiMonitor', 'multimonitorpathoptions', game_data.get('multi_monitor_app_options', app_config.multi_monitor_tool_path_options))
         config.set('MultiMonitor', 'multimonitorpatharguments', game_data.get('multi_monitor_app_arguments', app_config.multi_monitor_tool_path_arguments))
         config.set('MultiMonitor', 'multimonitorpathrunwait', str(game_data.get('multi_monitor_app_run_wait', False)))
-
-        # --- [MonitorWizard] Section ---
-        config.add_section('MonitorWizard')
-        config.set('MonitorWizard', 'configpath', getattr(app_config, 'monitor_wizard_config_path', ''))
 
         # --- [JustAfterLaunch] Section ---
         config.add_section('JustAfterLaunch')
