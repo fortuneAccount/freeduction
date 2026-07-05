@@ -311,11 +311,11 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("Paths", "BorderlessWindowingArguments")) {
         SET_STR(borderless_arguments);
     } else if (MATCH("Paths", "MultiMonitorTool")) {
-        SET_STR(multimonitor_tool);
+        SET_STR(multimonitortool);
     } else if (MATCH("Paths", "MultiMonitorOptions")) {
-        SET_STR(multimonitor_options);
+        SET_STR(multimonitortool_options);
     } else if (MATCH("Paths", "MultiMonitorArguments")) {
-        SET_STR(multimonitor_arguments);
+        SET_STR(multimonitortool_arguments);
     } else if (MATCH("Paths", "Player1Profile")) {
         SET_STR(player1_profile);
     } else if (MATCH("Paths", "Player2Profile")) {
@@ -655,11 +655,11 @@ void action_kill_controller_mapper() {
 }
 
 void action_run_monitor_config_game() {
-    if (strlen(G_CONFIG.multimonitor_tool) == 0 || strlen(G_CONFIG.mm_game_config) == 0) {
+    if (strlen(G_CONFIG.multimonitortool) == 0 || strlen(G_CONFIG.mm_game_config) == 0) {
         return;
     }
     
-    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitor_tool);
+    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitortool);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
     
     attribs = GetFileAttributesA(G_CONFIG.mm_game_config);
@@ -667,21 +667,21 @@ void action_run_monitor_config_game() {
 
     char cmd[MAX_CMD_LEN];
     snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
-             G_CONFIG.multimonitor_tool,
-             G_CONFIG.multimonitor_options,
+             G_CONFIG.multimonitortool,
+             G_CONFIG.multimonitortool_options,
              G_CONFIG.mm_game_config,
-             G_CONFIG.multimonitor_arguments);
+             G_CONFIG.multimonitortool_arguments);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);
 }
 
 void action_run_monitor_config_desktop() {
-    if (strlen(G_CONFIG.multimonitor_tool) == 0 || strlen(G_CONFIG.mm_desktop_config) == 0) {
+    if (strlen(G_CONFIG.multimonitortool) == 0 || strlen(G_CONFIG.mm_desktop_config) == 0) {
         return;
     }
     
-    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitor_tool);
+    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitortool);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
     
     attribs = GetFileAttributesA(G_CONFIG.mm_desktop_config);
@@ -689,10 +689,10 @@ void action_run_monitor_config_desktop() {
 
     char cmd[MAX_CMD_LEN];
     snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
-             G_CONFIG.multimonitor_tool,
-             G_CONFIG.multimonitor_options,
+             G_CONFIG.multimonitortool,
+             G_CONFIG.multimonitortool_options,
              G_CONFIG.mm_desktop_config,
-             G_CONFIG.multimonitor_arguments);
+             G_CONFIG.multimonitortool_arguments);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);

@@ -190,10 +190,10 @@ class SequenceExecutor:
 
     def _run_monitor_config(self, config_attr):
         """Apply a monitor configuration using the multi-monitor tool."""
-        tool = getattr(self.launcher, 'multimonitor_tool', '')
+        tool = getattr(self.launcher, 'multimonitortool', '')
         config = getattr(self.launcher, config_attr, '')
-        options = getattr(self.launcher, 'multimonitor_options', '')
-        args = getattr(self.launcher, 'multimonitor_arguments', '')
+        options = getattr(self.launcher, 'multimonitortool_options', '')
+        args = getattr(self.launcher, 'multimonitortool_arguments', '')
 
         if tool and config and os.path.exists(self.launcher.resolve_path(tool)) and os.path.exists(config):
             logging.info(f"Applying Monitor Config: {config}")

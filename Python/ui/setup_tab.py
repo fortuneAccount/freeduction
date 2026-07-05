@@ -193,14 +193,15 @@ class SetupTab(QWidget):
     
     PATH_ATTRIBUTES = [
         "profiles_dir", "launchers_dir", "launcher_executable", "controller_mapper_path",
-        "borderless_gaming_path", "multi_monitor_tool_path", "disc_mount_path", "p1_profile_path",
-        "p2_profile_path", "mediacenter_profile_path", "multimonitor_gaming_path",
-        "multimonitor_media_path", "pre1_path", "pre2_path", "pre3_path",
+        "borderless_gaming_path", "disc_mount_path", "p1_profile_path",
+        "p2_profile_path", "mediacenter_profile_path",
+        "multimonitortool_path", "multimonitortool_gaming_path",
+        "multimonitortool_media_path", "pre1_path", "pre2_path", "pre3_path",
         "just_after_launch_path", "just_before_exit_path",
         "post1_path", "post2_path", "post3_path",
         "cloud_sync_path", "local_backup_path", "audio_tool_path",
         "disc_mount_cfg", "disc_unmount_cfg", "audio_game_cfg", "audio_mediacenter_cfg",
-        "unborder_config", "reborder_config"
+        "unborder_cfg", "reborder_cfg"
     ]
 
     SEQUENCE_TOOLTIPS = {
@@ -451,14 +452,21 @@ class SetupTab(QWidget):
         display_tab_layout = QVBoxLayout(display_tab)
         display_group = QGroupBox("Monitor Configuration Tool")
         display_layout = QFormLayout(display_group)
-        self.path_rows["multi_monitor_tool_path"] = PathConfigRow(
-            "multi_monitor_tool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
-        self.path_rows["multi_monitor_tool_path"].enabled_cb.setToolTip("Enable monitor configuration tool")
+        self.path_rows["multimonitortool_path"] = PathConfigRow(
+            "multimonitortool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
+        self.path_rows["multimonitortool_path"].enabled_cb.setToolTip("Enable monitor configuration tool")
         
+        # Prioritize MultiMonitorTool.exe from the freeduction bin directory
         native_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'bin', 'multimonitortool', 'multimonitortool.exe')
-        if os.path.exists(native_path) and self.path_rows["multi_monitor_tool_path"].combo.findText("NATIVE") == -1:
-            self.path_rows["multi_monitor_tool_path"].combo.addItem("NATIVE")
-            self.path_rows["multi_monitor_tool_path"].combo.setItemData(0, native_path, Qt.ItemDataRole.UserRole)
+        if os.path.exists(native_path):
+            combo = self.path_rows["multimonitortool_path"].combo
+            # Insert as first item and select it
+            if combo.findText(native_path) == -1:
+                combo.insertItem(0, native_path)
+            combo.setCurrentIndex(0)
+            # Make the combobox selectable but not editable (dropdown only)
+            self.path_rows["multimonitortool_path"].combo.setEnabled(True)
+            self.path_rows["multimonitortool_path"].combo.lineEdit().setReadOnly(True)
 
         self.wizard_btn = QPushButton("Open Monitor Wizard")
         self.wizard_btn.setToolTip("Open the monitor wizard to query supported resolutions, refresh rates, and bit depths")
@@ -476,12 +484,12 @@ class SetupTab(QWidget):
         display_note.setWordWrap(True)
         display_layout.addRow(display_note)
 
-        self._add_path_row(display_layout, "Monitor-Config App:", "multi_monitor_tool_path",
-                           self.path_rows["multi_monitor_tool_path"])
-        self.path_rows["multimonitor_gaming_path"] = PathConfigRow("multimonitor_gaming_path", add_enabled=True)
-        self._add_path_row(display_layout, "    MM Gaming Config:", "multimonitor_gaming_path", self.path_rows["multimonitor_gaming_path"])
-        self.path_rows["multimonitor_media_path"] = PathConfigRow("multimonitor_media_path", add_enabled=True)
-        self._add_path_row(display_layout, "    MM Desktop Config:", "multimonitor_media_path", self.path_rows["multimonitor_media_path"])
+        self._add_path_row(display_layout, "Monitor-Config App:", "multimonitortool_path",
+                           self.path_rows["multimonitortool_path"])
+        self.path_rows["multimonitortool_gaming_path"] = PathConfigRow("multimonitortool_gaming_path", add_enabled=True)
+        self._add_path_row(display_layout, "    MM Gaming Config:", "multimonitortool_gaming_path", self.path_rows["multimonitortool_gaming_path"])
+        self.path_rows["multimonitortool_media_path"] = PathConfigRow("multimonitortool_media_path", add_enabled=True)
+        self._add_path_row(display_layout, "    MM Desktop Config:", "multimonitortool_media_path", self.path_rows["multimonitortool_media_path"])
         display_tab_layout.addWidget(display_group)
         display_tab_layout.addStretch()
         paths_tabs.addTab(display_tab, "DISPLAY")
@@ -496,16 +504,16 @@ class SetupTab(QWidget):
         self.path_rows["borderless_gaming_path"].enabled_cb.setToolTip("Enable Borderless Windowing")
         self._add_path_row(windowing_layout, "Borderless Windowing:", "borderless_gaming_path",
                            self.path_rows["borderless_gaming_path"])
-        self.path_rows["unborder_config"] = PathConfigRow(
-            "unborder_config", add_enabled=True, add_cen_lc=True, use_combobox=True)
-        self.path_rows["unborder_config"].enabled_cb.setToolTip("Enable UnBorder Config")
-        self._add_path_row(windowing_layout, "UnBorder Config:", "unborder_config",
-                           self.path_rows["unborder_config"])
-        self.path_rows["reborder_config"] = PathConfigRow(
-            "reborder_config", add_enabled=True, add_cen_lc=True, use_combobox=True)
-        self.path_rows["reborder_config"].enabled_cb.setToolTip("Enable ReBorder Config")
-        self._add_path_row(windowing_layout, "ReBorder Config:", "reborder_config",
-                           self.path_rows["reborder_config"])
+        self.path_rows["unborder_cfg"] = PathConfigRow(
+            "unborder_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["unborder_cfg"].enabled_cb.setToolTip("Enable UnBorder Config")
+        self._add_path_row(windowing_layout, "UnBorder Config:", "unborder_cfg",
+                           self.path_rows["unborder_cfg"])
+        self.path_rows["reborder_cfg"] = PathConfigRow(
+            "reborder_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["reborder_cfg"].enabled_cb.setToolTip("Enable ReBorder Config")
+        self._add_path_row(windowing_layout, "ReBorder Config:", "reborder_cfg",
+                           self.path_rows["reborder_cfg"])
         windowing_tab_layout.addWidget(windowing_group)
         windowing_tab_layout.addStretch()
         paths_tabs.addTab(windowing_tab, "WINDOWING")
@@ -1205,7 +1213,7 @@ class SetupTab(QWidget):
 
     def _on_wizard_button_clicked(self):
         """Open the monitor configuration wizard from the wizard button."""
-        row = self.path_rows.get("multi_monitor_tool_path")
+        row = self.path_rows.get("multimonitortool_path")
         if not row or not row.path:
             QMessageBox.information(self, "Display Wizard", "Please select a display tool first.")
             return
@@ -1219,6 +1227,9 @@ class SetupTab(QWidget):
 
         wizard = DisplayWizard(self, windowing_app_name=tool_name, tool_path=selected_path)
         wizard.exec()
+        # Refresh UI after wizard may have saved new config paths
+        if hasattr(self.main_window, 'config'):
+            self.sync_ui_from_config(self.main_window.config)
 
     def _on_download_requested(self, tool_name, tool_data):
         if tool_data.get("special") == "mount_disc":
@@ -2279,7 +2290,30 @@ exit 1
         # Update initial state of sub-tab widgets
         self._update_cloud_backup_state()
 
+        # Auto-populate Monitor-Config gaming/media paths from root .cfg files
+        _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        _auto_populate_pairs = [
+            ("multimonitortool_gaming_path", "G_MON.cfg", "multimonitortool_gaming_enabled"),
+            ("multimonitortool_media_path", "DT_MC.cfg", "multimonitortool_media_enabled"),
+        ]
+        _auto_populated = False
+        for _path_key, _cfg_file, _enabled_key in _auto_populate_pairs:
+            _current = getattr(config, _path_key, "")
+            if not _current:
+                _cfg_path = os.path.join(_root_dir, _cfg_file)
+                if os.path.exists(_cfg_path):
+                    setattr(config, _path_key, _cfg_path)
+                    setattr(config, _enabled_key, True)
+                    _auto_populated = True
+                    if _path_key in self.path_rows:
+                        row = self.path_rows[_path_key]
+                        row.path = _cfg_path
+                        row.enabled = True
+
         self.blockSignals(False)
+
+        if _auto_populated:
+            self.config_changed.emit()
 
     def sync_config_from_ui(self, config: AppConfig):
         config.source_dirs = [self.source_dirs_list.item(i).text() for i in range(self.source_dirs_list.count())]

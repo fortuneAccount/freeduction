@@ -92,7 +92,7 @@ class ConfigManager(QObject):
         config.defaults = {
             'controller_mapper_path_enabled': True,
             'borderless_gaming_path_enabled': True,
-            'multi_monitor_tool_path_enabled': True,
+            'multimonitortool_path_enabled': True,
             'just_after_launch_path_enabled': True,
             'just_before_exit_path_enabled': True,
             'pre1_path_enabled': True,
@@ -114,14 +114,14 @@ class ConfigManager(QObject):
             'audio_tool_path_enabled': True,
             'audio_game_cfg_enabled': True,
             'audio_mediacenter_cfg_enabled': True,
-            'unborder_config_enabled': True,
-            'reborder_config_enabled': True,
+            'unborder_cfg_enabled': True,
+            'reborder_cfg_enabled': True,
         }
 
         config.run_wait_states = {
             'controller_mapper_path_run_wait': False,
             'borderless_gaming_path_run_wait': False,
-            'multi_monitor_tool_path_run_wait': False,
+            'multimonitortool_path_run_wait': False,
             'just_after_launch_path_run_wait': False,
             'just_before_exit_path_run_wait': False,
             'pre1_path_run_wait': False, 'post1_path_run_wait': False,
@@ -441,7 +441,7 @@ class ConfigManager(QObject):
         attr_mapping = {
             'controller_mapper_path': ('controller_mapper_path_options', 'controller_mapper_path_arguments'),
             'borderless_gaming_path': ('borderless_gaming_path_options', 'borderless_gaming_path_arguments'),
-            'multi_monitor_tool_path': ('multi_monitor_tool_path_options', 'multi_monitor_tool_path_arguments'),
+            'multimonitortool_path': ('multimonitortool_options', 'multimonitortool_arguments'),
             'pre1_path': ('pre1_path_options', 'pre1_path_arguments'),
             'pre2_path': ('pre2_path_options', 'pre2_path_arguments'),
             'pre3_path': ('pre3_path_options', 'pre3_path_arguments'),
@@ -455,8 +455,8 @@ class ConfigManager(QObject):
             'p1_profile_path': ('p1_profile_path_options', 'p1_profile_path_arguments'),
             'p2_profile_path': ('p2_profile_path_options', 'p2_profile_path_arguments'),
             'mediacenter_profile_path': ('mediacenter_profile_path_options', 'mediacenter_profile_path_arguments'),
-            'multimonitor_gaming_path': ('multimonitor_gaming_path_options', 'multimonitor_gaming_path_arguments'),
-            'multimonitor_media_path': ('multimonitor_media_path_options', 'multimonitor_media_path_arguments'),
+            'multimonitortool_gaming_path': ('multimonitortool_gaming_options', 'multimonitortool_gaming_arguments'),
+            'multimonitortool_media_path': ('multimonitortool_media_options', 'multimonitortool_media_arguments'),
         }
         
         if config_attr not in attr_mapping:

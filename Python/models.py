@@ -20,12 +20,12 @@ class AppConfig:
         self.launcher_executable = ""
         self.controller_mapper_path = ""
         self.borderless_gaming_path = ""
-        self.multi_monitor_tool_path = ""
         self.p1_profile_path = ""
         self.p2_profile_path = ""
         self.mediacenter_profile_path = ""
-        self.multimonitor_gaming_path = ""
-        self.multimonitor_media_path = ""
+        self.multimonitortool_path = ""
+        self.multimonitortool_gaming_path = ""
+        self.multimonitortool_media_path = ""
         self.filtered_steam_cache_path = ""
         
         # Pre/Post launch apps
@@ -69,18 +69,18 @@ class AppConfig:
         self.controller_mapper_path_arguments = ""
         self.borderless_gaming_path_options = ""
         self.borderless_gaming_path_arguments = ""
-        self.multi_monitor_tool_path_options = ""
-        self.multi_monitor_tool_path_arguments = ""
+        self.multimonitortool_options = ""
+        self.multimonitortool_arguments = ""
         self.p1_profile_path_options = ""
         self.p1_profile_path_arguments = ""
         self.p2_profile_path_options = ""
         self.p2_profile_path_arguments = ""
         self.mediacenter_profile_path_options = ""
         self.mediacenter_profile_path_arguments = ""
-        self.multimonitor_gaming_path_options = ""
-        self.multimonitor_gaming_path_arguments = ""
-        self.multimonitor_media_path_options = ""
-        self.multimonitor_media_path_arguments = ""
+        self.multimonitortool_gaming_options = ""
+        self.multimonitortool_gaming_arguments = ""
+        self.multimonitortool_media_options = ""
+        self.multimonitortool_media_arguments = ""
         
         self.just_after_launch_path_options = ""
         self.just_after_launch_path_arguments = ""
@@ -93,12 +93,6 @@ class AppConfig:
         self.audio_app_options = ""
         self.audio_app_arguments = ""
         
-        # Run/Return audio config options & arguments
-        self.run_audio_config_path_options = ""
-        self.run_audio_config_path_arguments = ""
-        self.return_audio_config_path_options = ""
-        self.return_audio_config_path_arguments = ""
-        
         # Config file options & arguments
         self.disc_mount_cfg_options = ""
         self.disc_mount_cfg_arguments = ""
@@ -110,12 +104,12 @@ class AppConfig:
         self.audio_mediacenter_cfg_arguments = ""
         
         # Unborder/reborder config paths
-        self.unborder_config = ""
-        self.reborder_config = ""
-        self.unborder_config_options = ""
-        self.unborder_config_arguments = ""
-        self.reborder_config_options = ""
-        self.reborder_config_arguments = ""
+        self.unborder_cfg = ""
+        self.reborder_cfg = ""
+        self.unborder_cfg_options = ""
+        self.unborder_cfg_arguments = ""
+        self.reborder_cfg_options = ""
+        self.reborder_cfg_arguments = ""
         
         # Cloud backup options & arguments
         self.rclone_path_options = ""
@@ -186,8 +180,8 @@ class AppConfig:
         self.p1_profile_mode = "CEN"  # or "LC"
         self.p2_profile_mode = "CEN"
         self.mediacenter_profile_mode = "CEN"
-        self.multimonitor_gaming_mode = "CEN"
-        self.multimonitor_media_mode = "CEN"
+        self.multimonitortool_gaming_mode = "CEN"
+        self.multimonitortool_media_mode = "CEN"
 
         # Setup Tab: Behavior
         self.editor_page_size = 50
@@ -217,7 +211,7 @@ class AppConfig:
         # Enable toggles for applications defined in Setup -> Applications
         self.enable_controller_mapper = False
         self.enable_borderless_app = False
-        self.enable_multimonitor_app = False
+        self.enable_multimonitortool = False
         self.enable_after_launch_app = False
         self.enable_before_exit_app = False
         self.enable_cloud_backup = False
@@ -228,25 +222,23 @@ class AppConfig:
         self.enable_post2 = False
         self.enable_post3 = False
         self.enable_audio_app = False
-        self.enable_run_audio_config = False
-        self.enable_return_audio_config = False
-        self.enable_unborder_config = False
-        self.enable_reborder_config = False
+        self.enable_unborder_cfg = False
+        self.enable_reborder_cfg = False
         self.disc_mount_cfg_enabled = False
         self.disc_unmount_cfg_enabled = False
         self.cloud_sync_path_options = ""
         self.cloud_sync_path_arguments = ""
         self.local_backup_path_options = ""
         self.local_backup_path_arguments = ""
-        self.multimonitor_gaming_path_enabled = True
-        self.multimonitor_media_path_enabled = True
-        self.p1_profile_path_enabled = True
-        self.p2_profile_path_enabled = True
-        self.mediacenter_profile_path_enabled = True
+        self.multimonitortool_gaming_enabled = True
+        self.multimonitortool_media_enabled = True
+        self.p1_profile_enabled = True
+        self.p2_profile_enabled = True
+        self.mediacenter_profile_enabled = True
         self.audio_game_cfg_enabled = False
         self.audio_mediacenter_cfg_enabled = False
-        self.unborder_config_enabled = False
-        self.reborder_config_enabled = False
+        self.unborder_cfg_enabled = False
+        self.reborder_cfg_enabled = False
 
         # Other settings not directly on UI
         self.app_directory = ""

@@ -32,9 +32,9 @@ typedef struct {
     char borderless_windowing_app[MAX_PATH_LEN];
     char borderless_options[MAX_CMD_LEN];
     char borderless_arguments[MAX_CMD_LEN];
-    char multimonitor_tool[MAX_PATH_LEN];
-    char multimonitor_options[MAX_CMD_LEN];
-    char multimonitor_arguments[MAX_CMD_LEN];
+    char multimonitortool[MAX_PATH_LEN];
+    char multimonitortool_options[MAX_CMD_LEN];
+    char multimonitortool_arguments[MAX_CMD_LEN];
     char player1_profile[MAX_PATH_LEN];
     char player2_profile[MAX_PATH_LEN];
     char mediacenter_profile[MAX_PATH_LEN];

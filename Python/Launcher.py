@@ -401,9 +401,9 @@ class GameLauncher:
         
         # Load MultiMonitor section
         if 'MultiMonitor' in config:
-            self.multimonitor_tool = config.get('MultiMonitor', 'multimonitorpath', fallback='')
-            self.multimonitor_options = config.get('MultiMonitor', 'multimonitorpathoptions', fallback='')
-            self.multimonitor_arguments = config.get('MultiMonitor', 'multimonitorpatharguments', fallback='')
+            self.multimonitortool = config.get('MultiMonitor', 'multimonitorpath', fallback='')
+            self.multimonitortool_options = config.get('MultiMonitor', 'multimonitorpathoptions', fallback='')
+            self.multimonitortool_arguments = config.get('MultiMonitor', 'multimonitorpatharguments', fallback='')
 
         # Load DiscMount section
         if 'DiscMount' in config:
@@ -433,29 +433,19 @@ class GameLauncher:
             self.audio_app_arguments = config.get('AudioApp', 'audioapppatharguments', fallback='')
             self.audio_app_run_wait = config.getboolean('AudioApp', 'audioapppathrunwait', fallback=False)
 
-        # Load RunAudioConfig section
-        if 'RunAudioConfig' in config:
-            self.run_audio_config_enabled = config.getboolean('RunAudioConfig', 'enablerunaudioconfig', fallback=False)
-            self.run_audio_config = config.get('RunAudioConfig', 'runaudioconfigpath', fallback='')
-
-        # Load ReturnAudioConfig section
-        if 'ReturnAudioConfig' in config:
-            self.return_audio_config_enabled = config.getboolean('ReturnAudioConfig', 'enablereturnaudioconfig', fallback=False)
-            self.return_audio_config = config.get('ReturnAudioConfig', 'returnaudioconfigpath', fallback='')
-
         # Load UnBorderConfig section
         if 'UnBorderConfig' in config:
-            self.unborder_config_enabled = config.getboolean('UnBorderConfig', 'enableunborderconfig', fallback=False)
-            self.unborder_config = config.get('UnBorderConfig', 'unborderconfigpath', fallback='')
-            self.unborder_config_options = config.get('UnBorderConfig', 'unborderconfigpathoptions', fallback='')
-            self.unborder_config_arguments = config.get('UnBorderConfig', 'unborderconfigpatharguments', fallback='')
+            self.unborder_cfg_enabled = config.getboolean('UnBorderConfig', 'enableunborderconfig', fallback=False)
+            self.unborder_cfg = config.get('UnBorderConfig', 'unborderconfigpath', fallback='')
+            self.unborder_cfg_options = config.get('UnBorderConfig', 'unborderconfigpathoptions', fallback='')
+            self.unborder_cfg_arguments = config.get('UnBorderConfig', 'unborderconfigpatharguments', fallback='')
 
         # Load ReBorderConfig section
         if 'ReBorderConfig' in config:
-            self.reborder_config_enabled = config.getboolean('ReBorderConfig', 'enablereborderconfig', fallback=False)
-            self.reborder_config = config.get('ReBorderConfig', 'reborderconfigpath', fallback='')
-            self.reborder_config_options = config.get('ReBorderConfig', 'reborderconfigpathoptions', fallback='')
-            self.reborder_config_arguments = config.get('ReBorderConfig', 'reborderconfigpatharguments', fallback='')
+            self.reborder_cfg_enabled = config.getboolean('ReBorderConfig', 'enablereborderconfig', fallback=False)
+            self.reborder_cfg = config.get('ReBorderConfig', 'reborderconfigpath', fallback='')
+            self.reborder_cfg_options = config.get('ReBorderConfig', 'reborderconfigpathoptions', fallback='')
+            self.reborder_cfg_arguments = config.get('ReBorderConfig', 'reborderconfigpatharguments', fallback='')
 
         # Load AudioGameCfg section
         if 'AudioGameCfg' in config:
@@ -636,7 +626,7 @@ class GameLauncher:
         vars_map = {
             '$MAPPER': self.controller_mapper_app,
             '$BORDERLESS': self.borderless_app,
-            '$MMONAPP': self.multimonitor_tool,
+            '$MMONAPP': self.multimonitortool,
             '$CLOUDAPP': getattr(self, 'cloud_app', ''),
             '$BACKUPAPP': getattr(self, 'backup_app', ''),
             '$GAMEDIR': self.game_dir,

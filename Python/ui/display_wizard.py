@@ -356,9 +356,9 @@ class DisplayWizard(QDialog):
 
         config.monitor_wizard_profiles = profile_data
         if current_state_title == "Game / Running State":
-            config.multimonitor_gaming_path = file_path
+            config.multimonitortool_gaming_path = file_path
         elif current_state_title == "Desktop / Exit State":
-            config.multimonitor_media_path = file_path
+            config.multimonitortool_media_path = file_path
         else:
             config.monitor_wizard_config_path = file_path
         self.setup_tab.main_window.config_manager.save_config(config)

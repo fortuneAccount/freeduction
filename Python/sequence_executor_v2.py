@@ -168,7 +168,7 @@ class SequenceExecutorV2:
             # Try alternative attribute names
             alt_names = {
                 'antimicrox': 'controller_mapper_app',
-                'multimonitortool': 'multimonitor_tool',
+                'multimonitortool': 'multimonitortool',
                 'borderless': 'borderless_app',
                 'rclone': 'rclone_app',
                 'ludusavi': 'ludusavi_app'
