@@ -290,7 +290,6 @@ class EditorTab(QWidget):
             "Mount-Cfg", "opts", "args",
             "Unmount-Cfg", "opts", "args",
             "Audio-App", "opts", "args", "wait",
-            "Run Audio Config", "Return Audio Config",
             "UnBorder Config", "opts", "args",
             "ReBorder Config", "opts", "args",
             "Audio Game", "opts", "args",
@@ -378,8 +377,6 @@ class EditorTab(QWidget):
             "Options passed to the Audio Tool application",
             "Arguments passed to the Audio Tool application",
             "Wait for the Audio Tool application to finish before continuing",
-            "Path to the Run Audio configuration file",
-            "Path to the Return Audio configuration file",
             "Path to the UnBorder configuration file",
             "Options for the UnBorder configuration file tool",
             "Arguments for the UnBorder configuration file tool",
@@ -468,7 +465,42 @@ class EditorTab(QWidget):
         self.table.setEditTriggers(QAbstractItemView.EditTrigger.AllEditTriggers)
         self.table.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
-        main_layout.addWidget(self.table)
+        # --- Frozen Create Column ---
+        self.frozen_table = QTableWidget()
+        self.frozen_table.setColumnCount(1)
+        self.frozen_table.setHorizontalHeaderLabels(["Create"])
+        self.frozen_table.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        self.frozen_table.horizontalHeader().resizeSection(0, 50)
+        self.frozen_table.setFixedWidth(52)
+        self.frozen_table.verticalHeader().hide()
+        self.frozen_table.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.frozen_table.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.frozen_table.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+        self.frozen_table.setSelectionMode(QAbstractItemView.SelectionMode.NoSelection)
+        self.frozen_table.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.frozen_table.verticalScrollBar().setEnabled(False)
+        frozen_header_item = self.frozen_table.horizontalHeaderItem(0)
+        if frozen_header_item:
+            frozen_header_item.setToolTip("Include this game in the creation process")
+        self.table.verticalHeader().hide()
+        self.frozen_table.setStyleSheet("QTableWidget { border: 1px solid gray; border-right: none; }")
+        for i in range(max(c.value for c in constants.EditorCols) + 1):
+            if i != 0:
+                self.table.setColumnHidden(i, False)
+        self.table.setColumnHidden(0, True)
+        self.table.verticalScrollBar().valueChanged.connect(
+            lambda v: self.frozen_table.verticalScrollBar().setValue(v))
+        self.table.verticalHeader().sectionResized.connect(
+            lambda idx, old, new: self.frozen_table.setRowHeight(idx, new))
+
+        table_container = QWidget()
+        table_layout = QHBoxLayout(table_container)
+        table_layout.setContentsMargins(0, 0, 0, 0)
+        table_layout.setSpacing(0)
+        table_layout.addWidget(self.frozen_table)
+        table_layout.addWidget(self.table, 1)
+
+        main_layout.addWidget(table_container, 1)
 
         # --- Pagination ---
         pagination_layout = QHBoxLayout()
@@ -683,9 +715,8 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.RUN_AUDIO_CONFIG,
-            constants.EditorCols.RETURN_AUDIO_CONFIG, constants.EditorCols.UNBORDER_CONFIG,
-            constants.EditorCols.REBORDER_CONFIG
+            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
+            constants.EditorCols.REBORDER_CFG
         ]
 
         # For "by_filename", prompt the user for a substring before iterating
@@ -769,7 +800,10 @@ class EditorTab(QWidget):
         self.is_dirty = False
         self.table.setUpdatesEnabled(False)
         self.table.blockSignals(True)
+        self.frozen_table.setUpdatesEnabled(False)
+        self.frozen_table.blockSignals(True)
         self.table.setRowCount(0)
+        self.frozen_table.setRowCount(0)
         
         # Calculate duplicates for styling
         all_names = [g.get('name_override', '').strip() for g in self.original_data if g.get('name_override', '').strip() and g.get('create', False)]
@@ -782,8 +816,11 @@ class EditorTab(QWidget):
         for i in range(start_index, end_index):
             row_num = self.table.rowCount()
             self.table.insertRow(row_num)
+            self.frozen_table.insertRow(row_num)
             self._populate_row(row_num, self.filtered_data[i], duplicates)
             
+        self.frozen_table.blockSignals(False)
+        self.frozen_table.setUpdatesEnabled(True)
         self.table.blockSignals(False)
         self.table.setUpdatesEnabled(True)
         
@@ -1039,8 +1076,6 @@ class EditorTab(QWidget):
             # Audio App
             'audio_app_path': '', 'audio_app_enabled': True, 'audio_app_overwrite': True,
             'audio_app_options': '', 'audio_app_arguments': '', 'audio_app_run_wait': False,
-            'run_audio_config': '', 'run_audio_config_enabled': True, 'run_audio_config_overwrite': True,
-            'return_audio_config': '', 'return_audio_config_enabled': True, 'return_audio_config_overwrite': True,
             'unborder_config': '', 'unborder_config_enabled': True, 'unborder_config_overwrite': True,
             'reborder_config': '', 'reborder_config_enabled': True, 'reborder_config_overwrite': True,
         }
@@ -1125,9 +1160,8 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE.value,
             constants.EditorCols.ISO_PATH.value,
             constants.EditorCols.DM_MOUNT_CFG.value, constants.EditorCols.DM_UNMOUNT_CFG.value,
-            constants.EditorCols.AUDIO_APP_PATH.value, constants.EditorCols.RUN_AUDIO_CONFIG.value,
-            constants.EditorCols.RETURN_AUDIO_CONFIG.value, constants.EditorCols.UNBORDER_CONFIG.value,
-            constants.EditorCols.REBORDER_CONFIG.value
+            constants.EditorCols.AUDIO_APP_PATH.value, constants.EditorCols.UNBORDER_CFG.value,
+            constants.EditorCols.REBORDER_CFG.value
         }
         
         if col in path_cols:
@@ -1316,9 +1350,8 @@ class EditorTab(QWidget):
             constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE,
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.RUN_AUDIO_CONFIG,
-            constants.EditorCols.RETURN_AUDIO_CONFIG, constants.EditorCols.UNBORDER_CONFIG,
-            constants.EditorCols.REBORDER_CONFIG
+            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
+            constants.EditorCols.REBORDER_CFG
         ]
         
         for row in range(self.table.rowCount()):
@@ -2220,10 +2253,10 @@ class EditorTab(QWidget):
         # Config file groups (no run_wait columns)
         groups.append((constants.EditorCols.DM_MOUNT_CFG, [constants.EditorCols.DM_MOUNT_CFG_OPTIONS, constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.DM_UNMOUNT_CFG, [constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.UNBORDER_CONFIG, [constants.EditorCols.UNBORDER_CONFIG_OPTIONS, constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS]))
-        groups.append((constants.EditorCols.REBORDER_CONFIG, [constants.EditorCols.REBORDER_CONFIG_OPTIONS, constants.EditorCols.REBORDER_CONFIG_ARGUMENTS]))
-        groups.append((constants.EditorCols.AUDIO_GAME_CONFIG, [constants.EditorCols.AUDIO_GAME_CFG_OPTIONS, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.AUDIO_MEDIACENTER_CONFIG, [constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.UNBORDER_CFG, [constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.REBORDER_CFG, [constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.AUDIO_GAME_CFG, [constants.EditorCols.AUDIO_GAME_CFG_OPTIONS, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.AUDIO_MEDIACENTER_CFG, [constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS]))
 
         for path_col_enum, extra_cols_enums in groups:
             path_col = path_col_enum.value
@@ -2471,35 +2504,25 @@ class EditorTab(QWidget):
             game['audio_app_arguments'] = item.text() if item else ""
         elif col == constants.EditorCols.AUDIO_APP_RUN_WAIT.value:
             game['audio_app_run_wait'] = self._get_checkbox_value(row, col)
-        elif col == constants.EditorCols.RUN_AUDIO_CONFIG.value:
-            en, path, ov = self._get_merged_path_data(row, col)
-            game['run_audio_config_enabled'] = en
-            game['run_audio_config'] = path
-            game['run_audio_config_overwrite'] = ov
-        elif col == constants.EditorCols.RETURN_AUDIO_CONFIG.value:
-            en, path, ov = self._get_merged_path_data(row, col)
-            game['return_audio_config_enabled'] = en
-            game['return_audio_config'] = path
-            game['return_audio_config_overwrite'] = ov
-        elif col == constants.EditorCols.UNBORDER_CONFIG.value:
+        elif col == constants.EditorCols.UNBORDER_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['unborder_config_enabled'] = en
             game['unborder_config'] = path
             game['unborder_config_overwrite'] = ov
-        elif col == constants.EditorCols.UNBORDER_CONFIG_OPTIONS.value:
+        elif col == constants.EditorCols.UNBORDER_CFG_OPTIONS.value:
             game['unborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS.value:
+        elif col == constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value:
             game['unborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.REBORDER_CONFIG.value:
+        elif col == constants.EditorCols.REBORDER_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['reborder_config_enabled'] = en
             game['reborder_config'] = path
             game['reborder_config_overwrite'] = ov
-        elif col == constants.EditorCols.REBORDER_CONFIG_OPTIONS.value:
+        elif col == constants.EditorCols.REBORDER_CFG_OPTIONS.value:
             game['reborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.REBORDER_CONFIG_ARGUMENTS.value:
+        elif col == constants.EditorCols.REBORDER_CFG_ARGUMENTS.value:
             game['reborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.AUDIO_GAME_CONFIG.value:
+        elif col == constants.EditorCols.AUDIO_GAME_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['audio_game_cfg_enabled'] = en
             game['audio_game_cfg'] = path
@@ -2508,7 +2531,7 @@ class EditorTab(QWidget):
             game['audio_game_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value:
             game['audio_game_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value:
+        elif col == constants.EditorCols.AUDIO_MEDIACENTER_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['audio_mediacenter_cfg_enabled'] = en
             game['audio_mediacenter_cfg'] = path
@@ -2549,9 +2572,8 @@ class EditorTab(QWidget):
             constants.EditorCols.PRE3_PATH, constants.EditorCols.POST3_PATH,
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.RUN_AUDIO_CONFIG,
-            constants.EditorCols.RETURN_AUDIO_CONFIG, constants.EditorCols.UNBORDER_CONFIG,
-            constants.EditorCols.REBORDER_CONFIG
+            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
+            constants.EditorCols.REBORDER_CFG
         ]
         
         for row in range(self.table.rowCount()):
@@ -2647,16 +2669,19 @@ class EditorTab(QWidget):
     def _update_widget_state(self, row, col, value):
         """Update a widget's visual state without triggering data sync."""
         self.table.blockSignals(True)
+        self.frozen_table.blockSignals(True)
         if col == constants.EditorCols.INCLUDE.value:
-            widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
+            widget = self.frozen_table.cellWidget(row, 0)  # type: ignore[union-attr]
             if widget:
                 cb = widget.findChild(QCheckBox)
                 if cb: cb.setChecked(value)
+        self.frozen_table.blockSignals(False)
         self.table.blockSignals(False)
 
     def _get_checkbox_value(self, row: int, col: int) -> bool:
         """Get checkbox value from a cell widget."""
-        widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
+        target_table = self.frozen_table if col == constants.EditorCols.INCLUDE.value else self.table
+        widget = target_table.cellWidget(row, col if col != constants.EditorCols.INCLUDE.value else 0)  # type: ignore[union-attr]
         if widget:
             checkbox = widget.findChild(QCheckBox)
             if checkbox:
@@ -2761,8 +2786,6 @@ class EditorTab(QWidget):
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
-            ('run_audio_config', 'run_audio_config_enabled'),
-            ('return_audio_config', 'return_audio_config_enabled'),
             ('unborder_config', 'unborder_config_enabled'),
             ('reborder_config', 'reborder_config_enabled'),
         ]
@@ -2786,8 +2809,8 @@ class EditorTab(QWidget):
             symbol, _ = self._get_propagation_symbol_and_run_wait(config_key)
             return f"{symbol} {val.lstrip('<> ')}"
 
-        # Create (CheckBox) - col INCLUDE
-        self.table.setCellWidget(row_num, constants.EditorCols.INCLUDE.value, self._create_checkbox_widget(game.get('create', False), row_num, constants.EditorCols.INCLUDE.value))
+        # Create (CheckBox) - col INCLUDE (frozen column)
+        self.frozen_table.setCellWidget(row_num, 0, self._create_checkbox_widget(game.get('create', False), row_num, constants.EditorCols.INCLUDE.value))
 
         # Name (uneditable) - col NAME
         name_item = QTableWidgetItem(game.get('name', ''))
@@ -3042,40 +3065,32 @@ class EditorTab(QWidget):
         self.table.setItem(row_num, constants.EditorCols.AUDIO_APP_ARGUMENTS.value, QTableWidgetItem(game.get('audio_app_arguments', '')))
         self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_APP_RUN_WAIT.value, self._create_checkbox_widget(game.get('audio_app_run_wait', audio_run_wait), row_num, constants.EditorCols.AUDIO_APP_RUN_WAIT.value))
         
-        # Run Audio Config
-        run_audio = get_path_display('run_audio_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.RUN_AUDIO_CONFIG.value, self._create_merged_path_widget(game.get('run_audio_config_enabled', True), run_audio, game.get('run_audio_config_overwrite', True), row_num, constants.EditorCols.RUN_AUDIO_CONFIG.value))
-        
-        # Return Audio Config
-        return_audio = get_path_display('return_audio_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.RETURN_AUDIO_CONFIG.value, self._create_merged_path_widget(game.get('return_audio_config_enabled', True), return_audio, game.get('return_audio_config_overwrite', True), row_num, constants.EditorCols.RETURN_AUDIO_CONFIG.value))
-        
         # UnBorder Config
         unborder_cfg = get_path_display('unborder_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.UNBORDER_CONFIG.value, self._create_merged_path_widget(game.get('unborder_config_enabled', True), unborder_cfg, game.get('unborder_config_overwrite', True), row_num, constants.EditorCols.UNBORDER_CONFIG.value))
-        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CONFIG_OPTIONS.value, QTableWidgetItem(game.get('unborder_config_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CONFIG_ARGUMENTS.value, QTableWidgetItem(game.get('unborder_config_arguments', '')))
+        self.table.setCellWidget(row_num, constants.EditorCols.UNBORDER_CFG.value, self._create_merged_path_widget(game.get('unborder_config_enabled', True), unborder_cfg, game.get('unborder_config_overwrite', True), row_num, constants.EditorCols.UNBORDER_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('unborder_config_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('unborder_config_arguments', '')))
         
         # ReBorder Config
         reborder_cfg = get_path_display('reborder_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CONFIG.value, self._create_merged_path_widget(game.get('reborder_config_enabled', True), reborder_cfg, game.get('reborder_config_overwrite', True), row_num, constants.EditorCols.REBORDER_CONFIG.value))
-        self.table.setItem(row_num, constants.EditorCols.REBORDER_CONFIG_OPTIONS.value, QTableWidgetItem(game.get('reborder_config_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.REBORDER_CONFIG_ARGUMENTS.value, QTableWidgetItem(game.get('reborder_config_arguments', '')))
+        self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CFG.value, self._create_merged_path_widget(game.get('reborder_config_enabled', True), reborder_cfg, game.get('reborder_config_overwrite', True), row_num, constants.EditorCols.REBORDER_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('reborder_config_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('reborder_config_arguments', '')))
         
         # Audio Game Config
         audio_game_cfg = get_path_display('audio_game_cfg', 'audio_tool_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_GAME_CONFIG.value, self._create_merged_path_widget(game.get('audio_game_cfg_enabled', True), audio_game_cfg, game.get('audio_game_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_GAME_CONFIG.value))
+        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_GAME_CFG.value, self._create_merged_path_widget(game.get('audio_game_cfg_enabled', True), audio_game_cfg, game.get('audio_game_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_GAME_CFG.value))
         self.table.setItem(row_num, constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value, QTableWidgetItem(game.get('audio_game_cfg_options', '')))
         self.table.setItem(row_num, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('audio_game_cfg_arguments', '')))
         
         # Audio MediaCenter Config
         audio_mc_cfg = get_path_display('audio_mediacenter_cfg', 'audio_tool_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value, self._create_merged_path_widget(game.get('audio_mediacenter_cfg_enabled', True), audio_mc_cfg, game.get('audio_mediacenter_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_MEDIACENTER_CONFIG.value))
+        self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG.value, self._create_merged_path_widget(game.get('audio_mediacenter_cfg_enabled', True), audio_mc_cfg, game.get('audio_mediacenter_cfg_overwrite', True), row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG.value))
         self.table.setItem(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value, QTableWidgetItem(game.get('audio_mediacenter_cfg_options', '')))
         self.table.setItem(row_num, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('audio_mediacenter_cfg_arguments', '')))
         
         # Rich tooltip for Create checkbox — shows Name-Override + executable name
-        create_widget = self.table.cellWidget(row_num, constants.EditorCols.INCLUDE.value)
+        create_widget = self.frozen_table.cellWidget(row_num, 0)
         if create_widget:
             cb = create_widget.findChild(QCheckBox)
             if cb:
@@ -3225,12 +3240,11 @@ class EditorTab(QWidget):
             ('RunAudio', 'audio_app_path', [
                 constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.AUDIO_APP_OPTIONS, 
                 constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT,
-                constants.EditorCols.RUN_AUDIO_CONFIG, constants.EditorCols.RETURN_AUDIO_CONFIG
             ]),
             ('Borderless', 'borderless_windowing_path', [
                 constants.EditorCols.BW_PATH, constants.EditorCols.BW_OPTIONS, 
                 constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT,
-                constants.EditorCols.UNBORDER_CONFIG, constants.EditorCols.REBORDER_CONFIG
+                constants.EditorCols.UNBORDER_CFG, constants.EditorCols.REBORDER_CFG
             ]),
         ]
         
@@ -3289,8 +3303,6 @@ class EditorTab(QWidget):
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
-            ('run_audio_config', 'run_audio_config_enabled'),
-            ('return_audio_config', 'return_audio_config_enabled'),
             ('unborder_config', 'unborder_config_enabled'),
             ('reborder_config', 'reborder_config_enabled'),
         ]

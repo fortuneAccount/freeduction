@@ -169,9 +169,9 @@ def _process_executable(
             # Paths from setup tab (only if enabled)
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'borderless_windowing_path': config.borderless_gaming_path if config.defaults.get('borderless_gaming_path_enabled', True) else "",
-            'multi_monitor_app_path': config.multi_monitor_tool_path if config.defaults.get('multi_monitor_tool_path_enabled', True) else "",
-            'mm_game_profile': config.multimonitor_gaming_path if config.defaults.get('multimonitor_gaming_path_enabled', True) else "",
-            'mm_desktop_profile': config.multimonitor_media_path if config.defaults.get('multimonitor_media_path_enabled', True) else "",
+            'multi_monitor_app_path': config.multimonitortool_path if config.defaults.get('multi_monitor_tool_path_enabled', True) else "",
+            'mm_game_profile': config.multimonitortool_gaming_path if config.defaults.get('multimonitor_gaming_path_enabled', True) else "",
+            'mm_desktop_profile': config.multimonitortool_media_path if config.defaults.get('multimonitor_media_path_enabled', True) else "",
             'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "",
             'player2_profile': config.p2_profile_path if config.defaults.get('p2_profile_path_enabled', True) else "",
             'mediacenter_profile': config.mediacenter_profile_path if config.defaults.get('mediacenter_profile_path_enabled', True) else "",
