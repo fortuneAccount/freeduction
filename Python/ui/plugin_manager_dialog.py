@@ -1,11 +1,12 @@
-"""Plugin Manager Dialog - UI for managing plugins"""
+"""Plugin Manager Dialog - UI for managing plugins and built-in tools"""
 
 import os
 import logging
 from PyQt6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QTabWidget, QWidget,
     QTableWidget, QTableWidgetItem, QPushButton, QLabel,
-    QHeaderView, QMessageBox, QCheckBox
+    QHeaderView, QMessageBox, QCheckBox, QLineEdit, QGroupBox,
+    QFormLayout, QScrollArea
 )
 from PyQt6.QtCore import Qt, pyqtSignal
 
@@ -16,7 +17,7 @@ from Python import constants
 
 
 class PluginManagerDialog(QDialog):
-    """Modal dialog for managing plugins"""
+    """Modal dialog for managing plugins and built-in tools"""
     
     plugin_changed = pyqtSignal()
     
@@ -24,7 +25,7 @@ class PluginManagerDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Plugin Manager")
         self.setWindowFlags(self.windowFlags() | Qt.WindowType.WindowStaysOnTopHint)
-        self.resize(800, 600)
+        self.resize(900, 650)
         
         self.logger = logging.getLogger(__name__)
         self._init_plugin_infrastructure()
@@ -54,12 +55,113 @@ class PluginManagerDialog(QDialog):
         self.tabs = QTabWidget()
         self.tabs.addTab(self._create_manager_tab(), "Manager")
         self.tabs.addTab(self._create_market_tab(), "Market")
+        self.tabs.addTab(self._create_tools_tab(), "Tools")
         layout.addWidget(self.tabs)
         
         close_btn = QPushButton("Close")
         close_btn.clicked.connect(self.accept)
         layout.addWidget(close_btn)
 
+    def _make_form_row(self, label, widget):
+        """Helper to create a labeled form row with consistent layout."""
+        row = QHBoxLayout()
+        lbl = QLabel(label)
+        lbl.setFixedWidth(140)
+        row.addWidget(lbl)
+        row.addWidget(widget, 1)
+        return row
+
+    def _create_tools_tab(self):
+        """Create the Tools tab with sub-tabs for each built-in tool."""
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        
+        info = QLabel("Configure built-in tools. These settings are managed here instead of the Editor grid.")
+        info.setWordWrap(True)
+        layout.addWidget(info)
+        
+        tool_tabs = QTabWidget()
+        
+        # --- Borderless Windowing ---
+        bw_tab = QWidget()
+        bw_layout = QVBoxLayout(bw_tab)
+        bw_scroll = QScrollArea()
+        bw_scroll.setWidgetResizable(True)
+        bw_content = QWidget()
+        bw_form = QFormLayout(bw_content)
+        self.bw_path = QLineEdit(); bw_form.addRow("Application Path:", self.bw_path)
+        self.bw_opts = QLineEdit(); bw_form.addRow("Options:", self.bw_opts)
+        self.bw_args = QLineEdit(); bw_form.addRow("Arguments:", self.bw_args)
+        self.bw_unborder = QLineEdit(); bw_form.addRow("UnBorder Config:", self.bw_unborder)
+        self.bw_reborder = QLineEdit(); bw_form.addRow("ReBorder Config:", self.bw_reborder)
+        bw_scroll.setWidget(bw_content)
+        bw_layout.addWidget(bw_scroll)
+        tool_tabs.addTab(bw_tab, "Borderless Windowing")
+        
+        # --- Disc Mounting ---
+        dm_tab = QWidget()
+        dm_layout = QVBoxLayout(dm_tab)
+        dm_scroll = QScrollArea()
+        dm_scroll.setWidgetResizable(True)
+        dm_content = QWidget()
+        dm_form = QFormLayout(dm_content)
+        self.dm_iso = QLineEdit(); dm_form.addRow("ISO Path:", self.dm_iso)
+        self.dm_path = QLineEdit(); dm_form.addRow("Mount App Path:", self.dm_path)
+        self.dm_opts = QLineEdit(); dm_form.addRow("Options:", self.dm_opts)
+        self.dm_args = QLineEdit(); dm_form.addRow("Arguments:", self.dm_args)
+        self.dm_mount_cfg = QLineEdit(); dm_form.addRow("Mount Config:", self.dm_mount_cfg)
+        self.dm_unmount_cfg = QLineEdit(); dm_form.addRow("Unmount Config:", self.dm_unmount_cfg)
+        dm_scroll.setWidget(dm_content)
+        dm_layout.addWidget(dm_scroll)
+        tool_tabs.addTab(dm_tab, "Disc Mounting")
+        
+        # --- Local Backup ---
+        lb_tab = QWidget()
+        lb_layout = QVBoxLayout(lb_tab)
+        lb_scroll = QScrollArea()
+        lb_scroll.setWidgetResizable(True)
+        lb_content = QWidget()
+        lb_form = QFormLayout(lb_content)
+        self.lb_path = QLineEdit(); lb_form.addRow("Backup App Path:", self.lb_path)
+        self.lb_opts = QLineEdit(); lb_form.addRow("Options:", self.lb_opts)
+        self.lb_args = QLineEdit(); lb_form.addRow("Arguments:", self.lb_args)
+        lb_scroll.setWidget(lb_content)
+        lb_layout.addWidget(lb_scroll)
+        tool_tabs.addTab(lb_tab, "Local Backup")
+        
+        # --- Cloud-Sync ---
+        cs_tab = QWidget()
+        cs_layout = QVBoxLayout(cs_tab)
+        cs_scroll = QScrollArea()
+        cs_scroll.setWidgetResizable(True)
+        cs_content = QWidget()
+        cs_form = QFormLayout(cs_content)
+        self.cs_path = QLineEdit(); cs_form.addRow("Sync App Path:", self.cs_path)
+        self.cs_opts = QLineEdit(); cs_form.addRow("Options:", self.cs_opts)
+        self.cs_args = QLineEdit(); cs_form.addRow("Arguments:", self.cs_args)
+        cs_scroll.setWidget(cs_content)
+        cs_layout.addWidget(cs_scroll)
+        tool_tabs.addTab(cs_tab, "Cloud-Sync")
+        
+        # --- Audio ---
+        au_tab = QWidget()
+        au_layout = QVBoxLayout(au_tab)
+        au_scroll = QScrollArea()
+        au_scroll.setWidgetResizable(True)
+        au_content = QWidget()
+        au_form = QFormLayout(au_content)
+        self.au_path = QLineEdit(); au_form.addRow("Audio App Path:", self.au_path)
+        self.au_opts = QLineEdit(); au_form.addRow("Options:", self.au_opts)
+        self.au_args = QLineEdit(); au_form.addRow("Arguments:", self.au_args)
+        self.au_game_cfg = QLineEdit(); au_form.addRow("Game Config:", self.au_game_cfg)
+        self.au_mc_cfg = QLineEdit(); au_form.addRow("MediaCenter Config:", self.au_mc_cfg)
+        au_scroll.setWidget(au_content)
+        au_layout.addWidget(au_scroll)
+        tool_tabs.addTab(au_tab, "Audio")
+        
+        layout.addWidget(tool_tabs)
+        return widget
+    
     def _create_manager_tab(self):
         """Create the Manager tab"""
         widget = QWidget()

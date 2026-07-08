@@ -463,6 +463,28 @@ class EditorTab(QWidget):
             for col in range(self.table.columnCount()):
                 if headers[col].lower() in ("opts", "args", "wait"):
                     self.table.setColumnWidth(col, 40)
+
+            # Hide plugin-managed tool columns (configured in Plugin Manager)
+            hidden_cols = [
+                constants.EditorCols.BW_PATH.value, constants.EditorCols.BW_OPTIONS.value,
+                constants.EditorCols.BW_ARGUMENTS.value, constants.EditorCols.BW_RUN_WAIT.value,
+                constants.EditorCols.ISO_PATH.value,
+                constants.EditorCols.DM_PATH.value, constants.EditorCols.DM_OPTIONS.value,
+                constants.EditorCols.DM_ARGUMENTS.value, constants.EditorCols.DM_RUN_WAIT.value,
+                constants.EditorCols.DM_MOUNT_CFG.value, constants.EditorCols.DM_MOUNT_CFG_OPTIONS.value,
+                constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS.value,
+                constants.EditorCols.DM_UNMOUNT_CFG.value, constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS.value,
+                constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS.value,
+                constants.EditorCols.AUDIO_APP_PATH.value, constants.EditorCols.AUDIO_APP_OPTIONS.value,
+                constants.EditorCols.AUDIO_APP_ARGUMENTS.value, constants.EditorCols.AUDIO_APP_RUN_WAIT.value,
+                constants.EditorCols.AUDIO_GAME_CFG.value, constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value,
+                constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value,
+                constants.EditorCols.AUDIO_MEDIACENTER_CFG.value, constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value,
+                constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value,
+            ]
+            for col in hidden_cols:
+                self.table.setColumnWidth(col, 0)
+                self.table.setColumnHidden(col, True)
         except Exception:
             pass
         header.setFirstSectionMovable(False)  # type: ignore[union-attr]

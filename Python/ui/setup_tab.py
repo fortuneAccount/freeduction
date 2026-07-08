@@ -2498,4 +2498,4 @@ exit 1
         """Open the Plugin Manager dialog"""
         from Python.ui.plugin_manager_dialog import PluginManagerDialog
         dialog = PluginManagerDialog(self)
-        dialog.exec
+        dialog.exec()

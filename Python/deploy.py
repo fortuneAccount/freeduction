@@ -903,7 +903,43 @@ def run_gui(ini_path: Path) -> None:
                 log("Compression failed.\n")
                 set_ui_busy(False); return
 
-            log(f"Portable binary created: {archive_path}\n")
+            log(f"Archive created: {archive_path}\n")
+
+            # Build SFX portable executable that extracts to .\{rj_proj}\ by default
+            sfx_module = project_root / "bin" / "7zCon.sfx"
+            sfx_output = dest_dir / f"{rj_proj}_portable.exe"
+
+            if sfx_module.exists():
+                log("Building SFX portable executable...\n")
+                sfx_config = dest_dir / "sfx_config.txt"
+                try:
+                    sfx_config.write_text(
+                        f";!@Install@!UTF-8!\r\n"
+                        f"InstallPath=\".\\\\{rj_proj}\\\\\"\r\n"
+                        f";!@InstallEnd@!\r\n",
+                        encoding="utf-8"
+                    )
+                    sfx_cmd = ["cmd", "/c", "copy", "/b",
+                               f"{sfx_module}+{sfx_config}+{archive_path}",
+                               str(sfx_output)]
+                    result = subprocess.run(sfx_cmd, capture_output=True, timeout=30)
+                    if result.returncode == 0:
+                        log(f"  SFX portable: {sfx_output}\n")
+                        log(f"  Default extraction path: .{sep}{rj_proj}{sep}\n")
+                    else:
+                        log(f"  SFX build failed (code {result.returncode})\n")
+                        log(f"  stderr: {result.stderr.decode('utf-8', errors='replace')}\n")
+                except Exception as e:
+                    log(f"  SFX build error: {e}\n")
+                finally:
+                    try:
+                        os.remove(str(sfx_config))
+                    except Exception:
+                        pass
+            else:
+                log(f"SFX module not found at {sfx_module}, skipping SFX build.\n")
+
+            log("Portable archive ready\n")
             log("\n>>> Deploy complete <<<\n")
             set_ui_busy(False)
             proc_state['proc'] = None
