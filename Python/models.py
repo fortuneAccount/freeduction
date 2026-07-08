@@ -240,6 +240,9 @@ class AppConfig:
         self.unborder_cfg_enabled = False
         self.reborder_cfg_enabled = False
 
+        # Tool plugin-gated feature visibility (tool names comma-separated)
+        self.enabled_tools = ""
+
         # Other settings not directly on UI
         self.app_directory = ""
 

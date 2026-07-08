@@ -58,6 +58,7 @@ class MainWindow(QMainWindow):
         self.ui_caps = UICapabilityManager.from_config(self.config)
 
         self.indexing_cancelled = False
+        self.enabled_tools = set()
         self.data_manager = DataManager(self.config, self)
         self.steam_cache_manager = SteamCacheManager(self)
         self.steam_manager = SteamManager(self.steam_cache_manager)
@@ -458,13 +459,27 @@ class MainWindow(QMainWindow):
         self.setup_tab.sync_ui_from_config(self.config)
         self.deployment_tab.sync_ui_from_config(self.config)
         self._apply_editor_font()
+        # Parse and sync tool-gated visibility (monitor + controller_mapper visible by default)
+        raw = getattr(self.config, 'enabled_tools', '')
+        self.enabled_tools = set(t.strip() for t in raw.split(',') if t.strip()) if raw else {'monitor', 'controller_mapper'}
+        self._sync_tool_visibility()
+
+    def _sync_tool_visibility(self):
+        """Sync tool-gated column and tab visibility to both UI panels."""
+        self.editor_tab.set_enabled_tools(self.enabled_tools)
+        self.setup_tab.set_enabled_tools(self.enabled_tools)
+
+    def set_enabled_tools(self, enabled_tools: set):
+        self.enabled_tools = set(enabled_tools)
+        self.config.enabled_tools = ','.join(sorted(self.enabled_tools))
+        self._sync_tool_visibility()
 
     @pyqtSlot()
     def _sync_config_from_ui_and_save(self):
         """Updates the AppConfig model from the UI and saves it to disk."""
         self.setup_tab.sync_config_from_ui(self.config)
         self.deployment_tab.sync_config_from_ui(self.config)
-                
+        self.config.enabled_tools = ','.join(sorted(self.enabled_tools))
         self.config_manager.save_config(self.config)
 
     def on_create_button_clicked(self):

@@ -390,8 +390,8 @@ class SetupTab(QWidget):
         paths_widget = QWidget()
         paths_layout = QVBoxLayout(paths_widget)
         paths_layout.setContentsMargins(0, 0, 0, 0)
-        paths_tabs = QTabWidget()
-        paths_layout.addWidget(paths_tabs)
+        self.paths_tabs = QTabWidget()
+        paths_layout.addWidget(self.paths_tabs)
 
         # Prepare repo items for generic lists (All except GLOBAL)
         all_tools = {}
@@ -425,7 +425,7 @@ class SetupTab(QWidget):
         launcher_layout.addRow(cb_container)
         launcher_tab_layout.addWidget(launcher_group)
         launcher_tab_layout.addStretch()
-        paths_tabs.addTab(launcher_tab, "LAUNCHER")
+        self.paths_tabs.addTab(launcher_tab, "LAUNCHER")
 
         # ── Tab 2: MAPPING ───────────────────────────────────────────────────
         mapping_tab = QWidget()
@@ -445,7 +445,7 @@ class SetupTab(QWidget):
         self._add_path_row(mapper_layout, "    Media Center Profile:", "mediacenter_profile_path", self.path_rows["mediacenter_profile_path"])
         mapping_tab_layout.addWidget(mapper_group)
         mapping_tab_layout.addStretch()
-        paths_tabs.addTab(mapping_tab, "MAPPING")
+        self.paths_tabs.addTab(mapping_tab, "MAPPING")
 
         # ── Tab 3: DISPLAY ───────────────────────────────────────────────────
         display_tab = QWidget()
@@ -492,7 +492,7 @@ class SetupTab(QWidget):
         self._add_path_row(display_layout, "    MM Desktop Config:", "multimonitortool_media_path", self.path_rows["multimonitortool_media_path"])
         display_tab_layout.addWidget(display_group)
         display_tab_layout.addStretch()
-        paths_tabs.addTab(display_tab, "DISPLAY")
+        self.paths_tabs.addTab(display_tab, "DISPLAY")
 
         # ── Tab 4: WINDOWING ─────────────────────────────────────────────────
         windowing_tab = QWidget()
@@ -516,7 +516,7 @@ class SetupTab(QWidget):
                            self.path_rows["reborder_cfg"])
         windowing_tab_layout.addWidget(windowing_group)
         windowing_tab_layout.addStretch()
-        paths_tabs.addTab(windowing_tab, "WINDOWING")
+        self.paths_tabs.addTab(windowing_tab, "WINDOWING")
 
         # ── Tab 5: DISC-MOUNTING ─────────────────────────────────────────────
         disc_tab = QWidget()
@@ -539,7 +539,7 @@ class SetupTab(QWidget):
                            self.path_rows["disc_unmount_cfg"])
         disc_tab_layout.addWidget(disc_group)
         disc_tab_layout.addStretch()
-        paths_tabs.addTab(disc_tab, "DISC-MOUNTING")
+        self.paths_tabs.addTab(disc_tab, "DISC-MOUNTING")
 
         # ── Tab 6: LOCAL-BACKUP ──────────────────────────────────────────────
         local_backup_tab = QWidget()
@@ -597,7 +597,7 @@ class SetupTab(QWidget):
         local_backup_form.addRow(self.local_backup_stack)
         local_backup_tab_layout.addWidget(local_backup_group)
         local_backup_tab_layout.addStretch()
-        paths_tabs.addTab(local_backup_tab, "LOCAL-BACKUP")
+        self.paths_tabs.addTab(local_backup_tab, "LOCAL-BACKUP")
 
         # ── Tab 7: CLOUD-SYNC ────────────────────────────────────────────────
         cloud_sync_tab = QWidget()
@@ -685,7 +685,7 @@ class SetupTab(QWidget):
         cloud_sync_form.addRow(self.cloud_sync_stack)
         cloud_sync_tab_layout.addWidget(cloud_sync_group)
         cloud_sync_tab_layout.addStretch()
-        paths_tabs.addTab(cloud_sync_tab, "CLOUD-SYNC")
+        self.paths_tabs.addTab(cloud_sync_tab, "CLOUD-SYNC")
 
         # ── Tab 8: AUDIO ─────────────────────────────────────────────────────
         audio_tab = QWidget()
@@ -713,7 +713,7 @@ class SetupTab(QWidget):
                            self.path_rows["audio_mediacenter_cfg"])
         audio_tab_layout.addWidget(audio_group)
         audio_tab_layout.addStretch()
-        paths_tabs.addTab(audio_tab, "AUDIO")
+        self.paths_tabs.addTab(audio_tab, "AUDIO")
 
         # ── Tab 9: PRE/POST SCRIPTS ──────────────────────────────────────────
         scripts_tab = QWidget()
@@ -742,7 +742,7 @@ class SetupTab(QWidget):
             self._add_path_row(scripts_layout, f"Post-Launch App {i}:", key, self.path_rows[key])
         scripts_tab_layout.addWidget(scripts_group)
         scripts_tab_layout.addStretch()
-        paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
+        self.paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
 
         paths_section = AccordionSection("PATHS AND PROFILES", paths_widget, max_height=400)
 
@@ -2494,8 +2494,29 @@ exit 1
             for tool_name, paths in installed.items():
                 logging.info(f"  - {tool_name}: {len(paths)} executable(s) found")
 
+    # ── Tool plugin-gated tab visibility ───────────────────────────── #
+    SETUP_TOOL_TAB_MAP = {
+        'borderless_window': 3,   # WINDOWING
+        'disc_mount': 4,          # DISC-MOUNTING
+        'local_backup': 5,        # LOCAL-BACKUP
+        'cloud_sync': 6,          # CLOUD-SYNC
+        'audio': 7,               # AUDIO
+    }
+
+    def set_enabled_tools(self, enabled_tools: set):
+        """Show/hide setup sub-tabs based on which tool plugins are enabled."""
+        for tool, tab_idx in self.SETUP_TOOL_TAB_MAP.items():
+            visible = tool in enabled_tools
+            self.paths_tabs.setTabVisible(tab_idx, visible)
+
     def _open_plugin_manager(self):
         """Open the Plugin Manager dialog"""
         from Python.ui.plugin_manager_dialog import PluginManagerDialog
-        dialog = PluginManagerDialog(self)
+        current_tools = set(getattr(self.window(), 'enabled_tools', set()))
+        dialog = PluginManagerDialog(self, enabled_tools=current_tools)
         dialog.exec()
+        new_tools = dialog.get_enabled_tools()
+        if new_tools is not None and new_tools != current_tools:
+            mw = self.window()
+            if hasattr(mw, 'set_enabled_tools'):
+                mw.set_enabled_tools(new_tools)

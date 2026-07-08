@@ -164,6 +164,7 @@ class EditorTab(QWidget):
         self.table = None
         self.original_data = []
         self.filtered_data = []
+        self._enabled_tools = set()
         self.current_page = 0
         self.page_size = self.main_window.config.editor_page_size
         self.undo_stack = []
@@ -267,12 +268,15 @@ class EditorTab(QWidget):
         headers = [
             "Create", "Name", "Dir", "SteamID",
             "NameOverride", "opts", "args", "AsAdmin",
-            "Mapper", "opts", "args", "wait",
+            "Launcher Exe",
+            "opts", "args",
+            "Monitor-App", "opts", "args", "wait",
             "Windowing", "opts", "args", "wait",
             "UnBorder", "opts", "args",
             "ReBorder", "opts", "args",
             "MM Game", "opts", "args",
             "MM Desktop", "opts", "args",
+            "Mapper", "opts", "args", "wait",
             "Player 1", "opts", "args",
             "Player 2", "opts", "args",
             "MediaCenter", "opts", "args",
@@ -285,8 +289,6 @@ class EditorTab(QWidget):
             "Pre3", "opts", "args", "wait",
             "Post3", "opts", "args", "wait",
             "Kill List",
-            "Launcher Exe",
-            "opts", "args",
             "Exec Order", "Term Order",
             "ISO Path",
             "Disc-Mount", "opts", "args", "wait",
@@ -308,10 +310,13 @@ class EditorTab(QWidget):
             "Additional command-line options for the game executable",
             "Command-line arguments for the game executable",
             "Run game as administrator",
-            "Path to the Controller Mapper application (e.g. AntimicroX)",
-            "Options passed to the Controller Mapper application",
-            "Arguments passed to the Controller Mapper application",
-            "Wait for the Controller Mapper application to finish before continuing",
+            "Custom launcher executable path (can differ from the game executable)",
+            "Options passed to the custom launcher executable",
+            "Arguments passed to the custom launcher executable",
+            "Path to the Monitor-Config tool application (e.g. MultiMonitorTool.exe)",
+            "Options passed to the Monitor-Config tool",
+            "Arguments passed to the Monitor-Config tool",
+            "Wait for the Monitor-Config tool to finish before continuing",
             "Path to the Borderless Windowing application (e.g. Borderless Gaming)",
             "Options passed to the Borderless Windowing application",
             "Arguments passed to the Borderless Windowing application",
@@ -328,6 +333,10 @@ class EditorTab(QWidget):
             "Config file path for Multi-Monitor Desktop profile",
             "Options passed to the Multi-Monitor Desktop profile tool",
             "Arguments passed to the Multi-Monitor Desktop profile tool",
+            "Path to the Controller Mapper application (e.g. AntimicroX)",
+            "Options passed to the Controller Mapper application",
+            "Arguments passed to the Controller Mapper application",
+            "Wait for the Controller Mapper application to finish before continuing",
             "Controller profile path for Player 1",
             "Options passed to the Player 1 controller profile tool",
             "Arguments passed to the Player 1 controller profile tool",
@@ -370,9 +379,6 @@ class EditorTab(QWidget):
             "Arguments passed to Post-Launch App 3",
             "Wait for Post-Launch App 3 to finish before continuing",
             "Comma-separated list of processes to kill when game exits (Checked = Enabled)",
-            "Custom launcher executable path (can differ from the game executable)",
-            "Options passed to the custom launcher executable",
-            "Arguments passed to the custom launcher executable",
             "Execution sequence order string (read-only list of launch sequence items)",
             "Termination sequence order string (read-only list of exit sequence items)",
             "Path to ISO file to mount before game launch",
@@ -418,6 +424,7 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE.value,
             constants.EditorCols.DM_PATH.value,
             constants.EditorCols.AUDIO_APP_PATH.value,
+            constants.EditorCols.MM_PATH.value,
         }
         base_font = self.table.font()
         italic_font = QFont(base_font)
@@ -441,12 +448,12 @@ class EditorTab(QWidget):
         # Shorten width for Enabled (En) and Run/Wait (Rw) columns to save space
         try:
             rw_columns = [constants.EditorCols.CM_RUN_WAIT.value, constants.EditorCols.BW_RUN_WAIT.value,
+                          constants.EditorCols.MM_RUN_WAIT.value, constants.EditorCols.AUDIO_APP_RUN_WAIT.value,
                           constants.EditorCols.JA_RUN_WAIT.value,
                           constants.EditorCols.JB_RUN_WAIT.value, constants.EditorCols.PRE1_RUN_WAIT.value,
                           constants.EditorCols.POST1_RUN_WAIT.value, constants.EditorCols.PRE2_RUN_WAIT.value,
                           constants.EditorCols.POST2_RUN_WAIT.value, constants.EditorCols.PRE3_RUN_WAIT.value,
-                          constants.EditorCols.POST3_RUN_WAIT.value, constants.EditorCols.DM_RUN_WAIT.value,
-                          constants.EditorCols.AUDIO_APP_RUN_WAIT.value]
+                          constants.EditorCols.POST3_RUN_WAIT.value, constants.EditorCols.DM_RUN_WAIT.value]
 
             for col in rw_columns:
                 # Automatically resize Wait columns to fit content
@@ -464,27 +471,8 @@ class EditorTab(QWidget):
                 if headers[col].lower() in ("opts", "args", "wait"):
                     self.table.setColumnWidth(col, 40)
 
-            # Hide plugin-managed tool columns (configured in Plugin Manager)
-            hidden_cols = [
-                constants.EditorCols.BW_PATH.value, constants.EditorCols.BW_OPTIONS.value,
-                constants.EditorCols.BW_ARGUMENTS.value, constants.EditorCols.BW_RUN_WAIT.value,
-                constants.EditorCols.ISO_PATH.value,
-                constants.EditorCols.DM_PATH.value, constants.EditorCols.DM_OPTIONS.value,
-                constants.EditorCols.DM_ARGUMENTS.value, constants.EditorCols.DM_RUN_WAIT.value,
-                constants.EditorCols.DM_MOUNT_CFG.value, constants.EditorCols.DM_MOUNT_CFG_OPTIONS.value,
-                constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS.value,
-                constants.EditorCols.DM_UNMOUNT_CFG.value, constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS.value,
-                constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS.value,
-                constants.EditorCols.AUDIO_APP_PATH.value, constants.EditorCols.AUDIO_APP_OPTIONS.value,
-                constants.EditorCols.AUDIO_APP_ARGUMENTS.value, constants.EditorCols.AUDIO_APP_RUN_WAIT.value,
-                constants.EditorCols.AUDIO_GAME_CFG.value, constants.EditorCols.AUDIO_GAME_CFG_OPTIONS.value,
-                constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS.value,
-                constants.EditorCols.AUDIO_MEDIACENTER_CFG.value, constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS.value,
-                constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS.value,
-            ]
-            for col in hidden_cols:
-                self.table.setColumnWidth(col, 0)
-                self.table.setColumnHidden(col, True)
+            # Apply initial plugin-gated column visibility
+            self._apply_tool_visibility()
         except Exception:
             pass
         header.setFirstSectionMovable(False)  # type: ignore[union-attr]
@@ -749,9 +737,10 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH
+            constants.EditorCols.AUDIO_APP_PATH,
+            constants.EditorCols.MM_PATH
         ]
-
+ 
         # For "by_filename", prompt the user for a substring before iterating
         filename_filter = None
         if criteria == "by_filename":
@@ -1111,6 +1100,14 @@ class EditorTab(QWidget):
             'audio_app_options': '', 'audio_app_arguments': '', 'audio_app_run_wait': False,
             'unborder_cfg': '', 'unborder_cfg_enabled': True, 'unborder_cfg_overwrite': True,
             'reborder_cfg': '', 'reborder_cfg_enabled': True, 'reborder_cfg_overwrite': True,
+
+            # Monitor Config App
+            'multimonitortool_path': config.multimonitortool_path if config.defaults.get('multimonitortool_path_enabled', True) else "",
+            'multimonitortool_enabled': config.defaults.get('multimonitortool_path_enabled', True),
+            'multimonitortool_overwrite': config.overwrite_states.get('multimonitortool_path', True),
+            'multimonitortool_options': config.multimonitortool_options,
+            'multimonitortool_arguments': config.multimonitortool_arguments,
+            'multimonitortool_run_wait': config.run_wait_states.get('multimonitortool_path_run_wait', False),
         }
         
         self.original_data.append(copy.deepcopy(game_data))
@@ -1390,7 +1387,8 @@ class EditorTab(QWidget):
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
             constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
-            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS
+            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.MM_PATH
         ]
         
         for row in range(self.table.rowCount()):
@@ -2285,6 +2283,7 @@ class EditorTab(QWidget):
             (constants.EditorCols.POST3_PATH, [constants.EditorCols.POST3_OPTIONS, constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT]),
             (constants.EditorCols.DM_PATH, [constants.EditorCols.DM_OPTIONS, constants.EditorCols.DM_ARGUMENTS, constants.EditorCols.DM_RUN_WAIT]),
             (constants.EditorCols.AUDIO_APP_PATH, [constants.EditorCols.AUDIO_APP_OPTIONS, constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT]),
+            (constants.EditorCols.MM_PATH, [constants.EditorCols.MM_OPTIONS, constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT]),
         ]
         # Launcher Executable group
         groups.append((constants.EditorCols.LAUNCHER_EXE, [constants.EditorCols.LAUNCHER_EXE_OPTIONS, constants.EditorCols.LAUNCHER_EXE_ARGUMENTS]))
@@ -2322,6 +2321,57 @@ class EditorTab(QWidget):
             
             # Hide path if compact AND empty
             self.table.setColumnHidden(path_col, compact and is_empty)
+
+    # ── Tool (plugin) gated column visibility ────────────────────── #
+    TOOL_COLUMN_MAP = {
+        'monitor': [
+            constants.EditorCols.MM_PATH, constants.EditorCols.MM_OPTIONS,
+            constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT,
+        ],
+        'controller_mapper': [
+            constants.EditorCols.CM_PATH, constants.EditorCols.CM_OPTIONS,
+            constants.EditorCols.CM_ARGUMENTS, constants.EditorCols.CM_RUN_WAIT,
+        ],
+        'borderless_window': [
+            constants.EditorCols.BW_PATH, constants.EditorCols.BW_OPTIONS,
+            constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT,
+            constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS,
+            constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS,
+            constants.EditorCols.REBORDER_CFG_ARGUMENTS,
+        ],
+        'disc_mount': [
+            constants.EditorCols.ISO_PATH,
+            constants.EditorCols.DM_PATH, constants.EditorCols.DM_OPTIONS,
+            constants.EditorCols.DM_ARGUMENTS, constants.EditorCols.DM_RUN_WAIT,
+            constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_MOUNT_CFG_OPTIONS,
+            constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS,
+            constants.EditorCols.DM_UNMOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS,
+            constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS,
+        ],
+        'audio': [
+            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.AUDIO_APP_OPTIONS,
+            constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT,
+            constants.EditorCols.AUDIO_GAME_CFG, constants.EditorCols.AUDIO_GAME_CFG_OPTIONS,
+            constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS,
+            constants.EditorCols.AUDIO_MEDIACENTER_CFG, constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS,
+            constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS,
+        ],
+    }
+
+    def set_enabled_tools(self, enabled_tools: set):
+        self._enabled_tools = set(enabled_tools)
+        self._apply_tool_visibility()
+
+    def _apply_tool_visibility(self):
+        """Show/hide columns gated by tool plugin state."""
+        for tool, col_enums in self.TOOL_COLUMN_MAP.items():
+            visible = tool in self._enabled_tools
+            for col_enum in col_enums:
+                col = col_enum.value
+                self.table.setColumnHidden(col, not visible)
+                if not visible:
+                    self.table.setColumnWidth(col, 0)
 
     def _sync_cell_to_data(self, row, col):
         """Update the underlying data model from the table widget."""
@@ -2382,6 +2432,17 @@ class EditorTab(QWidget):
             game['borderless_windowing_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.HIDE_TASKBAR.value:
             game['hide_taskbar'] = self._get_checkbox_value(row, col)
+        elif col == constants.EditorCols.MM_PATH.value:
+            en, path, ov = self._get_merged_path_data(row, col)
+            game['multimonitortool_enabled'] = en
+            game['multimonitortool_path'] = path
+            game['multimonitortool_overwrite'] = ov
+        elif col == constants.EditorCols.MM_OPTIONS.value:
+            game['multimonitortool_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_ARGUMENTS.value:
+            game['multimonitortool_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_RUN_WAIT.value:
+            game['multimonitortool_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.MM_GAME_PROFILE.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['mm_game_profile_enabled'] = en
@@ -2629,7 +2690,8 @@ class EditorTab(QWidget):
             constants.EditorCols.PRE3_PATH, constants.EditorCols.POST3_PATH,
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH
+            constants.EditorCols.AUDIO_APP_PATH,
+            constants.EditorCols.MM_PATH
         ]
         
         for row in range(self.table.rowCount()):
@@ -2987,6 +3049,14 @@ class EditorTab(QWidget):
         # Hide Taskbar (CheckBox)
         self.table.setCellWidget(row_num, constants.EditorCols.HIDE_TASKBAR.value, self._create_checkbox_widget(game.get('hide_taskbar', False), row_num, constants.EditorCols.HIDE_TASKBAR.value))
 
+        # Monitor-Config App (merged path, opts, args, run_wait)
+        mm_symbol, mm_run_wait = self._get_propagation_symbol_and_run_wait('multimonitortool_path')
+        mm_path = f"{mm_symbol} {game.get('multimonitortool_path', '').lstrip('<> ')}"
+        self.table.setCellWidget(row_num, constants.EditorCols.MM_PATH.value, self._create_merged_path_widget(game.get('multimonitortool_enabled', True), mm_path, game.get('multimonitortool_overwrite', True), row_num, constants.EditorCols.MM_PATH.value))
+        self.table.setItem(row_num, constants.EditorCols.MM_OPTIONS.value, QTableWidgetItem(game.get('multimonitortool_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MM_ARGUMENTS.value, QTableWidgetItem(game.get('multimonitortool_arguments', '')))
+        self.table.setCellWidget(row_num, constants.EditorCols.MM_RUN_WAIT.value, self._create_checkbox_widget(game.get('multimonitortool_run_wait', mm_run_wait), row_num, constants.EditorCols.MM_RUN_WAIT.value))
+
         # Profiles with propagation symbols
         mm_game_profile = get_path_display('mm_game_profile', 'multimonitor_gaming_path')
         self.table.setCellWidget(row_num, constants.EditorCols.MM_GAME_PROFILE.value, self._create_merged_path_widget(game.get('mm_game_profile_enabled', True), mm_game_profile, game.get('mm_game_profile_overwrite', True), row_num, constants.EditorCols.MM_GAME_PROFILE.value))
@@ -3253,6 +3323,8 @@ class EditorTab(QWidget):
                 constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT
             ]),
             ('Monitor-Config', 'multimonitortool_path', [
+                constants.EditorCols.MM_PATH, constants.EditorCols.MM_OPTIONS,
+                constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT,
                 constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_GAME_PROFILE_OPTIONS,
                 constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS,
                 constants.EditorCols.MM_DESKTOP_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS,
