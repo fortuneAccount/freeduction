@@ -2,7 +2,6 @@
 # Build artifacts
 build/
 dist/
-py_launcher_dist/
 *.spec
 
 # Archives
@@ -35,8 +34,6 @@ steam_filtered.txt
 *.obj
 index_backups/
 cache/
-check_cols.py
-test_display_wizard.py
 # IDE specific
 .agent.md
 .devcontainer/
@@ -45,7 +42,6 @@ test_display_wizard.py
 .kiro/
 .kilo/
 .copilot/
-.devcontainer/
 
 # Running App Files
 Profiles/

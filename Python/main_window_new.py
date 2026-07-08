@@ -525,7 +525,7 @@ class MainWindow(QMainWindow):
         
         file_keys = [
             "launcher_executable",
-            "controller_mapper_path", "borderless_gaming_path", "multi_monitor_tool_path",
+            "controller_mapper_path", "borderless_gaming_path", "multimonitortool_path",
             "just_after_launch_path", "just_before_exit_path",
             "p1_profile_path", "p2_profile_path", "mediacenter_profile_path",
             "multimonitor_gaming_path", "multimonitor_media_path",
@@ -626,7 +626,7 @@ class MainWindow(QMainWindow):
             mapping = [
                 ('controller_mapper_enabled', 'controller_mapper_path_enabled', 'CME'),
                 ('borderless_windowing_enabled', 'borderless_gaming_path_enabled', 'BWE'),
-                ('multi_monitor_app_enabled', 'multi_monitor_tool_path_enabled', 'MME'),
+                ('multimonitortool_enabled', 'multimonitortool_path_enabled', 'MME'),
                 ('just_after_launch_enabled', 'just_after_launch_path_enabled', 'JAL'),
                 ('just_before_exit_enabled', 'just_before_exit_path_enabled', 'JBE'),
                 ('pre_1_enabled', 'pre1_path_enabled', 'P1'),

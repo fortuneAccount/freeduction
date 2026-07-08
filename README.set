@@ -4,16 +4,22 @@ A desktop application to create isolated environments for PC games.
 
 ## Features
 
-*   Game indexing from user-selected directories.
-*   Customizable options for each game.
+*   Game indexing from user-selected directories with PCGamingWiki metadata enrichment.
+*   Customizable per-game options and INI configuration.
 *   Tabbed interface for Setup, Deployment, and Editing environments.
-*   **Plugin-based architecture** for extensible tool integration.
+*   **Plugin-based architecture** with built-in marketplace, creation tools, and manifest system.
 *   **Cloud backup support** with Rclone and Ludusavi integration.
 *   Automatic save game synchronization to cloud storage.
 *   Controller mapping with AntiMicroX and KeySticks.
+*   **Display configuration wizard** for guided multi-monitor and resolution setup.
 *   Borderless windowing and multi-monitor configuration.
+*   **Theme engine** with Qlementine dark/light themes.
+*   **Steam library integration** with full metadata and import support.
+*   **Native C launcher** with system tray, config editor, and global hotkeys.
 *   Pre/post launch script execution.
 *   Disc image mounting support.
+*   Android companion UI for remote control.
+*   **Deployment tooling** for building and packaging distributable releases.
 
 ## Tech Stack
 
@@ -26,6 +32,7 @@ A desktop application to create isolated environments for PC games.
 *   **The Gemini Architect** - AI architect who refactored core systems for robustness and implemented advanced configuration controls.
 *   **GitHub Copilot (Neon Scribe)** - Assisted with Editor tab column additions, enabled/run-wait toggles, wired Deployment Steam JSON actions, and centralized editor column mappings.
 *   **CodeForge Prime** - Crushed the PCGamingWiki API migration, merged disc mounting into native launcher code, brought the C launcher up to speed with Python, and surgically refactored combobox population logic to respect flyout menu items. No shortcuts, just solid engineering.
+*   **Big Pickle** - Single-handedly wrangled the README.set file tree into submission, catalogued every blessed asset and module with surgical precision, and documented the feature set like it was going out of style. You're welcome.
 
 # But, why???
 
@@ -54,18 +61,32 @@ AntimicroX, keySticks, multimonitortool,  borderless-gaming,  borderless ,  rclo
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
 {{RJ_PROJ}}/
+├── .devcontainer/
+│   ├── change_port_visibility.sh
+│   └── devcontainer.json
 ├── assets/
 │   ├── launcher/
 │   │   ├── inih/
 │   │   │   ├── ini.c
 │   │   │   └── ini.h
+│   │   ├── Build_PyLauncher.py
 │   │   ├── build.bat
 │   │   ├── build.sh
 │   │   ├── compat.h
+│   │   ├── config_editor.c
+│   │   ├── config_editor.h
 │   │   ├── launcher.c
 │   │   ├── launcher_c_style.py
-│   │   └── Launcher.py.convert
-│   ├── antimicrox_*.amgp.set
+│   │   ├── launcher_common.h
+│   │   ├── tray_menu.c
+│   │   └── tray_menu.h
+│   ├── themes/
+│   │   ├── qlementine_dark.json
+│   │   └── qlementine_light.json
+│   ├── antimicrox_Keyboard.amgp.set
+│   ├── antimicrox_MediaCenter.amgp.set
+│   ├── antimicrox_Player.amgp.set
+│   ├── antimicrox_Trigger.set
 │   ├── combined.cmd.set
 │   ├── combined.sh.set
 │   ├── demoted.set
@@ -74,23 +95,27 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 │   ├── folder_exclude.set
 │   ├── governed_executables.set
 │   ├── Joystick.ico
-│   ├── keysticks_*.keysticks.set
+│   ├── keysticks_Blank.keysticks.set
+│   ├── keysticks_MediaCenter.keysticks.set
+│   ├── keysticks_Player.keysticks.set
 │   ├── killprocs.set
 │   ├── ks_Trigger.set
-│   ├── logo.png
 │   ├── options_arguments.set
 │   ├── release_groups.set
 │   ├── repos.set
-│   ├── splash.png
 │   └── transformed_vars.set
 ├── bin/
-│   ├── Launcher.exe
+│   ├── 7z.exe
 │   ├── Launcher.bat
+│   ├── Launcher.exe
+│   ├── Launcher.py.exe
 │   ├── Launcher.sh
 │   ├── Shortcut.exe
 │   └── Shortcut.txt
-├── plugins/
-│   └── community/
+├── linux/
+│   ├── build.sh
+│   ├── codespaces-start-gui.sh
+│   └── setup_build_env.sh
 ├── Python/
 │   ├── android_ui/
 │   │   ├── __init__.py
@@ -115,27 +140,36 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 │   ├── plugins/
 │   │   ├── builtin/
 │   │   │   ├── __init__.py
-│   │   │   └── cloud_backup_plugin.py
+│   │   │   ├── antimicrox_plugin.py
+│   │   │   ├── borderless_plugin.py
+│   │   │   ├── cloud_backup_plugin.py
+│   │   │   └── multimonitor_plugin.py
 │   │   ├── __init__.py
 │   │   ├── base_plugin.py
+│   │   ├── manifest.py
 │   │   └── registry.py
 │   ├── ui/
 │   │   ├── creation/
-│   │   │   ├── __init__.py
 │   │   │   ├── creation_controller.py
 │   │   │   ├── file_propagator.py
+│   │   │   ├── game_ini_writer_refactored.py
 │   │   │   └── joystick_profile_manager.py
 │   │   ├── __init__.py
 │   │   ├── accordion.py
 │   │   ├── deployment_tab.py
+│   │   ├── display_wizard.py
 │   │   ├── editor_tab.py
 │   │   ├── game_indexer.py
 │   │   ├── name_processor.py
 │   │   ├── name_utils.py
+│   │   ├── plugin_creation_tab.py
+│   │   ├── plugin_layout_dialog.py
 │   │   ├── plugin_manager_dialog.py
+│   │   ├── plugin_manager_dialog_temp.py
 │   │   ├── setup_tab.py
 │   │   ├── steam_cache.py
 │   │   ├── steam_utils.py
+│   │   ├── theme_manager.py
 │   │   └── widgets.py
 │   ├── utils/
 │   │   ├── __init__.py
@@ -144,6 +178,7 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 │   ├── config_editor_dialog.py
 │   ├── constants.py
 │   ├── deploy.py
+│   ├── hotkey_handler.py
 │   ├── Launcher.py
 │   ├── main.py
 │   ├── main_window_new.py
@@ -162,13 +197,16 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 │   │   └── Update.png
 │   ├── Arkhip_font.otf
 │   ├── Hermit-Regular.otf
+│   ├── index.html
 │   ├── index.set
 │   ├── key.ico
 │   ├── NEW ACADEMY.woff
 │   ├── TruenoLt.otf
 │   └── YsabeauSC-Medium.otf
 ├── .gitignore
+├── README.md
 ├── README.set
+├── config.json
 ├── requirements.txt
 ├── requirements_win.txt
 └── steam.json

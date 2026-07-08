@@ -84,6 +84,11 @@ class ConfigManager(QObject):
         self._detect_borderless_gaming(config)
         self._detect_all_bin_tools(config)  # Auto-detect all tools in bin directory
 
+        # Set default launcher executable to bundled Launcher.exe
+        if not config.launcher_executable:
+            config.launcher_executable = constants.LAUNCHER_EXECUTABLE
+            config.defaults['launcher_executable_enabled'] = True
+
         # Set default sequences
         config.launch_sequence = ["Cloud-Sync", "mount-disc", "Kill-Game", "Kill-List", "Controller-Mapper", "Monitor-Config", "No-TB", "Pre1", "Borderless", "Pre2", "Pre3"]
         config.exit_sequence = ["Kill-Game", "Kill-List", "Monitor-Config", "Taskbar", "Post1", "Controller-Mapper", "Post2", "Borderless", "Post3", "Unmount-disc", "Cloud-Sync"]
@@ -91,31 +96,31 @@ class ConfigManager(QObject):
         # Set default enabled states
         config.defaults = {
             'controller_mapper_path_enabled': True,
-            'borderless_gaming_path_enabled': True,
-            'multimonitortool_path_enabled': True,
-            'just_after_launch_path_enabled': True,
-            'just_before_exit_path_enabled': True,
-            'pre1_path_enabled': True,
-            'post1_path_enabled': True,
-            'pre2_path_enabled': True,
-            'post2_path_enabled': True,
-            'pre3_path_enabled': True,
-            'post3_path_enabled': True,
+            'borderless_gaming_path_enabled': False,
+            'multimonitortool_path_enabled': False,
+            'just_after_launch_path_enabled': False,
+            'just_before_exit_path_enabled': False,
+            'pre1_path_enabled': False,
+            'post1_path_enabled': False,
+            'pre2_path_enabled': False,
+            'post2_path_enabled': False,
+            'pre3_path_enabled': False,
+            'post3_path_enabled': False,
             'p1_profile_path_enabled': True,
             'p2_profile_path_enabled': True,
             'mediacenter_profile_path_enabled': True,
-            'multimonitor_gaming_path_enabled': True,
-            'multimonitor_media_path_enabled': True,
+            'multimonitor_gaming_path_enabled': False,
+            'multimonitor_media_path_enabled': False,
             'profiles_dir_enabled': True,
             'launchers_dir_enabled': True,
-            'disc_mount_path_enabled': True,
-            'disc_mount_cfg_enabled': True,
-            'disc_unmount_cfg_enabled': True,
-            'audio_tool_path_enabled': True,
-            'audio_game_cfg_enabled': True,
-            'audio_mediacenter_cfg_enabled': True,
-            'unborder_cfg_enabled': True,
-            'reborder_cfg_enabled': True,
+            'disc_mount_path_enabled': False,
+            'disc_mount_cfg_enabled': False,
+            'disc_unmount_cfg_enabled': False,
+            'audio_tool_path_enabled': False,
+            'audio_game_cfg_enabled': False,
+            'audio_mediacenter_cfg_enabled': False,
+            'unborder_cfg_enabled': False,
+            'reborder_cfg_enabled': False,
         }
 
         config.run_wait_states = {

@@ -15,7 +15,7 @@ import datetime
 
 PATH_KEYS = [
     "profiles_dir", "launchers_dir", "launcher_executable",
-    "controller_mapper_path", "borderless_gaming_path", "multi_monitor_tool_path",
+    "controller_mapper_path", "borderless_gaming_path", "multimonitortool_path",
     "just_after_launch_path", "just_before_exit_path",
     "disc_mount_path", "disc_mount_cfg", "disc_unmount_cfg",
     "p1_profile_path", "p2_profile_path", "mediacenter_profile_path",
@@ -24,7 +24,7 @@ PATH_KEYS = [
     "post3_path",
     "cloud_sync_path", "local_backup_path", "audio_tool_path",
     "audio_game_cfg", "audio_mediacenter_cfg",
-    "unborder_config", "reborder_config"
+    "unborder_cfg", "reborder_cfg"
 ]
 
 PATH_LABELS = {
@@ -33,7 +33,7 @@ PATH_LABELS = {
     "launcher_executable": "Overwrite Launcher Executable",
     "controller_mapper_path": "Overwrite Controller Mapper",
     "borderless_gaming_path": "Overwrite Borderless Windowing",
-    "multi_monitor_tool_path": "Overwrite Multi-Monitor Tool",
+    "multimonitortool_path": "Overwrite Multi-Monitor Tool",
     "just_after_launch_path": "Overwrite Just After Launch",
     "just_before_exit_path": "Overwrite Just Before Exit",
     "disc_mount_path": "Overwrite Disc-Mount",
@@ -55,8 +55,8 @@ PATH_LABELS = {
     "audio_tool_path": "Overwrite Audio Tool",
     "audio_game_cfg": "Overwrite Audio Game Config",
     "audio_mediacenter_cfg": "Overwrite Audio MediaCenter Config",
-    "unborder_config": "Overwrite Unborder Config",
-    "reborder_config": "Overwrite Reborder Config"
+    "unborder_cfg": "Overwrite Unborder Config",
+    "reborder_cfg": "Overwrite Reborder Config"
 }
 
 class LogViewerDialog(QDialog):

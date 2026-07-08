@@ -63,12 +63,21 @@ call :ReadINI "%GAMEINI%" "Launcher" "UseKillList" USEKILLLIST
 call :ReadINI "%GAMEINI%" "Launcher" "KillList" KILLLIST
 call :ReadINI "%GAMEINI%" "Launcher" "TerminateBorderlessOnExit" TERMBORDERLESS
 
-REM Parse INI file - Profiles section
-call :ReadINI "%GAMEINI%" "Profiles" "Player1Profile" PLAYER1PROFILE
-call :ReadINI "%GAMEINI%" "Profiles" "Player2Profile" PLAYER2PROFILE
-call :ReadINI "%GAMEINI%" "Profiles" "MediaCenterProfile" MEDIACENTERPROFILE
-call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorGamingConfig" MMGAMECONFIG
-call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorMediaCenterConfig" MMDESKTOPCONFIG
+REM Parse INI file - mapperprofiles section
+call :ReadINI "%GAMEINI%" "mapperprofiles" "player1profile" PLAYER1PROFILE
+call :ReadINI "%GAMEINI%" "mapperprofiles" "player2profile" PLAYER2PROFILE
+call :ReadINI "%GAMEINI%" "mapperprofiles" "mediacenterprofile" MEDIACENTERPROFILE
+
+REM Parse INI file - monitorprofiles section
+call :ReadINI "%GAMEINI%" "monitorprofiles" "multimonitorgamingconfig" MMGAMECONFIG
+call :ReadINI "%GAMEINI%" "monitorprofiles" "multimonitormediacenterconfig" MMDESKTOPCONFIG
+
+REM Backward compatibility: old Profiles section
+if "%PLAYER1PROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "Player1Profile" PLAYER1PROFILE
+if "%PLAYER2PROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "Player2Profile" PLAYER2PROFILE
+if "%MEDIACENTERPROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MediaCenterProfile" MEDIACENTERPROFILE
+if "%MMGAMECONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorGamingConfig" MMGAMECONFIG
+if "%MMDESKTOPCONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorMediaCenterConfig" MMDESKTOPCONFIG
 
 REM Parse INI file - ControllerMapper section
 call :ReadINI "%GAMEINI%" "ControllerMapper" "ControllerMapperPath" MAPPERAPP
@@ -85,17 +94,25 @@ call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPath" MMTOOL
 call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathOptions" MMOPTS
 call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathArguments" MMARGS
 
-REM Parse INI file - DiscMount section
-call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPath" MOUNTAPP
-call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathOptions" MOUNTOPTS
-call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathArguments" MOUNTARGS
-call :ReadINI "%GAMEINI%" "DiscMount" "DiscMountPathRunWait" MOUNTWAIT
+REM Parse INI file - DiscMountProfiles section
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "EnableDiscMountCfg" MOUNTENABLED
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPath" MOUNTCFGAPP
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPathOptions" MOUNTCFGOPTS
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPathArguments" MOUNTCFARGS
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "EnableDiscUnmountCfg" UNMOUNTENABLED
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPath" UNMOUNTCFGAPP
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPathOptions" UNMOUNTCFGOPTS
+call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPathArguments" UNMOUNTCFARGS
 
-REM Parse INI file - DiscUnmount section
-call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPath" UNMOUNTAPP
-call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathOptions" UNMOUNTOPTS
-call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathArguments" UNMOUNTARGS
-call :ReadINI "%GAMEINI%" "DiscUnmount" "DiscUnmountPathRunWait" UNMOUNTWAIT
+REM Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
+if "%MOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscMountCfg" "EnableDiscMountCfg" MOUNTENABLED
+if "%MOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscMountCfg" "DiscMountCfgPath" MOUNTCFGAPP
+if "%MOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscMountCfg" "DiscMountCfgPathOptions" MOUNTCFGOPTS
+if "%MOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscMountCfg" "DiscMountCfgPathArguments" MOUNTCFARGS
+if "%UNMOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscUnmountCfg" "EnableDiscUnmountCfg" UNMOUNTENABLED
+if "%UNMOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscUnmountCfg" "DiscUnmountCfgPath" UNMOUNTCFGAPP
+if "%UNMOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscUnmountCfg" "DiscUnmountCfgPathOptions" UNMOUNTCFGOPTS
+if "%UNMOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscUnmountCfg" "DiscUnmountCfgPathArguments" UNMOUNTCFARGS
 
 REM Parse INI file - CloudSync section
 call :ReadINI "%GAMEINI%" "CloudSync" "EnableCloudSync" CLOUDENABLED

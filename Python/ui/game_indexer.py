@@ -169,7 +169,7 @@ def _process_executable(
             # Paths from setup tab (only if enabled)
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'borderless_windowing_path': config.borderless_gaming_path if config.defaults.get('borderless_gaming_path_enabled', True) else "",
-            'multi_monitor_app_path': config.multimonitortool_path if config.defaults.get('multi_monitor_tool_path_enabled', True) else "",
+            'multimonitortool_path': config.multimonitortool_path if config.defaults.get('multimonitortool_path_enabled', True) else "",
             'mm_game_profile': config.multimonitortool_gaming_path if config.defaults.get('multimonitor_gaming_path_enabled', True) else "",
             'mm_desktop_profile': config.multimonitortool_media_path if config.defaults.get('multimonitor_media_path_enabled', True) else "",
             'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "",
@@ -185,7 +185,7 @@ def _process_executable(
             # Enabled states from setup tab (defaults)
             'controller_mapper_enabled': config.defaults.get('controller_mapper_path_enabled', True),
             'borderless_windowing_enabled': config.defaults.get('borderless_gaming_path_enabled', True),
-            'multi_monitor_app_enabled': config.defaults.get('multi_monitor_tool_path_enabled', True),
+            'multimonitortool_enabled': config.defaults.get('multimonitortool_path_enabled', True),
             'just_after_launch_enabled': config.defaults.get('just_after_launch_path_enabled', True),
             'just_before_exit_enabled': config.defaults.get('just_before_exit_path_enabled', True),
             'pre_1_enabled': config.defaults.get('pre1_path_enabled', True), 'pre_2_enabled': config.defaults.get('pre2_path_enabled', True), 'pre_3_enabled': config.defaults.get('pre3_path_enabled', True),
@@ -203,7 +203,7 @@ def _process_executable(
             # Overwrite states (default to global config)
             'controller_mapper_overwrite': config.overwrite_states.get('controller_mapper_path', True),
             'borderless_windowing_overwrite': config.overwrite_states.get('borderless_gaming_path', True),
-            'multi_monitor_app_overwrite': config.overwrite_states.get('multi_monitor_tool_path', True),
+            'multimonitortool_overwrite': config.overwrite_states.get('multimonitortool_path', True),
             'just_after_launch_overwrite': config.overwrite_states.get('just_after_launch_path', True),
             'just_before_exit_overwrite': config.overwrite_states.get('just_before_exit_path', True),
             'pre_1_overwrite': config.overwrite_states.get('pre1_path', True),
@@ -223,7 +223,7 @@ def _process_executable(
             # Run-wait states from setup tab
             'controller_mapper_run_wait': config.run_wait_states.get('controller_mapper_path_run_wait', False),
             'borderless_windowing_run_wait': config.run_wait_states.get('borderless_gaming_path_run_wait', False),
-            'multi_monitor_app_run_wait': config.run_wait_states.get('multi_monitor_tool_path_run_wait', False),
+            'multimonitortool_run_wait': config.run_wait_states.get('multimonitortool_path_run_wait', False),
             'just_after_launch_run_wait': config.run_wait_states.get('just_after_launch_path_run_wait', False),
             'just_before_exit_run_wait': config.run_wait_states.get('just_before_exit_path_run_wait', False),
             'pre_1_run_wait': config.run_wait_states.get('pre1_path_run_wait', False), 'pre_2_run_wait': config.run_wait_states.get('pre2_path_run_wait', False), 'pre_3_run_wait': config.run_wait_states.get('pre3_path_run_wait', False),
@@ -240,10 +240,10 @@ def _process_executable(
             'audio_game_cfg_options': getattr(config, 'audio_game_cfg_options', ''), 'audio_game_cfg_arguments': getattr(config, 'audio_game_cfg_arguments', ''),
             'audio_mediacenter_cfg': getattr(config, 'audio_mediacenter_cfg', ''), 'audio_mediacenter_cfg_enabled': config.defaults.get('audio_mediacenter_cfg_enabled', True), 'audio_mediacenter_cfg_overwrite': config.overwrite_states.get('audio_mediacenter_cfg', True),
             'audio_mediacenter_cfg_options': getattr(config, 'audio_mediacenter_cfg_options', ''), 'audio_mediacenter_cfg_arguments': getattr(config, 'audio_mediacenter_cfg_arguments', ''),
-            'unborder_config': getattr(config, 'unborder_config', ''), 'unborder_config_enabled': config.defaults.get('unborder_config_enabled', True), 'unborder_config_overwrite': config.overwrite_states.get('unborder_config', True),
-            'unborder_config_options': getattr(config, 'unborder_config_options', ''), 'unborder_config_arguments': getattr(config, 'unborder_config_arguments', ''),
-            'reborder_config': getattr(config, 'reborder_config', ''), 'reborder_config_enabled': config.defaults.get('reborder_config_enabled', True), 'reborder_config_overwrite': config.overwrite_states.get('reborder_config', True),
-            'reborder_config_options': getattr(config, 'reborder_config_options', ''), 'reborder_config_arguments': getattr(config, 'reborder_config_arguments', ''),
+            'unborder_cfg': getattr(config, 'unborder_cfg', ''), 'unborder_cfg_enabled': config.defaults.get('unborder_cfg_enabled', True), 'unborder_cfg_overwrite': config.overwrite_states.get('unborder_cfg', True),
+            'unborder_cfg_options': getattr(config, 'unborder_cfg_options', ''), 'unborder_cfg_arguments': getattr(config, 'unborder_cfg_arguments', ''),
+            'reborder_cfg': getattr(config, 'reborder_cfg', ''), 'reborder_cfg_enabled': config.defaults.get('reborder_cfg_enabled', True), 'reborder_cfg_overwrite': config.overwrite_states.get('reborder_cfg', True),
+            'reborder_cfg_options': getattr(config, 'reborder_cfg_options', ''), 'reborder_cfg_arguments': getattr(config, 'reborder_cfg_arguments', ''),
         }
         return game_data
     except PermissionError:

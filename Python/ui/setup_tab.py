@@ -2091,7 +2091,7 @@ exit 1
             'Taskbar':           lambda: config.hide_taskbar,
             'Controller-Mapper': lambda: has_path('controller_mapper_path'),
             'Borderless':        lambda: has_path('borderless_gaming_path'),
-            'Monitor-Config':    lambda: has_path('multi_monitor_tool_path'),
+            'Monitor-Config':    lambda: has_path('multimonitortool_path'),
             'Cloud-Sync':        lambda: has_path('cloud_sync_path'),
             'mount-disc':        lambda: has_path('disc_mount_path'),
             'Unmount-disc':      lambda: has_path('disc_mount_path') or bool(getattr(config, 'disc_unmount_cfg', '') and config.defaults.get('disc_unmount_cfg_enabled', True)),

@@ -54,6 +54,36 @@ typedef struct {
     char disc_unmount_arguments[MAX_CMD_LEN];
     int disc_unmount_wait;
 
+    // Borderless profiles
+    char unborder_cfg[MAX_PATH_LEN];
+    char unborder_cfg_options[MAX_CMD_LEN];
+    char unborder_cfg_arguments[MAX_CMD_LEN];
+    int unborder_cfg_enabled;
+    char reborder_cfg[MAX_PATH_LEN];
+    char reborder_cfg_options[MAX_CMD_LEN];
+    char reborder_cfg_arguments[MAX_CMD_LEN];
+    int reborder_cfg_enabled;
+
+    // [DiscMountProfiles]
+    int disc_mount_cfg_enabled;
+    char disc_mount_cfg[MAX_PATH_LEN];
+    char disc_mount_cfg_options[MAX_CMD_LEN];
+    char disc_mount_cfg_arguments[MAX_CMD_LEN];
+    int disc_unmount_cfg_enabled;
+    char disc_unmount_cfg[MAX_PATH_LEN];
+    char disc_unmount_cfg_options[MAX_CMD_LEN];
+    char disc_unmount_cfg_arguments[MAX_CMD_LEN];
+
+    // [AudioProfiles]
+    int audio_game_cfg_enabled;
+    char audio_game_cfg[MAX_PATH_LEN];
+    char audio_game_cfg_options[MAX_CMD_LEN];
+    char audio_game_cfg_arguments[MAX_CMD_LEN];
+    int audio_mediacenter_cfg_enabled;
+    char audio_mediacenter_cfg[MAX_PATH_LEN];
+    char audio_mediacenter_cfg_options[MAX_CMD_LEN];
+    char audio_mediacenter_cfg_arguments[MAX_CMD_LEN];
+
     // [Options]
     int run_as_admin;
     int hide_taskbar;

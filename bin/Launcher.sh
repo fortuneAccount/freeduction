@@ -75,12 +75,21 @@ USEKILLLIST=$(read_ini "$GAMEINI" "Launcher" "UseKillList")
 KILLLIST=$(read_ini "$GAMEINI" "Launcher" "KillList")
 TERMBORDERLESS=$(read_ini "$GAMEINI" "Launcher" "TerminateBorderlessOnExit")
 
-# Profiles section
-PLAYER1PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player1Profile")
-PLAYER2PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player2Profile")
-MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "Profiles" "MediaCenterProfile")
-MMGAMECONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorGamingConfig")
-MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorMediaCenterConfig")
+# mapperprofiles section
+PLAYER1PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player1profile")
+PLAYER2PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player2profile")
+MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "mediacenterprofile")
+
+# monitorprofiles section
+MMGAMECONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "multimonitorgamingconfig")
+MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "multimonitormediacenterconfig")
+
+# Backward compatibility: old Profiles section
+[ -z "$PLAYER1PROFILE" ] && PLAYER1PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player1Profile")
+[ -z "$PLAYER2PROFILE" ] && PLAYER2PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player2Profile")
+[ -z "$MEDIACENTERPROFILE" ] && MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "Profiles" "MediaCenterProfile")
+[ -z "$MMGAMECONFIG" ] && MMGAMECONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorGamingConfig")
+[ -z "$MMDESKTOPCONFIG" ] && MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorMediaCenterConfig")
 
 # ControllerMapper section
 MAPPERAPP=$(read_ini "$GAMEINI" "ControllerMapper" "ControllerMapperPath")
@@ -97,17 +106,23 @@ MMTOOL=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPath")
 MMOPTS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathOptions")
 MMARGS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathArguments")
 
-# DiscMount section
-MOUNTAPP=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPath")
-MOUNTOPTS=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathOptions")
-MOUNTARGS=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathArguments")
-MOUNTWAIT=$(read_ini "$GAMEINI" "DiscMount" "DiscMountPathRunWait")
+# DiscMountProfiles section
+MOUNTENABLED=$(read_ini "$GAMEINI" "DiscMountProfiles" "EnableDiscMountCfg")
+MOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPath")
+MOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPathOptions")
+MOUNTCFARGS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPathArguments")
+UNMOUNTENABLED=$(read_ini "$GAMEINI" "DiscMountProfiles" "EnableDiscUnmountCfg")
+UNMOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPath")
+UNMOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPathOptions")
+UNMOUNTCFARGS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPathArguments")
 
-# DiscUnmount section
-UNMOUNTAPP=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPath")
-UNMOUNTOPTS=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathOptions")
-UNMOUNTARGS=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathArguments")
-UNMOUNTWAIT=$(read_ini "$GAMEINI" "DiscUnmount" "DiscUnmountPathRunWait")
+# Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
+[ -z "$MOUNTCFGAPP" ] && MOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountCfg" "DiscMountCfgPath")
+[ -z "$MOUNTCFGAPP" ] && MOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscMountCfg" "DiscMountCfgPathOptions")
+[ -z "$MOUNTCFGAPP" ] && MOUNTCFARGS=$(read_ini "$GAMEINI" "DiscMountCfg" "DiscMountCfgPathArguments")
+[ -z "$UNMOUNTCFGAPP" ] && UNMOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscUnmountCfg" "DiscUnmountCfgPath")
+[ -z "$UNMOUNTCFGAPP" ] && UNMOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscUnmountCfg" "DiscUnmountCfgPathOptions")
+[ -z "$UNMOUNTCFGAPP" ] && UNMOUNTCFARGS=$(read_ini "$GAMEINI" "DiscUnmountCfg" "DiscUnmountCfgPathArguments")
 
 # Pre1, Pre2, Pre3 sections
 PREAPP1=$(read_ini "$GAMEINI" "Pre1" "Pre1Path")

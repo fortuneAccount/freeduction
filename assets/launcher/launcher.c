@@ -349,6 +349,110 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("Paths", "DiscUnmountWait")) {
         SET_BOOL(disc_unmount_wait);
     }
+    // [DiscMountProfiles] section
+    else if (MATCH("DiscMountProfiles", "enablediscmountcfg")) {
+        SET_BOOL(disc_mount_cfg_enabled);
+    } else if (MATCH("DiscMountProfiles", "discmountcfgpath")) {
+        SET_STR(disc_mount_cfg);
+    } else if (MATCH("DiscMountProfiles", "discmountcfgpathoptions")) {
+        SET_STR(disc_mount_cfg_options);
+    } else if (MATCH("DiscMountProfiles", "discmountcfgpatharguments")) {
+        SET_STR(disc_mount_cfg_arguments);
+    } else if (MATCH("DiscMountProfiles", "enablediscunmountcfg")) {
+        SET_BOOL(disc_unmount_cfg_enabled);
+    } else if (MATCH("DiscMountProfiles", "discunmountcfgpath")) {
+        SET_STR(disc_unmount_cfg);
+    } else if (MATCH("DiscMountProfiles", "discunmountcfgpathoptions")) {
+        SET_STR(disc_unmount_cfg_options);
+    } else if (MATCH("DiscMountProfiles", "discunmountcfgpatharguments")) {
+        SET_STR(disc_unmount_cfg_arguments);
+    }
+    // [mapperprofiles] section
+    else if (MATCH("mapperprofiles", "player1profile")) {
+        SET_STR(player1_profile);
+    } else if (MATCH("mapperprofiles", "player2profile")) {
+        SET_STR(player2_profile);
+    } else if (MATCH("mapperprofiles", "mediacenterprofile")) {
+        SET_STR(mediacenter_profile);
+    }
+    // [monitorprofiles] section
+    else if (MATCH("monitorprofiles", "multimonitorgamingconfig")) {
+        SET_STR(mm_game_config);
+    } else if (MATCH("monitorprofiles", "multimonitormediacenterconfig")) {
+        SET_STR(mm_desktop_config);
+    }
+    // [BorderlessProfiles] section
+    else if (MATCH("BorderlessProfiles", "enableunbordercfg")) {
+        SET_BOOL(unborder_cfg_enabled);
+    } else if (MATCH("BorderlessProfiles", "unbordercfgpath")) {
+        SET_STR(unborder_cfg);
+    } else if (MATCH("BorderlessProfiles", "unbordercfgpathoptions")) {
+        SET_STR(unborder_cfg_options);
+    } else if (MATCH("BorderlessProfiles", "unbordercfgpatharguments")) {
+        SET_STR(unborder_cfg_arguments);
+    } else if (MATCH("BorderlessProfiles", "enablerebordercfg")) {
+        SET_BOOL(reborder_cfg_enabled);
+    } else if (MATCH("BorderlessProfiles", "rebordercfgpath")) {
+        SET_STR(reborder_cfg);
+    } else if (MATCH("BorderlessProfiles", "rebordercfgpathoptions")) {
+        SET_STR(reborder_cfg_options);
+    } else if (MATCH("BorderlessProfiles", "rebordercfgpatharguments")) {
+        SET_STR(reborder_cfg_arguments);
+    }
+    // [AudioProfiles] section
+    else if (MATCH("AudioProfiles", "enableaudiogamecfg")) {
+        SET_BOOL(audio_game_cfg_enabled);
+    } else if (MATCH("AudioProfiles", "audiogamecfgpath")) {
+        SET_STR(audio_game_cfg);
+    } else if (MATCH("AudioProfiles", "audiogamecfgpathoptions")) {
+        SET_STR(audio_game_cfg_options);
+    } else if (MATCH("AudioProfiles", "audiogamecfgpatharguments")) {
+        SET_STR(audio_game_cfg_arguments);
+    } else if (MATCH("AudioProfiles", "enableaudiomediacentercfg")) {
+        SET_BOOL(audio_mediacenter_cfg_enabled);
+    } else if (MATCH("AudioProfiles", "audiomediacentercfgpath")) {
+        SET_STR(audio_mediacenter_cfg);
+    } else if (MATCH("AudioProfiles", "audiomediacentercfgpathoptions")) {
+        SET_STR(audio_mediacenter_cfg_options);
+    } else if (MATCH("AudioProfiles", "audiomediacentercfgpatharguments")) {
+        SET_STR(audio_mediacenter_cfg_arguments);
+    }
+    // Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
+    else if (MATCH("DiscMountCfg", "enablediscmountcfg")) {
+        SET_BOOL(disc_mount_cfg_enabled);
+    } else if (MATCH("DiscMountCfg", "discmountcfgpath")) {
+        SET_STR(disc_mount_cfg);
+    } else if (MATCH("DiscMountCfg", "discmountcfgpathoptions")) {
+        SET_STR(disc_mount_cfg_options);
+    } else if (MATCH("DiscMountCfg", "discmountcfgpatharguments")) {
+        SET_STR(disc_mount_cfg_arguments);
+    } else if (MATCH("DiscUnmountCfg", "enablediscunmountcfg")) {
+        SET_BOOL(disc_unmount_cfg_enabled);
+    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpath")) {
+        SET_STR(disc_unmount_cfg);
+    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpathoptions")) {
+        SET_STR(disc_unmount_cfg_options);
+    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpatharguments")) {
+        SET_STR(disc_unmount_cfg_arguments);
+    }
+    // Backward compatibility: old AudioGameCfg/AudioMediacenterCfg sections
+    else if (MATCH("AudioGameCfg", "enableaudiogamecfg")) {
+        SET_BOOL(audio_game_cfg_enabled);
+    } else if (MATCH("AudioGameCfg", "audiogamecfgpath")) {
+        SET_STR(audio_game_cfg);
+    } else if (MATCH("AudioGameCfg", "audiogamecfgpathoptions")) {
+        SET_STR(audio_game_cfg_options);
+    } else if (MATCH("AudioGameCfg", "audiogamecfgpatharguments")) {
+        SET_STR(audio_game_cfg_arguments);
+    } else if (MATCH("AudioMediacenterCfg", "enableaudiomediacentercfg")) {
+        SET_BOOL(audio_mediacenter_cfg_enabled);
+    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpath")) {
+        SET_STR(audio_mediacenter_cfg);
+    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpathoptions")) {
+        SET_STR(audio_mediacenter_cfg_options);
+    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpatharguments")) {
+        SET_STR(audio_mediacenter_cfg_arguments);
+    }
     // [Options] section
     else if (MATCH("Options", "RunAsAdmin")) {
         SET_BOOL(run_as_admin);

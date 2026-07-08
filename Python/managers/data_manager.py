@@ -148,7 +148,7 @@ class DataManager(QObject):
                 large_lc_count = 0
                 large_lc_details = []
                 path_keys = [
-                    'controller_mapper_path', 'borderless_windowing_path', 'multi_monitor_app_path',
+                    'controller_mapper_path', 'borderless_windowing_path', 'multimonitortool_path',
                     'just_after_launch_path', 'just_before_exit_path',
                     'pre1_path', 'pre2_path', 'pre3_path',
                     'post1_path', 'post2_path', 'post3_path',
@@ -209,7 +209,7 @@ class DataManager(QObject):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('multi_monitor_app_path', 'multi_monitor_app_enabled'),
+            ('multimonitortool_path', 'multimonitortool_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),

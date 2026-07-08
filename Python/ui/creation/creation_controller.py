@@ -101,7 +101,7 @@ class CreationController:
             app_keys = [
                 ('controller_mapper_path', 'Controller Mapper', 'controller_mapper_enabled'),
                 ('borderless_windowing_path', 'Borderless Gaming', 'borderless_windowing_enabled'),
-                ('multi_monitor_app_path', 'Multi-Monitor Tool', 'multi_monitor_app_enabled'),
+                ('multimonitortool_path', 'Multi-Monitor Tool', 'multimonitortool_enabled'),
                 ('just_after_launch_path', 'Just After Launch', 'just_after_launch_enabled'),
                 ('just_before_exit_path', 'Just Before Exit', 'just_before_exit_enabled'),
                 ('pre1_path', 'Pre-Launch 1', 'pre_1_enabled'),
@@ -635,38 +635,41 @@ class CreationController:
         config.set('Launcher', 'usekilllist', str(game_data.get('kill_list_enabled', False)))
         config.set('Launcher', 'killlist', game_data.get('kill_list', ''))
 
-        # --- [Profiles] Section ---
-        config.add_section('Profiles')
+        # --- [mapperprofiles] Section ---
+        config.add_section('mapperprofiles')
         
         if game_data.get('player1_profile_enabled', True):
             val = self._get_profile_path('player1_profile', game_data, game_profile_dir)
-            config.set('Profiles', 'player1profile', val)
+            config.set('mapperprofiles', 'player1profile', val)
         else:
-            config.set('Profiles', 'player1profile', "")
+            config.set('mapperprofiles', 'player1profile', "")
         
         if game_data.get('player2_profile_enabled', True):
             val = self._get_profile_path('player2_profile', game_data, game_profile_dir)
-            config.set('Profiles', 'player2profile', val)
+            config.set('mapperprofiles', 'player2profile', val)
         else:
-            config.set('Profiles', 'player2profile', "")
+            config.set('mapperprofiles', 'player2profile', "")
         
         if game_data.get('mediacenter_profile_enabled', True):
             val = self._get_profile_path('mediacenter_profile', game_data, game_profile_dir)
-            config.set('Profiles', 'mediacenterprofile', val)
+            config.set('mapperprofiles', 'mediacenterprofile', val)
         else:
-            config.set('Profiles', 'mediacenterprofile', "")
+            config.set('mapperprofiles', 'mediacenterprofile', "")
+
+        # --- [monitorprofiles] Section ---
+        config.add_section('monitorprofiles')
         
         if game_data.get('mm_game_profile_enabled', True):
             val = self._get_profile_path('mm_game_profile', game_data, game_profile_dir)
-            config.set('Profiles', 'multimonitorgamingconfig', val)
+            config.set('monitorprofiles', 'multimonitorgamingconfig', val)
         else:
-            config.set('Profiles', 'multimonitorgamingconfig', "")
+            config.set('monitorprofiles', 'multimonitorgamingconfig', "")
         
         if game_data.get('mm_desktop_profile_enabled', True):
             val = self._get_profile_path('mm_desktop_profile', game_data, game_profile_dir)
-            config.set('Profiles', 'multimonitormediacenterconfig', val)
+            config.set('monitorprofiles', 'multimonitormediacenterconfig', val)
         else:
-            config.set('Profiles', 'multimonitormediacenterconfig', "")
+            config.set('monitorprofiles', 'multimonitormediacenterconfig', "")
 
         # --- [DiscMount] Section ---
         config.add_section('DiscMount')
@@ -676,19 +679,16 @@ class CreationController:
         config.set('DiscMount', 'discmountpatharguments', game_data.get('disc_mount_args', ''))
         config.set('DiscMount', 'discmountpathrunwait', str(game_data.get('disc_mount_wait', False)))
 
-        # --- [DiscMountCfg] Section ---
-        config.add_section('DiscMountCfg')
-        config.set('DiscMountCfg', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
-        config.set('DiscMountCfg', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
-        config.set('DiscMountCfg', 'discmountcfgpathoptions', game_data.get('disc_mount_cfg_options', ''))
-        config.set('DiscMountCfg', 'discmountcfgpatharguments', game_data.get('disc_mount_cfg_arguments', ''))
-
-        # --- [DiscUnmountCfg] Section ---
-        config.add_section('DiscUnmountCfg')
-        config.set('DiscUnmountCfg', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
-        config.set('DiscUnmountCfg', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
-        config.set('DiscUnmountCfg', 'discunmountcfgpathoptions', game_data.get('disc_unmount_cfg_options', ''))
-        config.set('DiscUnmountCfg', 'discunmountcfgpatharguments', game_data.get('disc_unmount_cfg_arguments', ''))
+        # --- [DiscMountProfiles] Section ---
+        config.add_section('DiscMountProfiles')
+        config.set('DiscMountProfiles', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
+        config.set('DiscMountProfiles', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
+        config.set('DiscMountProfiles', 'discmountcfgpathoptions', game_data.get('disc_mount_cfg_options', ''))
+        config.set('DiscMountProfiles', 'discmountcfgpatharguments', game_data.get('disc_mount_cfg_arguments', ''))
+        config.set('DiscMountProfiles', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
+        config.set('DiscMountProfiles', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
+        config.set('DiscMountProfiles', 'discunmountcfgpathoptions', game_data.get('disc_unmount_cfg_options', ''))
+        config.set('DiscMountProfiles', 'discunmountcfgpatharguments', game_data.get('disc_unmount_cfg_arguments', ''))
 
         # --- [AudioApp] Section ---
         config.add_section('AudioApp')
@@ -698,43 +698,27 @@ class CreationController:
         config.set('AudioApp', 'audioapppatharguments', game_data.get('audio_app_arguments', app_config.audio_app_arguments))
         config.set('AudioApp', 'audioapppathrunwait', str(game_data.get('audio_app_run_wait', False)))
 
-        # --- [RunAudioConfig] Section ---
-        config.add_section('RunAudioConfig')
-        config.set('RunAudioConfig', 'enablerunaudioconfig', str(game_data.get('run_audio_config_enabled', False)))
-        config.set('RunAudioConfig', 'runaudioconfigpath', game_data.get('run_audio_config', ''))
+        # --- [BorderlessProfiles] Section ---
+        config.add_section('BorderlessProfiles')
+        config.set('BorderlessProfiles', 'enableunbordercfg', str(game_data.get('unborder_cfg_enabled', False)))
+        config.set('BorderlessProfiles', 'unbordercfgpath', game_data.get('unborder_cfg', ''))
+        config.set('BorderlessProfiles', 'unbordercfgpathoptions', game_data.get('unborder_cfg_options', ''))
+        config.set('BorderlessProfiles', 'unbordercfgpatharguments', game_data.get('unborder_cfg_arguments', ''))
+        config.set('BorderlessProfiles', 'enablerebordercfg', str(game_data.get('reborder_cfg_enabled', False)))
+        config.set('BorderlessProfiles', 'rebordercfgpath', game_data.get('reborder_cfg', ''))
+        config.set('BorderlessProfiles', 'rebordercfgpathoptions', game_data.get('reborder_cfg_options', ''))
+        config.set('BorderlessProfiles', 'rebordercfgpatharguments', game_data.get('reborder_cfg_arguments', ''))
 
-        # --- [ReturnAudioConfig] Section ---
-        config.add_section('ReturnAudioConfig')
-        config.set('ReturnAudioConfig', 'enablereturnaudioconfig', str(game_data.get('return_audio_config_enabled', False)))
-        config.set('ReturnAudioConfig', 'returnaudioconfigpath', game_data.get('return_audio_config', ''))
-
-        # --- [UnBorderConfig] Section ---
-        config.add_section('UnBorderConfig')
-        config.set('UnBorderConfig', 'enableunborderconfig', str(game_data.get('unborder_config_enabled', False)))
-        config.set('UnBorderConfig', 'unborderconfigpath', game_data.get('unborder_config', ''))
-        config.set('UnBorderConfig', 'unborderconfigpathoptions', game_data.get('unborder_config_options', ''))
-        config.set('UnBorderConfig', 'unborderconfigpatharguments', game_data.get('unborder_config_arguments', ''))
-
-        # --- [ReBorderConfig] Section ---
-        config.add_section('ReBorderConfig')
-        config.set('ReBorderConfig', 'enablereborderconfig', str(game_data.get('reborder_config_enabled', False)))
-        config.set('ReBorderConfig', 'reborderconfigpath', game_data.get('reborder_config', ''))
-        config.set('ReBorderConfig', 'reborderconfigpathoptions', game_data.get('reborder_config_options', ''))
-        config.set('ReBorderConfig', 'reborderconfigpatharguments', game_data.get('reborder_config_arguments', ''))
-
-        # --- [AudioGameCfg] Section ---
-        config.add_section('AudioGameCfg')
-        config.set('AudioGameCfg', 'enableaudiogamecfg', str(game_data.get('audio_game_cfg_enabled', False)))
-        config.set('AudioGameCfg', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
-        config.set('AudioGameCfg', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
-        config.set('AudioGameCfg', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
-
-        # --- [AudioMediacenterCfg] Section ---
-        config.add_section('AudioMediacenterCfg')
-        config.set('AudioMediacenterCfg', 'enableaudiomediacentercfg', str(game_data.get('audio_mediacenter_cfg_enabled', False)))
-        config.set('AudioMediacenterCfg', 'audiomediacentercfgpath', game_data.get('audio_mediacenter_cfg', ''))
-        config.set('AudioMediacenterCfg', 'audiomediacentercfgpathoptions', game_data.get('audio_mediacenter_cfg_options', ''))
-        config.set('AudioMediacenterCfg', 'audiomediacentercfgpatharguments', game_data.get('audio_mediacenter_cfg_arguments', ''))
+        # --- [AudioProfiles] Section ---
+        config.add_section('AudioProfiles')
+        config.set('AudioProfiles', 'enableaudiogamecfg', str(game_data.get('audio_game_cfg_enabled', False)))
+        config.set('AudioProfiles', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
+        config.set('AudioProfiles', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
+        config.set('AudioProfiles', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
+        config.set('AudioProfiles', 'enableaudiomediacentercfg', str(game_data.get('audio_mediacenter_cfg_enabled', False)))
+        config.set('AudioProfiles', 'audiomediacentercfgpath', game_data.get('audio_mediacenter_cfg', ''))
+        config.set('AudioProfiles', 'audiomediacentercfgpathoptions', game_data.get('audio_mediacenter_cfg_options', ''))
+        config.set('AudioProfiles', 'audiomediacentercfgpatharguments', game_data.get('audio_mediacenter_cfg_arguments', ''))
 
         # --- [ControllerMapper] Section ---
         config.add_section('ControllerMapper')
@@ -754,11 +738,11 @@ class CreationController:
 
         # --- [MultiMonitor] Section ---
         config.add_section('MultiMonitor')
-        config.set('MultiMonitor', 'enablemultimonitor', str(game_data.get('multi_monitor_app_enabled', True)))
-        config.set('MultiMonitor', 'multimonitorpath', self._get_app_path_for_ini('multi_monitor_app_path', game_data, game_profile_dir))
-        config.set('MultiMonitor', 'multimonitorpathoptions', game_data.get('multi_monitor_app_options', app_config.multi_monitor_tool_path_options))
-        config.set('MultiMonitor', 'multimonitorpatharguments', game_data.get('multi_monitor_app_arguments', app_config.multi_monitor_tool_path_arguments))
-        config.set('MultiMonitor', 'multimonitorpathrunwait', str(game_data.get('multi_monitor_app_run_wait', False)))
+        config.set('MultiMonitor', 'enablemultimonitor', str(game_data.get('multimonitortool_enabled', True)))
+        config.set('MultiMonitor', 'multimonitorpath', self._get_app_path_for_ini('multimonitortool_path', game_data, game_profile_dir))
+        config.set('MultiMonitor', 'multimonitorpathoptions', game_data.get('multimonitortool_options', app_config.multimonitortool_options))
+        config.set('MultiMonitor', 'multimonitorpatharguments', game_data.get('multimonitortool_arguments', app_config.multimonitortool_arguments))
+        config.set('MultiMonitor', 'multimonitorpathrunwait', str(game_data.get('multimonitortool_run_wait', False)))
 
         # --- [JustAfterLaunch] Section ---
         config.add_section('JustAfterLaunch')
@@ -863,13 +847,11 @@ class CreationController:
         app_source_map = [
             ('antimicrox', 'controller_mapper_path', 'controller_mapper_path'),
             ('borderless', 'borderless_windowing_path', 'borderless_gaming_path'),
-            ('multimonitortool', 'multi_monitor_app_path', 'multi_monitor_tool_path'),
+            ('multimonitortool', 'multimonitortool_path', 'multimonitortool_path'),
             ('wincdemu', 'disc_mount_path', 'disc_mount_path'),
             ('audioapp', 'audio_app_path', 'audio_tool_path'),
-            ('unborderconfig', 'unborder_config', 'unborder_config'),
-            ('reborderconfig', 'reborder_config', 'reborder_config'),
-            ('runaudioconfig', 'run_audio_config', 'run_audio_config'),
-            ('returnaudioconfig', 'return_audio_config', 'return_audio_config'),
+            ('unbordercfg', 'unborder_cfg', 'unborder_cfg'),
+            ('rebordercfg', 'reborder_cfg', 'reborder_cfg'),
             ('discmountcfg', 'disc_mount_cfg', 'disc_mount_cfg'),
             ('discunmountcfg', 'disc_unmount_cfg', 'disc_unmount_cfg'),
         ]
@@ -1017,7 +999,7 @@ class CreationController:
         # Map key to config_key
         config_key_map = {
             'borderless_windowing_path': 'borderless_gaming_path',
-            'multi_monitor_app_path': 'multi_monitor_tool_path'
+            'multimonitortool_path': 'multimonitortool_path'
         }
         config_key = config_key_map.get(key, key)
         
@@ -1051,7 +1033,7 @@ class CreationController:
         Downloads/Extracts if supported in repos.set, otherwise copies.
         """
         app_keys = [
-            'controller_mapper_path', 'borderless_windowing_path', 'multi_monitor_app_path',
+            'controller_mapper_path', 'borderless_windowing_path', 'multimonitortool_path',
             'just_after_launch_path', 'just_before_exit_path',
             'pre1_path', 'pre2_path', 'pre3_path',
             'post1_path', 'post2_path', 'post3_path'
@@ -1059,7 +1041,7 @@ class CreationController:
 
         config_key_map = {
             'borderless_windowing_path': 'borderless_gaming_path',
-            'multi_monitor_app_path': 'multi_monitor_tool_path'
+            'multimonitortool_path': 'multimonitortool_path'
         }
 
         for key in app_keys:

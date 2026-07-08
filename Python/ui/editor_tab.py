@@ -269,10 +269,13 @@ class EditorTab(QWidget):
             "NameOverride", "opts", "args", "AsAdmin",
             "Mapper", "opts", "args", "wait",
             "Windowing", "opts", "args", "wait",
-            "Multi-Monitor", "opts", "args", "wait",
-            "Hide TB",
-            "MM Game", "MM Desktop",
-            "Player 1", "Player 2", "MediaCenter",
+            "UnBorder", "opts", "args",
+            "ReBorder", "opts", "args",
+            "MM Game", "opts", "args",
+            "MM Desktop", "opts", "args",
+            "Player 1", "opts", "args",
+            "Player 2", "opts", "args",
+            "MediaCenter", "opts", "args",
             "JAL", "opts", "args", "wait",
             "JBE", "opts", "args", "wait",
             "Pre1", "opts", "args", "wait",
@@ -290,10 +293,9 @@ class EditorTab(QWidget):
             "Mount-Cfg", "opts", "args",
             "Unmount-Cfg", "opts", "args",
             "Audio-App", "opts", "args", "wait",
-            "UnBorder Config", "opts", "args",
-            "ReBorder Config", "opts", "args",
             "Audio Game", "opts", "args",
             "Audio MC", "opts", "args",
+            "Hide TB",
         ]
         self.table.setHorizontalHeaderLabels(headers)
 
@@ -314,16 +316,27 @@ class EditorTab(QWidget):
             "Options passed to the Borderless Windowing application",
             "Arguments passed to the Borderless Windowing application",
             "Wait for the Borderless Windowing application to finish before continuing",
-            "Path to the Multi-Monitor tool application (e.g. MultiMonitorTool)",
-            "Options passed to the Multi-Monitor tool application",
-            "Arguments passed to the Multi-Monitor tool application",
-            "Wait for the Multi-Monitor tool application to finish before continuing",
-            "Hide the Windows Taskbar while the game is running",
+            "Path to the UnBorder configuration file",
+            "Options for the UnBorder configuration file tool",
+            "Arguments for the UnBorder configuration file tool",
+            "Path to the ReBorder configuration file",
+            "Options for the ReBorder configuration file tool",
+            "Arguments for the ReBorder configuration file tool",
             "Config file path for Multi-Monitor Gaming profile",
+            "Options passed to the Multi-Monitor Gaming profile tool",
+            "Arguments passed to the Multi-Monitor Gaming profile tool",
             "Config file path for Multi-Monitor Desktop profile",
+            "Options passed to the Multi-Monitor Desktop profile tool",
+            "Arguments passed to the Multi-Monitor Desktop profile tool",
             "Controller profile path for Player 1",
+            "Options passed to the Player 1 controller profile tool",
+            "Arguments passed to the Player 1 controller profile tool",
             "Controller profile path for Player 2",
+            "Options passed to the Player 2 controller profile tool",
+            "Arguments passed to the Player 2 controller profile tool",
             "Controller profile path for Media Center",
+            "Options passed to the Media Center controller profile tool",
+            "Arguments passed to the Media Center controller profile tool",
             "Path to the application to run immediately after game launch",
             "Options passed to the Just After Launch application",
             "Arguments passed to the Just After Launch application",
@@ -377,18 +390,13 @@ class EditorTab(QWidget):
             "Options passed to the Audio Tool application",
             "Arguments passed to the Audio Tool application",
             "Wait for the Audio Tool application to finish before continuing",
-            "Path to the UnBorder configuration file",
-            "Options for the UnBorder configuration file tool",
-            "Arguments for the UnBorder configuration file tool",
-            "Path to the ReBorder configuration file",
-            "Options for the ReBorder configuration file tool",
-            "Arguments for the ReBorder configuration file tool",
             "Path to the Audio Game configuration file",
             "Options for the Audio Game configuration file tool",
             "Arguments for the Audio Game configuration file tool",
             "Path to the Audio MediaCenter configuration file",
             "Options for the Audio MediaCenter configuration file tool",
             "Arguments for the Audio MediaCenter configuration file tool",
+            "Hide the Windows Taskbar while the game is running",
         ]
         for i, tooltip in enumerate(tooltips):
             item = self.table.horizontalHeaderItem(i)
@@ -399,7 +407,6 @@ class EditorTab(QWidget):
         app_header_cols = {
             constants.EditorCols.CM_PATH.value,
             constants.EditorCols.BW_PATH.value,
-            constants.EditorCols.MM_PATH.value,
             constants.EditorCols.JA_PATH.value,
             constants.EditorCols.JB_PATH.value,
             constants.EditorCols.PRE1_PATH.value,
@@ -434,7 +441,7 @@ class EditorTab(QWidget):
         # Shorten width for Enabled (En) and Run/Wait (Rw) columns to save space
         try:
             rw_columns = [constants.EditorCols.CM_RUN_WAIT.value, constants.EditorCols.BW_RUN_WAIT.value,
-                          constants.EditorCols.MM_RUN_WAIT.value, constants.EditorCols.JA_RUN_WAIT.value,
+                          constants.EditorCols.JA_RUN_WAIT.value,
                           constants.EditorCols.JB_RUN_WAIT.value, constants.EditorCols.PRE1_RUN_WAIT.value,
                           constants.EditorCols.POST1_RUN_WAIT.value, constants.EditorCols.PRE2_RUN_WAIT.value,
                           constants.EditorCols.POST2_RUN_WAIT.value, constants.EditorCols.PRE3_RUN_WAIT.value,
@@ -705,9 +712,14 @@ class EditorTab(QWidget):
         self.table.clearSelection()
         
         path_cols = [
-            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH, constants.EditorCols.MM_PATH,
-            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE,
-            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE,
+            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH,
+            constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_GAME_PROFILE_OPTIONS, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS,
+            constants.EditorCols.MM_DESKTOP_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
+            constants.EditorCols.MEDIACENTER_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS,
             constants.EditorCols.JA_PATH, constants.EditorCols.JB_PATH,
             constants.EditorCols.PRE1_PATH, constants.EditorCols.POST1_PATH,
             constants.EditorCols.PRE2_PATH, constants.EditorCols.POST2_PATH,
@@ -715,8 +727,7 @@ class EditorTab(QWidget):
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
-            constants.EditorCols.REBORDER_CFG
+            constants.EditorCols.AUDIO_APP_PATH
         ]
 
         # For "by_filename", prompt the user for a substring before iterating
@@ -988,12 +999,12 @@ class EditorTab(QWidget):
             'borderless_windowing_arguments': config.borderless_gaming_path_arguments,
 
             # Multi Monitor
-            'multi_monitor_app_path': config.multi_monitor_tool_path if config.defaults.get('multi_monitor_tool_path_enabled', True) else "",
-            'multi_monitor_app_enabled': config.defaults.get('multi_monitor_tool_path_enabled', True),
-            'multi_monitor_app_overwrite': config.overwrite_states.get('multi_monitor_tool_path', True),
-            'multi_monitor_app_run_wait': config.run_wait_states.get('multi_monitor_tool_path_run_wait', False),
-            'multi_monitor_app_options': config.multi_monitor_tool_path_options,
-            'multi_monitor_app_arguments': config.multi_monitor_tool_path_arguments,
+            'multimonitortool_path': config.multimonitortool_path if config.defaults.get('multimonitortool_path_enabled', True) else "",
+            'multimonitortool_enabled': config.defaults.get('multimonitortool_path_enabled', True),
+            'multimonitortool_overwrite': config.overwrite_states.get('multimonitortool_path', True),
+            'multimonitortool_run_wait': config.run_wait_states.get('multimonitortool_path_run_wait', False),
+            'multimonitortool_options': config.multimonitortool_options,
+            'multimonitortool_arguments': config.multimonitortool_arguments,
 
             # Just After Launch
             'just_after_launch_path': config.just_after_launch_path if config.defaults.get('just_after_launch_path_enabled', True) else "",
@@ -1076,8 +1087,8 @@ class EditorTab(QWidget):
             # Audio App
             'audio_app_path': '', 'audio_app_enabled': True, 'audio_app_overwrite': True,
             'audio_app_options': '', 'audio_app_arguments': '', 'audio_app_run_wait': False,
-            'unborder_config': '', 'unborder_config_enabled': True, 'unborder_config_overwrite': True,
-            'reborder_config': '', 'reborder_config_enabled': True, 'reborder_config_overwrite': True,
+            'unborder_cfg': '', 'unborder_cfg_enabled': True, 'unborder_cfg_overwrite': True,
+            'reborder_cfg': '', 'reborder_cfg_enabled': True, 'reborder_cfg_overwrite': True,
         }
         
         self.original_data.append(copy.deepcopy(game_data))
@@ -1150,9 +1161,14 @@ class EditorTab(QWidget):
 
         # Browse Action
         path_cols = {
-            constants.EditorCols.CM_PATH.value, constants.EditorCols.BW_PATH.value, constants.EditorCols.MM_PATH.value,
-            constants.EditorCols.MM_GAME_PROFILE.value, constants.EditorCols.MM_DESKTOP_PROFILE.value,
-            constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE.value, constants.EditorCols.MEDIACENTER_PROFILE.value,
+            constants.EditorCols.CM_PATH.value, constants.EditorCols.BW_PATH.value,
+            constants.EditorCols.UNBORDER_CFG.value, constants.EditorCols.UNBORDER_CFG_OPTIONS.value, constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value,
+            constants.EditorCols.REBORDER_CFG.value, constants.EditorCols.REBORDER_CFG_OPTIONS.value, constants.EditorCols.REBORDER_CFG_ARGUMENTS.value,
+            constants.EditorCols.MM_GAME_PROFILE.value, constants.EditorCols.MM_GAME_PROFILE_OPTIONS.value, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS.value,
+            constants.EditorCols.MM_DESKTOP_PROFILE.value, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS.value, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS.value,
+            constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER1_PROFILE_OPTIONS.value, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS.value,
+            constants.EditorCols.PLAYER2_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE_OPTIONS.value, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS.value,
+            constants.EditorCols.MEDIACENTER_PROFILE.value, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS.value, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS.value,
             constants.EditorCols.JA_PATH.value, constants.EditorCols.JB_PATH.value,
             constants.EditorCols.PRE1_PATH.value, constants.EditorCols.POST1_PATH.value,
             constants.EditorCols.PRE2_PATH.value, constants.EditorCols.POST2_PATH.value,
@@ -1286,12 +1302,10 @@ class EditorTab(QWidget):
             ("Kill List Enabled", constants.EditorCols.KILL_LIST, "bool_special"),
             ("Controller Mapper Enabled", constants.EditorCols.CM_PATH, "bool_merged"),
             ("Borderless Windowing Enabled", constants.EditorCols.BW_PATH, "bool_merged"),
-            ("Multi-Monitor Enabled", constants.EditorCols.MM_PATH, "bool_merged"),
             ("Just After Launch Enabled", constants.EditorCols.JA_PATH, "bool_merged"),
             ("Just Before Exit Enabled", constants.EditorCols.JB_PATH, "bool_merged"),
             ("Wait for Mapper", constants.EditorCols.CM_RUN_WAIT, "bool"),
             ("Wait for Borderless", constants.EditorCols.BW_RUN_WAIT, "bool"),
-            ("Wait for Multi-Monitor", constants.EditorCols.MM_RUN_WAIT, "bool"),
         ]
         
         for name, col, type_ in fields:
@@ -1341,17 +1355,20 @@ class EditorTab(QWidget):
         """Check if paths in the table exist on disk and highlight invalid ones in green."""
         path_cols = [
             constants.EditorCols.DIRECTORY,
-            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH, constants.EditorCols.MM_PATH,
+            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH,
             constants.EditorCols.JA_PATH, constants.EditorCols.JB_PATH,
             constants.EditorCols.PRE1_PATH, constants.EditorCols.PRE2_PATH, constants.EditorCols.PRE3_PATH,
             constants.EditorCols.POST1_PATH, constants.EditorCols.POST2_PATH, constants.EditorCols.POST3_PATH,
             constants.EditorCols.LAUNCHER_EXE,
-            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE,
-            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE,
+            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_GAME_PROFILE_OPTIONS, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS,
+            constants.EditorCols.MM_DESKTOP_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
+            constants.EditorCols.MEDIACENTER_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS,
             constants.EditorCols.ISO_PATH,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
-            constants.EditorCols.REBORDER_CFG
+            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS
         ]
         
         for row in range(self.table.rowCount()):
@@ -2236,7 +2253,6 @@ class EditorTab(QWidget):
         groups = [
             (constants.EditorCols.CM_PATH, [constants.EditorCols.CM_OPTIONS, constants.EditorCols.CM_ARGUMENTS, constants.EditorCols.CM_RUN_WAIT]),
             (constants.EditorCols.BW_PATH, [constants.EditorCols.BW_OPTIONS, constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT]),
-            (constants.EditorCols.MM_PATH, [constants.EditorCols.MM_OPTIONS, constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT]),
             (constants.EditorCols.JA_PATH, [constants.EditorCols.JA_OPTIONS, constants.EditorCols.JA_ARGUMENTS, constants.EditorCols.JA_RUN_WAIT]),
             (constants.EditorCols.JB_PATH, [constants.EditorCols.JB_OPTIONS, constants.EditorCols.JB_ARGUMENTS, constants.EditorCols.JB_RUN_WAIT]),
             (constants.EditorCols.PRE1_PATH, [constants.EditorCols.PRE1_OPTIONS, constants.EditorCols.PRE1_ARGUMENTS, constants.EditorCols.PRE1_RUN_WAIT]),
@@ -2255,6 +2271,11 @@ class EditorTab(QWidget):
         groups.append((constants.EditorCols.DM_UNMOUNT_CFG, [constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.UNBORDER_CFG, [constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.REBORDER_CFG, [constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.MM_GAME_PROFILE, [constants.EditorCols.MM_GAME_PROFILE_OPTIONS, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS]))
+        groups.append((constants.EditorCols.MM_DESKTOP_PROFILE, [constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS]))
+        groups.append((constants.EditorCols.PLAYER1_PROFILE, [constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS]))
+        groups.append((constants.EditorCols.PLAYER2_PROFILE, [constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS]))
+        groups.append((constants.EditorCols.MEDIACENTER_PROFILE, [constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS]))
         groups.append((constants.EditorCols.AUDIO_GAME_CFG, [constants.EditorCols.AUDIO_GAME_CFG_OPTIONS, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.AUDIO_MEDIACENTER_CFG, [constants.EditorCols.AUDIO_MEDIACENTER_CFG_OPTIONS, constants.EditorCols.AUDIO_MEDIACENTER_CFG_ARGUMENTS]))
 
@@ -2337,17 +2358,6 @@ class EditorTab(QWidget):
             game['borderless_windowing_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.BW_RUN_WAIT.value:
             game['borderless_windowing_run_wait'] = self._get_checkbox_value(row, col)
-        elif col == constants.EditorCols.MM_PATH.value:
-            en, path, ov = self._get_merged_path_data(row, col)
-            game['multi_monitor_app_enabled'] = en
-            game['multi_monitor_app_path'] = path
-            game['multi_monitor_app_overwrite'] = ov
-        elif col == constants.EditorCols.MM_OPTIONS.value:
-            game['multi_monitor_app_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MM_ARGUMENTS.value:
-            game['multi_monitor_app_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MM_RUN_WAIT.value:
-            game['multi_monitor_app_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.HIDE_TASKBAR.value:
             game['hide_taskbar'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.MM_GAME_PROFILE.value:
@@ -2375,6 +2385,26 @@ class EditorTab(QWidget):
             game['mediacenter_profile_enabled'] = en
             game['mediacenter_profile'] = path
             game['mediacenter_profile_overwrite'] = ov
+        elif col == constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS.value:
+            game['mediacenter_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS.value:
+            game['mediacenter_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_GAME_PROFILE_OPTIONS.value:
+            game['mm_game_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS.value:
+            game['mm_game_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS.value:
+            game['mm_desktop_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS.value:
+            game['mm_desktop_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.PLAYER1_PROFILE_OPTIONS.value:
+            game['player1_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS.value:
+            game['player1_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.PLAYER2_PROFILE_OPTIONS.value:
+            game['player2_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS.value:
+            game['player2_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.JA_PATH.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['just_after_launch_enabled'] = en
@@ -2506,22 +2536,22 @@ class EditorTab(QWidget):
             game['audio_app_run_wait'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.UNBORDER_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
-            game['unborder_config_enabled'] = en
-            game['unborder_config'] = path
-            game['unborder_config_overwrite'] = ov
+            game['unborder_cfg_enabled'] = en
+            game['unborder_cfg'] = path
+            game['unborder_cfg_overwrite'] = ov
         elif col == constants.EditorCols.UNBORDER_CFG_OPTIONS.value:
-            game['unborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+            game['unborder_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value:
-            game['unborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+            game['unborder_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.REBORDER_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
-            game['reborder_config_enabled'] = en
-            game['reborder_config'] = path
-            game['reborder_config_overwrite'] = ov
+            game['reborder_cfg_enabled'] = en
+            game['reborder_cfg'] = path
+            game['reborder_cfg_overwrite'] = ov
         elif col == constants.EditorCols.REBORDER_CFG_OPTIONS.value:
-            game['reborder_config_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+            game['reborder_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.REBORDER_CFG_ARGUMENTS.value:
-            game['reborder_config_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+            game['reborder_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.AUDIO_GAME_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['audio_game_cfg_enabled'] = en
@@ -2563,17 +2593,21 @@ class EditorTab(QWidget):
         """Swap between LC (>) and CEN (<) for selected path cells."""
         self.push_undo()
         path_cols = [
-            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH, constants.EditorCols.MM_PATH,
-            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE,
-            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE,
+            constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH,
+            constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS,
+            constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_GAME_PROFILE_OPTIONS, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS,
+            constants.EditorCols.MM_DESKTOP_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
+            constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
+            constants.EditorCols.MEDIACENTER_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS,
             constants.EditorCols.JA_PATH, constants.EditorCols.JB_PATH,
             constants.EditorCols.PRE1_PATH, constants.EditorCols.POST1_PATH,
             constants.EditorCols.PRE2_PATH, constants.EditorCols.POST2_PATH,
             constants.EditorCols.PRE3_PATH, constants.EditorCols.POST3_PATH,
             constants.EditorCols.LAUNCHER_EXE,
             constants.EditorCols.DM_MOUNT_CFG, constants.EditorCols.DM_UNMOUNT_CFG,
-            constants.EditorCols.AUDIO_APP_PATH, constants.EditorCols.UNBORDER_CFG,
-            constants.EditorCols.REBORDER_CFG
+            constants.EditorCols.AUDIO_APP_PATH
         ]
         
         for row in range(self.table.rowCount()):
@@ -2609,8 +2643,8 @@ class EditorTab(QWidget):
             'controller_mapper_arguments': 'controller_mapper_path_arguments',
             'borderless_windowing_options': 'borderless_gaming_path_options',
             'borderless_windowing_arguments': 'borderless_gaming_path_arguments',
-            'multi_monitor_app_options': 'multi_monitor_tool_path_options',
-            'multi_monitor_app_arguments': 'multi_monitor_tool_path_arguments',
+            'multimonitortool_options': 'multimonitortool_options',
+            'multimonitortool_arguments': 'multimonitortool_arguments',
             'just_after_launch_options': 'just_after_launch_path_options',
             'just_after_launch_arguments': 'just_after_launch_path_arguments',
             'just_before_exit_options': 'just_before_exit_path_options',
@@ -2769,7 +2803,7 @@ class EditorTab(QWidget):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('multi_monitor_app_path', 'multi_monitor_app_enabled'),
+            ('multimonitortool_path', 'multimonitortool_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),
@@ -2786,8 +2820,8 @@ class EditorTab(QWidget):
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
-            ('unborder_config', 'unborder_config_enabled'),
-            ('reborder_config', 'reborder_config_enabled'),
+            ('unborder_cfg', 'unborder_cfg_enabled'),
+            ('reborder_cfg', 'reborder_cfg_enabled'),
         ]
         
         for game in sanitized:
@@ -2928,32 +2962,34 @@ class EditorTab(QWidget):
         self.table.setItem(row_num, constants.EditorCols.BW_ARGUMENTS.value, QTableWidgetItem(game.get('borderless_windowing_arguments', '')))
         self.table.setCellWidget(row_num, constants.EditorCols.BW_RUN_WAIT.value, self._create_checkbox_widget(game.get('borderless_windowing_run_wait', bw_run_wait), row_num, constants.EditorCols.BW_RUN_WAIT.value))
         
-        # Multi-monitor App (CheckBox, Path with symbol, RunWait)
-        mm_symbol, mm_run_wait = self._get_propagation_symbol_and_run_wait('multi_monitor_tool_path')
-        mm_path = f"{mm_symbol} {game.get('multi_monitor_app_path', '').lstrip('<> ')}"
-        self.table.setCellWidget(row_num, constants.EditorCols.MM_PATH.value, self._create_merged_path_widget(game.get('multi_monitor_app_enabled', True), mm_path, game.get('multi_monitor_app_overwrite', True), row_num, constants.EditorCols.MM_PATH.value))
-        self.table.setItem(row_num, constants.EditorCols.MM_OPTIONS.value, QTableWidgetItem(game.get('multi_monitor_app_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.MM_ARGUMENTS.value, QTableWidgetItem(game.get('multi_monitor_app_arguments', '')))
-        self.table.setCellWidget(row_num, constants.EditorCols.MM_RUN_WAIT.value, self._create_checkbox_widget(game.get('multi_monitor_app_run_wait', mm_run_wait), row_num, constants.EditorCols.MM_RUN_WAIT.value))
-
         # Hide Taskbar (CheckBox)
         self.table.setCellWidget(row_num, constants.EditorCols.HIDE_TASKBAR.value, self._create_checkbox_widget(game.get('hide_taskbar', False), row_num, constants.EditorCols.HIDE_TASKBAR.value))
 
         # Profiles with propagation symbols
         mm_game_profile = get_path_display('mm_game_profile', 'multimonitor_gaming_path')
         self.table.setCellWidget(row_num, constants.EditorCols.MM_GAME_PROFILE.value, self._create_merged_path_widget(game.get('mm_game_profile_enabled', True), mm_game_profile, game.get('mm_game_profile_overwrite', True), row_num, constants.EditorCols.MM_GAME_PROFILE.value))
+        self.table.setItem(row_num, constants.EditorCols.MM_GAME_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('mm_game_profile_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('mm_game_profile_arguments', '')))
         
         mm_desktop_profile = get_path_display('mm_desktop_profile', 'multimonitor_media_path')
         self.table.setCellWidget(row_num, constants.EditorCols.MM_DESKTOP_PROFILE.value, self._create_merged_path_widget(game.get('mm_desktop_profile_enabled', True), mm_desktop_profile, game.get('mm_desktop_profile_overwrite', True), row_num, constants.EditorCols.MM_DESKTOP_PROFILE.value))
+        self.table.setItem(row_num, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('mm_desktop_profile_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('mm_desktop_profile_arguments', '')))
         
         player1_profile = get_path_display('player1_profile', 'p1_profile_path')
         self.table.setCellWidget(row_num, constants.EditorCols.PLAYER1_PROFILE.value, self._create_merged_path_widget(game.get('player1_profile_enabled', True), player1_profile, game.get('player1_profile_overwrite', True), row_num, constants.EditorCols.PLAYER1_PROFILE.value))
+        self.table.setItem(row_num, constants.EditorCols.PLAYER1_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('player1_profile_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('player1_profile_arguments', '')))
         
         player2_profile = get_path_display('player2_profile', 'p2_profile_path')
         self.table.setCellWidget(row_num, constants.EditorCols.PLAYER2_PROFILE.value, self._create_merged_path_widget(game.get('player2_profile_enabled', True), player2_profile, game.get('player2_profile_overwrite', True), row_num, constants.EditorCols.PLAYER2_PROFILE.value))
+        self.table.setItem(row_num, constants.EditorCols.PLAYER2_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('player2_profile_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('player2_profile_arguments', '')))
         
         mediacenter_profile = get_path_display('mediacenter_profile', 'mediacenter_profile_path')
         self.table.setCellWidget(row_num, constants.EditorCols.MEDIACENTER_PROFILE.value, self._create_merged_path_widget(game.get('mediacenter_profile_enabled', True), mediacenter_profile, game.get('mediacenter_profile_overwrite', True), row_num, constants.EditorCols.MEDIACENTER_PROFILE.value))
+        self.table.setItem(row_num, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('mediacenter_profile_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('mediacenter_profile_arguments', '')))
 
         # Just After Launch (CheckBox, Path with symbol, RunWait)
         ja_symbol, ja_run_wait = self._get_propagation_symbol_and_run_wait('just_after_launch_path')
@@ -3066,16 +3102,16 @@ class EditorTab(QWidget):
         self.table.setCellWidget(row_num, constants.EditorCols.AUDIO_APP_RUN_WAIT.value, self._create_checkbox_widget(game.get('audio_app_run_wait', audio_run_wait), row_num, constants.EditorCols.AUDIO_APP_RUN_WAIT.value))
         
         # UnBorder Config
-        unborder_cfg = get_path_display('unborder_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.UNBORDER_CFG.value, self._create_merged_path_widget(game.get('unborder_config_enabled', True), unborder_cfg, game.get('unborder_config_overwrite', True), row_num, constants.EditorCols.UNBORDER_CFG.value))
-        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('unborder_config_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('unborder_config_arguments', '')))
+        unborder_cfg = get_path_display('unborder_cfg', 'audio_app_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.UNBORDER_CFG.value, self._create_merged_path_widget(game.get('unborder_cfg_enabled', True), unborder_cfg, game.get('unborder_cfg_overwrite', True), row_num, constants.EditorCols.UNBORDER_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('unborder_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('unborder_cfg_arguments', '')))
         
         # ReBorder Config
-        reborder_cfg = get_path_display('reborder_config', 'audio_app_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CFG.value, self._create_merged_path_widget(game.get('reborder_config_enabled', True), reborder_cfg, game.get('reborder_config_overwrite', True), row_num, constants.EditorCols.REBORDER_CFG.value))
-        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('reborder_config_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('reborder_config_arguments', '')))
+        reborder_cfg = get_path_display('reborder_cfg', 'audio_app_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.REBORDER_CFG.value, self._create_merged_path_widget(game.get('reborder_cfg_enabled', True), reborder_cfg, game.get('reborder_cfg_overwrite', True), row_num, constants.EditorCols.REBORDER_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_OPTIONS.value, QTableWidgetItem(game.get('reborder_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.REBORDER_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('reborder_cfg_arguments', '')))
         
         # Audio Game Config
         audio_game_cfg = get_path_display('audio_game_cfg', 'audio_tool_path')
@@ -3194,10 +3230,17 @@ class EditorTab(QWidget):
                 constants.EditorCols.BW_PATH, constants.EditorCols.BW_OPTIONS, 
                 constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT
             ]),
-            ('Monitor-Config', 'multi_monitor_app_path', [
-                constants.EditorCols.MM_PATH, constants.EditorCols.MM_OPTIONS, 
-                constants.EditorCols.MM_ARGUMENTS, constants.EditorCols.MM_RUN_WAIT,
-                constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE
+            ('Monitor-Config', 'multimonitortool_path', [
+                constants.EditorCols.MM_GAME_PROFILE, constants.EditorCols.MM_GAME_PROFILE_OPTIONS,
+                constants.EditorCols.MM_GAME_PROFILE_ARGUMENTS,
+                constants.EditorCols.MM_DESKTOP_PROFILE, constants.EditorCols.MM_DESKTOP_PROFILE_OPTIONS,
+                constants.EditorCols.MM_DESKTOP_PROFILE_ARGUMENTS,
+                constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS,
+                constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
+                constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS,
+                constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
+                constants.EditorCols.MEDIACENTER_PROFILE, constants.EditorCols.MEDIACENTER_PROFILE_OPTIONS,
+                constants.EditorCols.MEDIACENTER_PROFILE_ARGUMENTS
             ]),
             ('JustAfterLaunch', 'just_after_launch_path', [
                 constants.EditorCols.JA_PATH, constants.EditorCols.JA_OPTIONS, 
@@ -3286,7 +3329,7 @@ class EditorTab(QWidget):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('multi_monitor_app_path', 'multi_monitor_app_enabled'),
+            ('multimonitortool_path', 'multimonitortool_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),
@@ -3303,8 +3346,8 @@ class EditorTab(QWidget):
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
-            ('unborder_config', 'unborder_config_enabled'),
-            ('reborder_config', 'reborder_config_enabled'),
+            ('unborder_cfg', 'unborder_cfg_enabled'),
+            ('reborder_cfg', 'reborder_cfg_enabled'),
         ]
         
         for game in sanitized_data:
@@ -3574,32 +3617,35 @@ class EditorTab(QWidget):
             val = config.get(section, key, fallback='')
             return val
 
-        # [Paths]
-        game_data['controller_mapper_path'] = get_path('Paths', 'ControllerMapperApp', 'ControllerMapperApp')
-        game_data['controller_mapper_options'] = config.get('Paths', 'ControllerMapperOptions', fallback='')
-        game_data['controller_mapper_arguments'] = config.get('Paths', 'ControllerMapperArguments', fallback='')
-        game_data['controller_mapper_enabled'] = bool(game_data['controller_mapper_path'])
-        
-        game_data['borderless_windowing_path'] = get_path('Paths', 'BorderlessWindowingApp', 'BorderlessWindowingApp')
-        game_data['borderless_windowing_options'] = config.get('Paths', 'BorderlessWindowingOptions', fallback='')
-        game_data['borderless_windowing_arguments'] = config.get('Paths', 'BorderlessWindowingArguments', fallback='')
-        game_data['borderless_windowing_enabled'] = bool(game_data['borderless_windowing_path'])
-        
-        game_data['multi_monitor_app_path'] = get_path('Paths', 'MultiMonitorTool', 'MultiMonitorTool')
-        game_data['multi_monitor_app_options'] = config.get('Paths', 'MultiMonitorOptions', fallback='')
-        game_data['multi_monitor_app_arguments'] = config.get('Paths', 'MultiMonitorArguments', fallback='')
-        game_data['multi_monitor_app_enabled'] = bool(game_data['multi_monitor_app_path'])
-        
-        game_data['player1_profile'] = get_path('Paths', 'Player1Profile', 'Player1Profile')
+        # [mapperprofiles] (with [Paths] fallback)
+        game_data['player1_profile'] = config.get('mapperprofiles', 'player1profile', fallback=get_path('Paths', 'Player1Profile', 'Player1Profile'))
         game_data['player1_profile_enabled'] = bool(game_data['player1_profile'])
-        game_data['player2_profile'] = get_path('Paths', 'Player2Profile', 'Player2Profile')
+        game_data['player2_profile'] = config.get('mapperprofiles', 'player2profile', fallback=get_path('Paths', 'Player2Profile', 'Player2Profile'))
         game_data['player2_profile_enabled'] = bool(game_data['player2_profile'])
-        game_data['mm_game_profile'] = get_path('Paths', 'MultiMonitorGamingConfig', 'MultiMonitorGamingConfig')
-        game_data['mm_game_profile_enabled'] = bool(game_data['mm_game_profile'])
-        game_data['mm_desktop_profile'] = get_path('Paths', 'MultiMonitorDesktopConfig', 'MultiMonitorDesktopConfig')
-        game_data['mm_desktop_profile_enabled'] = bool(game_data['mm_desktop_profile'])
-        game_data['mediacenter_profile'] = get_path('Paths', 'MediaCenterProfile', 'MediaCenterProfile')
+        game_data['mediacenter_profile'] = config.get('mapperprofiles', 'mediacenterprofile', fallback=get_path('Paths', 'MediaCenterProfile', 'MediaCenterProfile'))
         game_data['mediacenter_profile_enabled'] = bool(game_data['mediacenter_profile'])
+        
+        # [monitorprofiles] (with [Paths] fallback)
+        game_data['mm_game_profile'] = config.get('monitorprofiles', 'multimonitorgamingconfig', fallback=get_path('Paths', 'MultiMonitorGamingConfig', 'MultiMonitorGamingConfig'))
+        game_data['mm_game_profile_enabled'] = bool(game_data['mm_game_profile'])
+        game_data['mm_desktop_profile'] = config.get('monitorprofiles', 'multimonitormediacenterconfig', fallback=get_path('Paths', 'MultiMonitorDesktopConfig', 'MultiMonitorDesktopConfig'))
+        game_data['mm_desktop_profile_enabled'] = bool(game_data['mm_desktop_profile'])
+        
+        # [MultiMonitor] (with [Paths] fallback)
+        game_data['multimonitortool_path'] = config.get('MultiMonitor', 'multimonitorpath', fallback=get_path('Paths', 'MultiMonitorTool', 'MultiMonitorTool'))
+        game_data['multimonitortool_options'] = config.get('MultiMonitor', 'multimonitorpathoptions', fallback=config.get('Paths', 'MultiMonitorOptions', fallback=''))
+        game_data['multimonitortool_arguments'] = config.get('MultiMonitor', 'multimonitorpatharguments', fallback=config.get('Paths', 'MultiMonitorArguments', fallback=''))
+        game_data['multimonitortool_enabled'] = config.getboolean('MultiMonitor', 'enablemultimonitor', fallback=bool(game_data['multimonitortool_path']))
+        
+        # [BorderlessProfiles]
+        game_data['unborder_cfg'] = config.get('BorderlessProfiles', 'unbordercfgpath', fallback='')
+        game_data['unborder_cfg_options'] = config.get('BorderlessProfiles', 'unbordercfgpathoptions', fallback='')
+        game_data['unborder_cfg_arguments'] = config.get('BorderlessProfiles', 'unbordercfgpatharguments', fallback='')
+        game_data['unborder_cfg_enabled'] = config.getboolean('BorderlessProfiles', 'enableunbordercfg', fallback=True)
+        game_data['reborder_cfg'] = config.get('BorderlessProfiles', 'rebordercfgpath', fallback='')
+        game_data['reborder_cfg_options'] = config.get('BorderlessProfiles', 'rebordercfgpathoptions', fallback='')
+        game_data['reborder_cfg_arguments'] = config.get('BorderlessProfiles', 'rebordercfgpatharguments', fallback='')
+        game_data['reborder_cfg_enabled'] = config.getboolean('BorderlessProfiles', 'enablerebordercfg', fallback=True)
         
         game_data['launcher_executable'] = config.get('Paths', 'LauncherExecutable', fallback='')
         game_data['launcher_executable_enabled'] = bool(game_data['launcher_executable'])

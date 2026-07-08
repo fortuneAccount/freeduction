@@ -43,12 +43,26 @@ def main():
         action="store_true",
         help="Run in plugin creation mode with red-tinted window frame",
     )
+    parser.add_argument(
+        "--deploy",
+        action="store_true",
+        help="Launch the deployment tool GUI for building and releasing portable binaries",
+    )
 
     args, _ = parser.parse_known_args()
     # Remove app-specific args so Kivy doesn't try to parse them
-    sys.argv = [arg for arg in sys.argv if arg != "--android-preview"]
+    sys.argv = [arg for arg in sys.argv if arg not in ("--android-preview", "--deploy")]
 
     setup_logging()
+
+    if args.deploy:
+        logging.info("Launching deployment tool (--deploy)")
+        try:
+            from Python.deploy import main as deploy_main
+            deploy_main(sys.argv[1:])
+        except Exception as e:
+            logging.exception("Failed to start deployment tool: %s", e)
+        return
 
     # Detect REAL Android runtime (python-for-android only)
     is_android = hasattr(sys, "getandroidapilevel")
