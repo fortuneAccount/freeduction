@@ -103,6 +103,7 @@ def main():
         from Python.main_window_new import MainWindow
 
         app = QApplication(sys.argv)
+        app.setStyle("Fusion")
         window = MainWindow(plugin_mode=args.plugin_mode)
         window.show()
         sys.exit(app.exec())

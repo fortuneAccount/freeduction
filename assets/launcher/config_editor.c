@@ -96,8 +96,8 @@ static const KeyTypeDef KEY_TYPES[] = {
     
     // [Profiles] section
     {"player1profile", CTRL_PATH_FILE}, {"player2profile", CTRL_PATH_FILE},
-    {"mediacenterprofile", CTRL_PATH_FILE}, {"multimonitorgamingconfig", CTRL_PATH_FILE},
-    {"multimonitormediacenterconfig", CTRL_PATH_FILE},
+    {"deskprofile", CTRL_PATH_FILE}, {"monitorgamingcfg", CTRL_PATH_FILE},
+    {"monitordeskcfg", CTRL_PATH_FILE},
     
     // Application sections - all follow same pattern: path, pathoptions, patharguments, pathrunwait
     {"controllermapperpath", CTRL_PATH_FILE}, {"controllermapperpathoptions", CTRL_TEXT},
@@ -108,9 +108,9 @@ static const KeyTypeDef KEY_TYPES[] = {
     {"borderlesswindowingpatharguments", CTRL_TEXT}, {"borderlesswindowingpathrunwait", CTRL_BOOL},
     {"enableborderlesswindowing", CTRL_BOOL},
     
-    {"multimonitorpath", CTRL_PATH_FILE}, {"multimonitorpathoptions", CTRL_TEXT},
-    {"multimonitorpatharguments", CTRL_TEXT}, {"multimonitorpathrunwait", CTRL_BOOL},
-    {"enablemultimonitor", CTRL_BOOL},
+    {"monitorapppath", CTRL_PATH_FILE}, {"monitorapppathoptions", CTRL_TEXT},
+    {"monitorapppatharguments", CTRL_TEXT}, {"monitorapppathrunwait", CTRL_BOOL},
+    {"enablemonitorapp", CTRL_BOOL},
     
     {"discmountpath", CTRL_PATH_FILE}, {"discmountpathoptions", CTRL_TEXT},
     {"discmountpatharguments", CTRL_TEXT}, {"discmountpathrunwait", CTRL_BOOL},
@@ -163,7 +163,7 @@ static const KeyTypeDef KEY_TYPES[] = {
     {"launchsequence", CTRL_LIST}, {"exitsequence", CTRL_LIST},
     
     // [SourceProfiles] and [SourceApplications] sections
-    {"multimonitortool", CTRL_PATH_FILE}, {"antimicrox", CTRL_PATH_FILE},
+    {"monitorapp", CTRL_PATH_FILE}, {"antimicrox", CTRL_PATH_FILE},
     {"rclone", CTRL_PATH_FILE}, {"wincdemu", CTRL_PATH_FILE},
     {"osf", CTRL_PATH_FILE}, {"imgdrive", CTRL_PATH_FILE},
     {"cdmage", CTRL_PATH_FILE}, {"ludusavi", CTRL_PATH_FILE},
@@ -192,8 +192,8 @@ static const KeyAbbrev KEY_ABBREVS[] = {
     
     // [Profiles] section
     {"player1profile", "P1 Profile"}, {"player2profile", "P2 Profile"},
-    {"mediacenterprofile", "MC Profile"}, {"multimonitorgamingconfig", "MM Game"},
-    {"multimonitormediacenterconfig", "MM Desktop"},
+    {"deskprofile", "Desk Profile"}, {"monitorgamingcfg", "Gaming"},
+    {"monitordeskcfg", "Desktop"},
     
     // [ControllerMapper] section
     {"enablecontrollermapper", "Enable Ctrl"}, {"controllermapperpath", "Ctrl Path"},
@@ -205,10 +205,10 @@ static const KeyAbbrev KEY_ABBREVS[] = {
     {"borderlesswindowingpathoptions", "Border Opts"}, {"borderlesswindowingpatharguments", "Border Args"},
     {"borderlesswindowingpathrunwait", "Border Wait"},
     
-    // [MultiMonitor] section
-    {"enablemultimonitor", "Enable MM"}, {"multimonitorpath", "MM Path"},
-    {"multimonitorpathoptions", "MM Opts"}, {"multimonitorpatharguments", "MM Args"},
-    {"multimonitorpathrunwait", "MM Wait"},
+    // [Monitor] section
+    {"enablemonitorapp", "Enable MA"}, {"monitorapppath", "MA Path"},
+    {"monitorapppathoptions", "MA Opts"}, {"monitorapppatharguments", "MA Args"},
+    {"monitorapppathrunwait", "MA Wait"},
     
     // [DiscMount] section
     {"enablediscmount", "Enable Mount"}, {"discmountpath", "Mount Path"},
@@ -261,7 +261,7 @@ static const KeyAbbrev KEY_ABBREVS[] = {
     {"launchsequence", "Launch Seq"}, {"exitsequence", "Exit Seq"},
     
     // [SourceApplications] section
-    {"multimonitortool", "MultiMon"}, {"antimicrox", "AntiMicroX"},
+    {"monitorapp", "MonApp"}, {"antimicrox", "AntiMicroX"},
     {"rclone", "RClone"}, {"wincdemu", "WinCDEmu"},
     {"osf", "OSF"}, {"imgdrive", "ImgDrive"},
     {"cdmage", "CDMage"}, {"ludusavi", "Ludusavi"},

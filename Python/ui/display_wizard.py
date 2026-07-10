@@ -88,25 +88,26 @@ class DisplayWizard(QDialog):
         self.save_format = "ini"
         self.setWindowTitle("Display Configuration Wizard")
         self.resize(900, 400)
-        self.screens = []
+        self.screens = QGuiApplication.screens()
         self._monitor_states = {}
         self._display_mode_cache = self._query_change_screen_resolution_modes()
         self._monitor_names = self._display_mode_cache.get("display_names", {})
-        self._current_monitor_config = self._query_current_multimonitortool_config()
+        self._current_display_settings = self._display_mode_cache.get("current_settings", {})
+        self._current_monitor_config = self._query_current_monitorapp_config()
         self._init_ui()
 
     @staticmethod
     def _detect_save_format(tool_path):
         path = tool_path.lower()
-        if "multimonitor" in path:
-            return "multimonitor"
+        if "monitorapp" in path:
+            return "monitorapp"
         if "displaychanger" in path:
             return "displaychanger"
         return "json"
 
     def _get_default_extension(self):
         path = (self.tool_path or "").lower()
-        if "multimonitor" in path:
+        if "monitorapp" in path:
             return ".cfg"
         if "displaychanger" in path:
             return ".xml"
@@ -122,11 +123,11 @@ class DisplayWizard(QDialog):
             return "XML Files (*.xml);;All Files (*)"
         return "Config Files (*.cfg);;All Files (*)"
 
-    def _query_current_multimonitortool_config(self):
-        """Query current monitor settings from MultiMonitorTool /saveconfig."""
+    def _query_current_monitorapp_config(self):
+        """Query current monitor settings from MonitorApp /saveconfig."""
         repo_root = Path(__file__).resolve().parents[2]
-        for exe_name in ["MultiMonitorTool.exe", "multimonitortool.exe"]:
-            exe_path = repo_root / "bin" / "multimonitortool" / exe_name
+        for exe_name in ["MonitorApp.exe", "monitorapp.exe", "MultiMonitorTool.exe", "multimonitortool.exe"]:
+            exe_path = repo_root / "bin" / "monitorapp" / exe_name
             if not exe_path.exists():
                 continue
             try:
@@ -145,7 +146,7 @@ class DisplayWizard(QDialog):
                     **kwargs
                 )
                 if result.returncode == 0 and os.path.exists(tmp_path):
-                    config = self._parse_multimonitortool_config(tmp_path)
+                    config = self._parse_monitorapp_config(tmp_path)
                     os.unlink(tmp_path)
                     return config
                 if os.path.exists(tmp_path):
@@ -155,8 +156,8 @@ class DisplayWizard(QDialog):
         return {}
 
     @staticmethod
-    def _parse_multimonitortool_config(config_path):
-        """Parse a MultiMonitorTool /saveconfig INI file."""
+    def _parse_monitorapp_config(config_path):
+        """Parse a MonitorApp /saveconfig INI file."""
         config = {}
         try:
             parser = configparser.ConfigParser()
@@ -183,7 +184,30 @@ class DisplayWizard(QDialog):
             elif f"DISPLAY{monitor_id}" in section_name.upper():
                 settings = section_data
                 break
+        if not settings:
+            expected_section = f"Monitor{monitor_id}"
+            if expected_section in self._current_monitor_config:
+                settings = self._current_monitor_config[expected_section]
         return settings
+
+    def _find_monitor_source_section(self, monitor_id):
+        """Locate the original MonitorApp section for a display index.
+
+        Display index N corresponds to \\.\\DISPLAY{N+1}; MonitorApp stores these
+        as [MonitorN] sections in the same order, so match by section name first and fall
+        back to the device path in the Name field.
+        """
+        if not self._current_monitor_config:
+            return None
+        expected_section = f"Monitor{monitor_id}"
+        if expected_section in self._current_monitor_config:
+            return self._current_monitor_config[expected_section]
+        device_pattern = r"^\\\.\\DISPLAY" + str(monitor_id + 1) + r"$"
+        for section_data in self._current_monitor_config.values():
+            name_val = section_data.get('Name', section_data.get('name', ''))
+            if re.match(device_pattern, name_val):
+                return section_data
+        return None
 
     def _init_ui(self):
         layout = QVBoxLayout(self)
@@ -216,7 +240,7 @@ class DisplayWizard(QDialog):
         current_tab_text = self.tab_widget.tabText(self.tab_widget.currentIndex())
         state_title = self._get_state_title_from_tab(current_tab_text)
         if "Desktop" in current_tab_text or "Exit" in current_tab_text:
-            default_name = "DT_MC" + self._get_default_extension()
+            default_name = "DT_D" + self._get_default_extension()
         elif "Game" in current_tab_text:
             default_name = "G_MON" + self._get_default_extension()
         else:
@@ -282,24 +306,22 @@ class DisplayWizard(QDialog):
             parser = configparser.ConfigParser()
             parser.optionxform = str
 
-            if 'multimonitor' in (self.tool_path or '').lower():
+            if 'monitorapp' in (self.tool_path or '').lower():
                 monitor_state_key = current_state_title or "Desktop / Exit State"
                 sorted_monitors = sorted(profile_data.get(monitor_state_key, {}).items())
                 for count, (monitor_id, data) in enumerate(sorted_monitors):
                     section_name = f"Monitor{count}"
-                    name_val = data.get('name') or f'Display {monitor_id}'
-                    monitor_id_val = ''
-                    serial_val = ''
-                    for section_data in self._current_monitor_config.values():
-                        if section_data.get('Name', '').lower() == name_val.lower():
-                            monitor_id_val = section_data.get('MonitorID', '')
-                            serial_val = section_data.get('SerialNumber', '')
-                            break
+                    # Start from the original MonitorApp section so every parameter it
+                    # carried (MonitorID, SerialNumber, and any others) is retained, then only
+                    # override the fields the wizard GUI is allowed to edit.
+                    source = self._find_monitor_source_section(monitor_id)
+                    section = dict(source) if source else {}
+
+                    if 'Name' not in section or not section.get('Name'):
+                        section['Name'] = data.get('name') or f'\\.\\DISPLAY{monitor_id + 1}'
+
                     if not data.get('enabled', True):
-                        parser[section_name] = {
-                            'Name': name_val,
-                            'MonitorID': monitor_id_val,
-                            'SerialNumber': serial_val,
+                        section.update({
                             'BitsPerPixel': '0',
                             'Width': '0',
                             'Height': '0',
@@ -308,7 +330,7 @@ class DisplayWizard(QDialog):
                             'DisplayOrientation': '0',
                             'PositionX': '',
                             'PositionY': '0',
-                        }
+                        })
                     else:
                         resolution = data.get('resolution', '')
                         width = height = ''
@@ -319,10 +341,7 @@ class DisplayWizard(QDialog):
                             if bit_depth.lower().endswith(strip_suffix):
                                 bit_depth = bit_depth[:-len(strip_suffix)]
                                 break
-                        parser[section_name] = {
-                            'Name': name_val,
-                            'MonitorID': monitor_id_val,
-                            'SerialNumber': serial_val,
+                        section.update({
                             'BitsPerPixel': bit_depth,
                             'Width': width,
                             'Height': height,
@@ -331,7 +350,13 @@ class DisplayWizard(QDialog):
                             'DisplayOrientation': data.get('orientation', '0'),
                             'PositionX': str(data.get('position_x', '')),
                             'PositionY': str(data.get('position_y', '')),
-                        }
+                        })
+
+                    if 'MonitorID' not in section:
+                        section['MonitorID'] = ''
+                    if 'SerialNumber' not in section:
+                        section['SerialNumber'] = ''
+                    parser[section_name] = section
             else:
                 monitor_state_key = current_state_title or "Desktop / Exit State"
                 state_map = profile_data.get(monitor_state_key, {})
@@ -356,9 +381,11 @@ class DisplayWizard(QDialog):
 
         config.monitor_wizard_profiles = profile_data
         if current_state_title == "Game / Running State":
-            config.multimonitortool_gaming_path = file_path
+            config.monitor_gaming_path = file_path
+            config.defaults['monitor_gaming_path_enabled'] = True
         elif current_state_title == "Desktop / Exit State":
-            config.multimonitortool_media_path = file_path
+            config.monitor_desk_path = file_path
+            config.defaults['monitor_desk_path_enabled'] = True
         else:
             config.monitor_wizard_config_path = file_path
         self.setup_tab.main_window.config_manager.save_config(config)
@@ -394,7 +421,7 @@ class DisplayWizard(QDialog):
         if self._display_mode_cache and isinstance(self._display_mode_cache, dict):
             display_indices = [key for key in self._display_mode_cache.keys() if isinstance(key, int)]
         if not display_indices:
-            display_indices = list(range(1, len(self.screens) + 1))
+            display_indices = list(range(len(self.screens)))
         display_indices = sorted(display_indices)
 
         monitor_columns = []
@@ -476,6 +503,7 @@ class DisplayWizard(QDialog):
         primary_cb = QCheckBox("Primary")
         primary_cb.setChecked(False)
         primary_cb.setEnabled(True)
+        primary_cb.toggled.connect(lambda checked, idx=index, ttl=title: self._on_primary_toggled(idx, ttl, checked))
         panel_layout.addWidget(primary_cb)
 
         reset_button = QPushButton("Reset")
@@ -753,12 +781,15 @@ class DisplayWizard(QDialog):
         return panel
 
     @staticmethod
-    def _parse_change_screen_resolution_output(output):
-        """Parse ChangeScreenResolution /m /l output into display->modes mapping."""
-        parsed = {}
+    def _parse_csr_modes_output(output):
+        """Parse ChangeScreenResolution /m output.
+
+        Returns (display_names, modes). The display identity/name is taken from the
+        "Display modes for \\.\\DISPLAYn:" header (the device path), not from a separate
+        /l listing. Modes are keyed by the same 0-based display index.
+        """
         display_names = {}
-        if not output:
-            return {"display_names": display_names}
+        modes = {}
 
         mode_patterns = [
             r"^\s*(?P<resolution>\d+x\d+)\s+(?P<bit_depth>\d+(?:bit|bpp))\s+@(?P<refresh>\d+(?:\.\d+)?)Hz(?:\s+.*)?$",
@@ -771,97 +802,100 @@ class DisplayWizard(QDialog):
             line = raw_line.rstrip()
             if not line:
                 continue
-
             stripped = line.strip()
-            if stripped.startswith("Connected display devices"):
-                continue
-
-            display_match = re.match(r"^\s*\[(\d+)\]\s+(.+?)(?:\s{2,}(.*))?$", stripped)
-            if display_match:
-                current_display = int(display_match.group(1))
-                display_device = display_match.group(2).strip().rstrip(':')
-                display_device = display_device.rstrip('\\').rstrip(':')
-                display_name = display_match.group(3).strip() if display_match.group(3) else display_device
-                display_names[current_display] = display_name
-                parsed[current_display] = []
-                continue
-
-            legacy_display_match = re.match(r"^Display\s*:?\s*(\d+)$", stripped, flags=re.IGNORECASE)
-            if legacy_display_match:
-                current_display = int(legacy_display_match.group(1))
-                display_names[current_display] = f"Display {current_display}"
-                parsed[current_display] = []
-                continue
-
-            monitor_match = re.match(r"^\s*(\\\\.\\DISPLAY\d+\\Monitor\d+)\s*(.*)$", stripped)
-            if monitor_match and current_display is not None:
-                display_names[current_display] = monitor_match.group(2).strip() or monitor_match.group(1)
-                continue
 
             if stripped.startswith("Display modes for"):
-                display_name = stripped.split("for", 1)[1].strip().rstrip(':')
-                mode_display_match = re.match(r"^\s*Display modes for.*?DISPLAY(\d+)\s*:", stripped)
+                mode_display_match = re.match(r"^\s*Display modes for\s+(\\\\.\\DISPLAY\d+)\s*:", stripped)
                 if mode_display_match:
-                    current_display = int(mode_display_match.group(1))
-                    display_names[current_display] = rf"\\.\DISPLAY{current_display}"
-                    parsed.setdefault(current_display, [])
-                    remainder = stripped.split(":", 1)[1] if ":" in stripped else ""
-                    for pattern in mode_patterns:
-                        mode_match = re.match(pattern, remainder)
-                        if mode_match and current_display is not None:
-                            parsed[current_display].append({
-                                'resolution': mode_match.group('resolution'),
-                                'refresh': mode_match.group('refresh'),
-                                'bit_depth': mode_match.group('bit_depth'),
-                            })
-                            break
-                elif current_display is not None:
-                    display_names[current_display] = display_name
+                    device = mode_display_match.group(1)
+                    display_num = int(re.search(r"DISPLAY(\d+)", device).group(1))
+                    current_display = display_num - 1
+                    display_names[current_display] = device
+                    modes.setdefault(current_display, [])
                 continue
 
             for pattern in mode_patterns:
                 mode_match = re.match(pattern, stripped)
                 if mode_match and current_display is not None:
-                    parsed.setdefault(current_display, []).append({
+                    modes.setdefault(current_display, []).append({
                         'resolution': mode_match.group('resolution'),
                         'refresh': mode_match.group('refresh'),
                         'bit_depth': mode_match.group('bit_depth'),
                     })
                     break
 
-        valid_displays = {key for key, value in parsed.items() if value}
-        parsed = {key: value for key, value in parsed.items() if value}
-        display_names = {key: value for key, value in display_names.items() if key in valid_displays}
+        return display_names, modes
 
-        return {"display_names": display_names, **parsed}
+    @staticmethod
+    def _decode_tool_output(raw):
+        """Decode tool stdout.
+
+        ChangeScreenResolution emits UTF-16 (with a BOM) when its output is redirected to a
+        file/console, but UTF-8/ANSI when captured through a pipe. Only treat the bytes as
+        UTF-16 when a BOM is present; otherwise try UTF-8 then the ANSI codepage so ASCII
+        pipe output is not silently mis-decoded as UTF-16 code units.
+        """
+        if isinstance(raw, bytes):
+            if raw[:2] in (b"\xff\xfe", b"\xfe\xff"):
+                try:
+                    return raw.decode("utf-16")
+                except (UnicodeDecodeError, UnicodeError):
+                    pass
+            for enc in ("utf-8-sig", "utf-8", "cp1252"):
+                try:
+                    return raw.decode(enc)
+                except (UnicodeDecodeError, UnicodeError):
+                    continue
+            return raw.decode("utf-8", errors="ignore")
+        return raw
 
     def _query_change_screen_resolution_modes(self):
-        """Query supported display modes through the bundled ChangeScreenResolution utility."""
+        """Query display info via ChangeScreenResolution /m only.
+
+        /m lists each display ("Display modes for \\.\\DISPLAYn:") along with its supported
+        resolutions, refresh rates and bit depths. The display identity is the device path
+        from that header; current settings come from MonitorApp (see
+        _query_current_monitorapp_config), never from a /l listing.
+        """
         repo_root = Path(__file__).resolve().parents[2]
-        for exe_name in ["ChangeScreenResolution.exe", "changescreenresolution.exe"]:
-            exe_path = repo_root / "bin" / exe_name
-            if not exe_path.exists():
-                continue
+        exe_path = repo_root / "bin" / "changescreenresolution" / "ChangeScreenResolution.exe"
+        if not exe_path.exists():
+            return {"display_names": {}, "current_settings": {}}
 
-            cmd = [str(exe_path), "/m", "/l"]
-            try:
-                kwargs = {
-                    'capture_output': True,
-                    'text': True,
-                    'encoding': 'utf-8',
-                    'errors': 'ignore',
-                    'timeout': 10,
-                }
-                if os.name == 'nt':
-                    kwargs['creationflags'] = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
-                result = subprocess.run(cmd, **kwargs)
-            except (OSError, subprocess.SubprocessError, ValueError):
-                continue
+        result = {"display_names": {}, "current_settings": {}}
 
-            if result.stdout:
-                return self._parse_change_screen_resolution_output(result.stdout)
+        kwargs = {
+            'capture_output': True,
+            'timeout': 10,
+        }
+        if os.name == 'nt':
+            kwargs['creationflags'] = getattr(subprocess, 'CREATE_NO_WINDOW', 0)
 
-        return {"display_names": {}}
+        try:
+            cmd_m = [str(exe_path), "/m"]
+            result_m = subprocess.run(cmd_m, **kwargs)
+            if result_m.stdout:
+                display_names, modes = self._parse_csr_modes_output(
+                    self._decode_tool_output(result_m.stdout)
+                )
+                result["display_names"] = display_names
+                result.update(modes)
+        except (OSError, subprocess.SubprocessError, ValueError):
+            pass
+
+        valid_indices = {k for k, v in result.items() if isinstance(k, int) and v}
+        if valid_indices:
+            for key in list(result.keys()):
+                if isinstance(key, int) and key not in valid_indices:
+                    del result[key]
+            for key in list(result.get("display_names", {}).keys()):
+                if key not in valid_indices:
+                    del result["display_names"][key]
+            for key in list(result.get("current_settings", {}).keys()):
+                if key not in valid_indices:
+                    del result["current_settings"][key]
+
+        return result
 
     def _collect_supported_resolutions(self, screen, display_index=None):
         """Return display resolutions from ChangeScreenResolution when available, otherwise fall back to common values."""
@@ -915,11 +949,12 @@ class DisplayWizard(QDialog):
 
     def _set_monitor_state_from_current(self, state):
         monitor_id = state.get('display_index')
-        current = self._get_current_monitor_settings(monitor_id)
-        if current:
+
+        csr_settings = self._current_display_settings.get(monitor_id)
+        if csr_settings:
             state['enable'].setChecked(True)
-            width = current.get('Width', '')
-            height = current.get('Height', '')
+            width = csr_settings.get('width', '')
+            height = csr_settings.get('height', '')
             if width and height:
                 resolution = f"{width}x{height}"
                 idx = state['resolution'].findText(resolution)
@@ -927,35 +962,55 @@ class DisplayWizard(QDialog):
                     state['resolution'].setCurrentIndex(idx)
                 else:
                     state['resolution'].setCurrentText(resolution)
-            refresh = current.get('DisplayFrequency', current.get('frequency', ''))
+            refresh = csr_settings.get('frequency', '')
             if refresh:
                 state['refresh'].setCurrentText(refresh)
-            bit_depth = current.get('BitsPerPixel', current.get('bitdepth', ''))
+            bit_depth = csr_settings.get('bits_per_pixel', '')
+            if bit_depth:
+                state['bit_depth'].setCurrentText(f"{bit_depth}bit")
+
+        mmt_settings = self._get_current_monitor_settings(monitor_id)
+        if not csr_settings and mmt_settings:
+            width = mmt_settings.get('Width', '')
+            height = mmt_settings.get('Height', '')
+            if width and height:
+                resolution = f"{width}x{height}"
+                idx = state['resolution'].findText(resolution)
+                if idx >= 0:
+                    state['resolution'].setCurrentIndex(idx)
+                else:
+                    state['resolution'].setCurrentText(resolution)
+            refresh = mmt_settings.get('DisplayFrequency', mmt_settings.get('frequency', ''))
+            if refresh:
+                state['refresh'].setCurrentText(refresh)
+            bit_depth = mmt_settings.get('BitsPerPixel', mmt_settings.get('bitdepth', ''))
             if bit_depth:
                 bpp_text = f"{bit_depth}bit"
                 if bit_depth == '32':
                     bpp_text = '32bit'
                 state['bit_depth'].setCurrentText(bpp_text)
+
+        if mmt_settings:
             try:
-                pos_x = int(current.get('PositionX', 0))
+                pos_x = int(mmt_settings.get('PositionX', 0))
             except (ValueError, TypeError):
                 pos_x = 0
             try:
-                pos_y = int(current.get('PositionY', 0))
+                pos_y = int(mmt_settings.get('PositionY', 0))
             except (ValueError, TypeError):
                 pos_y = 0
             state['position_x'].setValue(pos_x)
             state['position_y'].setValue(pos_y)
-            orientation = current.get('DisplayOrientation', 'Default')
+            orientation = mmt_settings.get('DisplayOrientation', 'Default')
             if orientation in ["0", "90", "180", "270"]:
                 state['orientation'].setCurrentText(orientation)
             else:
                 state['orientation'].setCurrentText("0")
-            is_primary = current.get('primary', 'No').lower() in ('yes', 'true', '1')
+            is_primary = mmt_settings.get('primary', 'No').lower() in ('yes', 'true', '1')
             if not is_primary:
-                is_primary = current.get('primary', '').lower() in ('yes', 'true', '1')
+                is_primary = mmt_settings.get('primary', '').lower() in ('yes', 'true', '1')
             state['primary'].setChecked(is_primary)
-            display_flags = current.get('DisplayFlags', '0')
+            display_flags = mmt_settings.get('DisplayFlags', '0')
             if display_flags == '1':
                 state['display_flags_1'].setChecked(True)
             else:

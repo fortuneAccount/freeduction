@@ -128,9 +128,9 @@ class SequenceExecutor:
         args = getattr(self.launcher, 'controller_mapper_arguments', '')
 
         if is_exit:
-            # Use MediaCenter profile for exit/restore
-            p1 = getattr(self.launcher, 'mediacenter_profile', '')
-            p2 = getattr(self.launcher, 'mediacenter_profile', '') # Use same for p2 if needed
+            # Use Desk profile for exit/restore
+            p1 = getattr(self.launcher, 'desk_profile', '')
+            p2 = getattr(self.launcher, 'desk_profile', '') # Use same for p2 if needed
         else:
             # Use Game profiles
             p1 = getattr(self.launcher, 'player1_profile', '')
@@ -183,17 +183,17 @@ class SequenceExecutor:
                 self.launcher.kill_process_by_name(os.path.basename(app))
 
     def run_monitor_config_game(self):
-        self._run_monitor_config('mm_game_config')
+        self._run_monitor_config('monitor_game_cfg')
 
     def run_monitor_config_desktop(self):
-        self._run_monitor_config('mm_desktop_config')
+        self._run_monitor_config('monitor_desk_cfg')
 
     def _run_monitor_config(self, config_attr):
         """Apply a monitor configuration using the multi-monitor tool."""
-        tool = getattr(self.launcher, 'multimonitortool', '')
+        tool = getattr(self.launcher, 'monitorapp', '')
         config = getattr(self.launcher, config_attr, '')
-        options = getattr(self.launcher, 'multimonitortool_options', '')
-        args = getattr(self.launcher, 'multimonitortool_arguments', '')
+        options = getattr(self.launcher, 'monitorapp_options', '')
+        args = getattr(self.launcher, 'monitorapp_arguments', '')
 
         if tool and config and os.path.exists(self.launcher.resolve_path(tool)) and os.path.exists(config):
             logging.info(f"Applying Monitor Config: {config}")

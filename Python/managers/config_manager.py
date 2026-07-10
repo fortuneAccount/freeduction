@@ -18,7 +18,7 @@ GAME_DIRECTORY_NAMES = [
 ]
 ANTIMICROX_EXES = ["antimicrox.exe", "antimicrox"]
 KEYSTICKS_EXES = ["keysticks.exe"]
-MULTIMONITOR_EXES = ["multimonitortool.exe"]
+MONITOR_EXES = ["monitorapp.exe", "MonitorApp.exe", "multimonitortool.exe", "MultiMonitorTool.exe"]
 BORDERLESS_EXES = ["borderlessgaming.exe"]
 
 
@@ -97,7 +97,7 @@ class ConfigManager(QObject):
         config.defaults = {
             'controller_mapper_path_enabled': True,
             'borderless_gaming_path_enabled': False,
-            'multimonitortool_path_enabled': False,
+            'monitorapp_path_enabled': False,
             'just_after_launch_path_enabled': False,
             'just_before_exit_path_enabled': False,
             'pre1_path_enabled': False,
@@ -108,9 +108,9 @@ class ConfigManager(QObject):
             'post3_path_enabled': False,
             'p1_profile_path_enabled': True,
             'p2_profile_path_enabled': True,
-            'mediacenter_profile_path_enabled': True,
-            'multimonitor_gaming_path_enabled': False,
-            'multimonitor_media_path_enabled': False,
+            'desk_profile_path_enabled': True,
+            'monitor_gaming_path_enabled': False,
+            'monitor_desk_path_enabled': False,
             'profiles_dir_enabled': True,
             'launchers_dir_enabled': True,
             'disc_mount_path_enabled': False,
@@ -118,7 +118,7 @@ class ConfigManager(QObject):
             'disc_unmount_cfg_enabled': False,
             'audio_tool_path_enabled': False,
             'audio_game_cfg_enabled': False,
-            'audio_mediacenter_cfg_enabled': False,
+            'audio_desk_cfg_enabled': False,
             'unborder_cfg_enabled': False,
             'reborder_cfg_enabled': False,
         }
@@ -126,7 +126,7 @@ class ConfigManager(QObject):
         config.run_wait_states = {
             'controller_mapper_path_run_wait': False,
             'borderless_gaming_path_run_wait': False,
-            'multimonitortool_path_run_wait': False,
+            'monitorapp_path_run_wait': False,
             'just_after_launch_path_run_wait': False,
             'just_before_exit_path_run_wait': False,
             'pre1_path_run_wait': False, 'post1_path_run_wait': False,
@@ -145,7 +145,7 @@ class ConfigManager(QObject):
             "launchers_dir": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
-            "mediacenter_profile_path": True
+            "desk_profile_path": True
         }
 
         # Set default deployment tab options
@@ -234,7 +234,7 @@ class ConfigManager(QObject):
             self._apply_tool_defaults(config, 'controller_mapper_path', keysticks_path, options_args_map)
     
     def _populate_controller_profiles(self, config: AppConfig, mapper_path: str, prefix: str, ext: str):
-        """Populate controller profiles for Player1, Player2, and MediaCenter."""
+        """Populate controller profiles for Player1, Player2, and Desk."""
         project_dir = Path(constants.APP_ROOT_DIR)
         mapper_dir = Path(mapper_path).parent
         assets_dir = project_dir / "assets"
@@ -259,7 +259,7 @@ class ConfigManager(QObject):
         profiles = {
             'p1_profile_path': ('Player1', f'{prefix}_Player{ext}.set', f'Player1{ext}'),
             'p2_profile_path': ('Player2', f'{prefix}_Player{ext}.set', f'Player2{ext}'),
-            'mediacenter_profile_path': ('MediaCenter', f'{prefix}_MediaCenter{ext}.set', f'MediaCenter{ext}')
+            'desk_profile_path': ('Desk', f'{prefix}_Desk{ext}.set', f'Desk{ext}')
         }
         
         for config_attr, (search_name, template_name, output_name) in profiles.items():
@@ -360,6 +360,7 @@ class ConfigManager(QObject):
         
         # Define tool mappings: config_attribute -> list of possible exe names
         tool_mappings = {
+            'monitorapp_path': MONITOR_EXES,
             'cloud_sync_path': ['rclone.exe', 'rclone', 'ludusavi.exe', 'ludusavi', 'syncthing.exe', 'syncthing', 'emusync.exe', 'emusync'],
             'local_backup_path': ['gamebackupmonitor.exe', 'GameBackupMonitor.exe', 'gamesavemanager.exe', 'GameSaveManager.exe', 'savestate.exe', 'SaveState.exe'],
             'disc_mount_path': ['imgdrive.exe', 'wincdemu.exe', 'osfmount.exe'],
@@ -390,6 +391,18 @@ class ConfigManager(QObject):
             else:
                 logging.debug(f"Could not find executable for {config_attr} (looking for: {exe_names})")
 
+        # Auto-detect monitor config profiles (.cfg) near the monitorapp exe
+        if config.monitorapp_path:
+            mdir = Path(config.monitorapp_path).parent
+            if mdir.exists():
+                for attr, keyword in [('monitor_gaming_path', 'gaming'), ('monitor_desk_path', 'desktop')]:
+                    if not getattr(config, attr, ''):
+                        for f in mdir.glob(f'*{keyword}*.cfg'):
+                            setattr(config, attr, str(f))
+                            config.defaults[f'{attr}_enabled'] = True
+                            logging.info(f"Auto-detected {attr}: {f}")
+                            break
+
         # Detect controller mapper and populate profiles if not already set
         if not config.controller_mapper_path:
             antimicrox_path = self._find_executable_recursive(bin_dir, ANTIMICROX_EXES)
@@ -405,7 +418,7 @@ class ConfigManager(QObject):
                     logging.info(f"Auto-detected Keysticks: {keysticks_path}")
                     self._apply_tool_defaults(config, 'controller_mapper_path', keysticks_path, options_args_map)
                     self._populate_controller_profiles(config, keysticks_path, 'keysticks', '.keysticks')
-        elif config.controller_mapper_path and (not config.p1_profile_path or not config.p2_profile_path or not config.mediacenter_profile_path):
+        elif config.controller_mapper_path and (not config.p1_profile_path or not config.p2_profile_path or not config.desk_profile_path):
             # Controller mapper already set but profiles might be missing - populate them
             mapper_path = config.controller_mapper_path
             if 'antimicrox' in mapper_path.lower():
@@ -446,7 +459,7 @@ class ConfigManager(QObject):
         attr_mapping = {
             'controller_mapper_path': ('controller_mapper_path_options', 'controller_mapper_path_arguments'),
             'borderless_gaming_path': ('borderless_gaming_path_options', 'borderless_gaming_path_arguments'),
-            'multimonitortool_path': ('multimonitortool_options', 'multimonitortool_arguments'),
+            'monitorapp_path': ('monitorapp_options', 'monitorapp_arguments'),
             'pre1_path': ('pre1_path_options', 'pre1_path_arguments'),
             'pre2_path': ('pre2_path_options', 'pre2_path_arguments'),
             'pre3_path': ('pre3_path_options', 'pre3_path_arguments'),
@@ -459,9 +472,9 @@ class ConfigManager(QObject):
             'audio_tool_path': ('audio_app_options', 'audio_app_arguments'),
             'p1_profile_path': ('p1_profile_path_options', 'p1_profile_path_arguments'),
             'p2_profile_path': ('p2_profile_path_options', 'p2_profile_path_arguments'),
-            'mediacenter_profile_path': ('mediacenter_profile_path_options', 'mediacenter_profile_path_arguments'),
-            'multimonitortool_gaming_path': ('multimonitortool_gaming_options', 'multimonitortool_gaming_arguments'),
-            'multimonitortool_media_path': ('multimonitortool_media_options', 'multimonitortool_media_arguments'),
+            'desk_profile_path': ('desk_profile_path_options', 'desk_profile_path_arguments'),
+            'monitor_gaming_path': ('monitor_gaming_options', 'monitor_gaming_arguments'),
+            'monitor_desk_path': ('monitor_desk_options', 'monitor_desk_arguments'),
         }
         
         if config_attr not in attr_mapping:

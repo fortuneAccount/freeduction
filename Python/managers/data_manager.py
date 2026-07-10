@@ -148,7 +148,7 @@ class DataManager(QObject):
                 large_lc_count = 0
                 large_lc_details = []
                 path_keys = [
-                    'controller_mapper_path', 'borderless_windowing_path', 'multimonitortool_path',
+                    'controller_mapper_path', 'borderless_windowing_path', 'monitorapp_path',
                     'just_after_launch_path', 'just_before_exit_path',
                     'pre1_path', 'pre2_path', 'pre3_path',
                     'post1_path', 'post2_path', 'post3_path',
@@ -209,7 +209,7 @@ class DataManager(QObject):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('multimonitortool_path', 'multimonitortool_enabled'),
+            ('monitorapp_path', 'monitorapp_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),
@@ -220,9 +220,9 @@ class DataManager(QObject):
             ('post3_path', 'post_3_enabled'),
             ('player1_profile', 'player1_profile_enabled'),
             ('player2_profile', 'player2_profile_enabled'),
-            ('mediacenter_profile', 'mediacenter_profile_enabled'),
-            ('mm_game_profile', 'mm_game_profile_enabled'),
-            ('mm_desktop_profile', 'mm_desktop_profile_enabled'),
+            ('desk_profile', 'desk_profile_enabled'),
+            ('monitor_game_profile', 'monitor_game_profile_enabled'),
+            ('monitor_desk_profile', 'monitor_desk_profile_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),

@@ -2,9 +2,8 @@ setuptools
 py7zr
 PyQt6
 nltk
-winshell
-pywin32
 requests
+screeninfo
 beautifulsoup4
 configparser
 psutil
@@ -13,9 +12,10 @@ pyinstaller
 cloudscraper
 pystray
 pillow
+winshell
+pywin32
 
-#screeninfo
-#qdarkstyle
-#qtdarktheme
-#PyQt6-Fluent-Widgets
-#PyQt6-Qlementine
+qdarkstyle
+pyqtdarktheme
+PyQt6-Fluent-Widgets[full]
+PyQt6-Qlementine

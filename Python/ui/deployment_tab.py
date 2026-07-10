@@ -15,10 +15,10 @@ import datetime
 
 PATH_KEYS = [
     "profiles_dir", "launchers_dir", "launcher_executable",
-    "controller_mapper_path", "multimonitortool_path",
+    "controller_mapper_path", "monitorapp_path",
     "just_after_launch_path", "just_before_exit_path",
-    "p1_profile_path", "p2_profile_path", "mediacenter_profile_path",
-    "multimonitor_gaming_path", "multimonitor_media_path",
+    "p1_profile_path", "p2_profile_path", "desk_profile_path",
+    "monitor_gaming_path", "monitor_desk_path",
     "pre1_path", "post1_path", "pre2_path", "post2_path", "pre3_path", 
     "post3_path",
 ]
@@ -28,14 +28,14 @@ PATH_LABELS = {
     "launchers_dir": "Overwrite Launcher",
     "launcher_executable": "Overwrite Launcher Executable",
     "controller_mapper_path": "Overwrite Controller Mapper",
-    "multimonitortool_path": "Overwrite Multi-Monitor Tool",
+    "monitorapp_path": "Overwrite Monitor App",
     "just_after_launch_path": "Overwrite Just After Launch",
     "just_before_exit_path": "Overwrite Just Before Exit",
     "p1_profile_path": "Overwrite Player 1 Profile",
     "p2_profile_path": "Overwrite Player 2 Profile",
-    "mediacenter_profile_path": "Overwrite Media Center Profile",
-    "multimonitor_gaming_path": "Overwrite MM Gaming Config",
-    "multimonitor_media_path": "Overwrite MM Media Config",
+    "desk_profile_path": "Overwrite Desk Profile",
+    "monitor_gaming_path": "Overwrite Mon Gaming Config",
+    "monitor_desk_path": "Overwrite Mon Desk Config",
     "pre1_path": "Overwrite Pre-Launch App 1",
     "post1_path": "Overwrite Post-Launch App 1",
     "pre2_path": "Overwrite Pre-Launch App 2",
@@ -147,23 +147,19 @@ class DeploymentTab(QWidget):
         
         left_layout.addStretch()
 
-        # --- Right Column: Deployment Options ---
-        right_col = QWidget()
-        right_layout = QVBoxLayout(right_col)
-        right_layout.setContentsMargins(0, 0, 0, 0)
+        # Add to main layout
+        database_indexing_layout.addWidget(left_col, 1)
 
-        # Enable Steam Name Matching
-        self.name_check_checkbox = QCheckBox("Enable Steam Name Matching")
-        self.name_check_checkbox.setToolTip("Attempt to match indexed games with Steam titles for better naming. Requires steam.json.")
-        right_layout.addWidget(self.name_check_checkbox)
-
-        self.auto_flag_checkbox = QCheckBox("Demote current library")
-        self.auto_flag_checkbox.setToolTip("Flag items as 'Do not create' if profile folder exists")
-        right_layout.addWidget(self.auto_flag_checkbox, alignment=Qt.AlignmentFlag.AlignRight)
-        
+        # --- Footer Controls (left-aligned) ---
         self.indexing_progress = QProgressBar()
         self.indexing_progress.setRange(0, 0) # Indeterminate
         self.indexing_progress.setVisible(False)
+
+        self.name_check_checkbox = QCheckBox("Enable Steam Name Matching")
+        self.name_check_checkbox.setToolTip("Attempt to match indexed games with Steam titles for better naming. Requires steam.json.")
+
+        self.auto_flag_checkbox = QCheckBox("Demote current library")
+        self.auto_flag_checkbox.setToolTip("Flag items as 'Do not create' if profile folder exists")
 
         self.index_sources_button = QPushButton("INDEX SOURCES")
         self.index_sources_button.clicked.connect(self.index_sources_requested.emit)
@@ -172,14 +168,6 @@ class DeploymentTab(QWidget):
         self.view_log_button = QPushButton("Log")
         self.view_log_button.clicked.connect(self.show_log_viewer)
 
-        right_layout.addWidget(self.index_sources_button)
-        right_layout.addWidget(self.indexing_progress)
-        right_layout.addStretch()
-
-        # Add columns to main layout
-        database_indexing_layout.addWidget(left_col, 1)
-        database_indexing_layout.addWidget(right_col, 1)
-
         # --- Creation Options Section ---
         creation_options_widget = QWidget()
         creation_options_layout = QVBoxLayout(creation_options_widget)
@@ -187,12 +175,14 @@ class DeploymentTab(QWidget):
         # Consolidated creation options group
         creation_group = QGroupBox("Creation Options ▼")
         creation_group_layout = QVBoxLayout(creation_group)
+        creation_group_layout.setContentsMargins(5, 10, 5, 5)
 
         # Scroll area for all checkboxes
         options_scroll = QScrollArea()
         options_scroll.setWidgetResizable(True)
         options_widget = QWidget()
         options_layout = QVBoxLayout(options_widget)
+        options_layout.setSpacing(8)
 
         # Metadata & Artwork Options
         meta_group = QGroupBox("Metadata & Artwork ▼")
@@ -252,27 +242,32 @@ class DeploymentTab(QWidget):
 
         creation_options_layout.addWidget(creation_group)
 
-        # Create button shows dynamic count of selected items
-        self.create_button = QPushButton()
-        self.create_button.setMinimumHeight(68) # 40px base + 70% increase
-        creation_options_layout.addWidget(self.create_button)
-
         # --- Accordion Setup ---
         # Rename General Options to Database Indexing
         general_options_section = AccordionSection("DATABASE INDEXING", database_indexing_widget, start_expanded=True)
         general_options_section.content_height += 75
-        creation_section = AccordionSection("CREATION", creation_options_widget)
+        creation_section = AccordionSection("CREATION", creation_options_widget, start_expanded=True)
         creation_section.content_height += 150
 
         main_layout.addWidget(general_options_section)
         main_layout.addWidget(creation_section, 1)
-        main_layout.addWidget(self.create_button)
 
-        # Bottom-aligned View Log button
-        log_btn_layout = QHBoxLayout()
-        log_btn_layout.addStretch()
-        log_btn_layout.addWidget(self.view_log_button)
-        main_layout.addLayout(log_btn_layout)
+        # Create button shows dynamic count of selected items
+        self.create_button = QPushButton()
+        self.create_button.setMinimumHeight(68)
+
+        # Footer: log on left above controls; create button on right
+        footer_layout = QHBoxLayout()
+        footer_left = QVBoxLayout()
+        footer_left.addWidget(self.view_log_button)
+        footer_left.addWidget(self.name_check_checkbox)
+        footer_left.addWidget(self.auto_flag_checkbox)
+        footer_left.addWidget(self.index_sources_button)
+        footer_left.addWidget(self.indexing_progress)
+        footer_layout.addLayout(footer_left)
+        footer_layout.addStretch()
+        footer_layout.addWidget(self.create_button)
+        main_layout.addLayout(footer_layout)
 
         # --- Connect Signals ---
         self.name_check_checkbox.stateChanged.connect(self.config_changed.emit)

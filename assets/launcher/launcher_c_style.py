@@ -301,8 +301,8 @@ def kill_controller_mapper():
         kill_process_by_name(Path(CONFIG['controllermapperapp']).name)
 
 def run_monitor_config_game():
-    tool = CONFIG.get('multimonitortool', '')
-    config = CONFIG.get('multimonitorgamingconfig', '')
+    tool = CONFIG.get('monitorapp', '')
+    config = CONFIG.get('monitorgamingcfg', '')
     
     # Resolve paths case-insensitively
     tool = find_path_case_insensitive(tool)
@@ -312,8 +312,8 @@ def run_monitor_config_game():
         run_process(f'"{tool}" /load "{config}"', wait=True)
 
 def run_monitor_config_desktop():
-    tool = CONFIG.get('multimonitortool', '')
-    config = CONFIG.get('multimonitordesktopconfig', '')
+    tool = CONFIG.get('monitorapp', '')
+    config = CONFIG.get('monitordeskcfg', '')
     
     # Resolve paths case-insensitively
     tool = find_path_case_insensitive(tool)

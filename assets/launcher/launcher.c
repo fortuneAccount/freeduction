@@ -310,22 +310,22 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(borderless_options);
     } else if (MATCH("Paths", "BorderlessWindowingArguments")) {
         SET_STR(borderless_arguments);
-    } else if (MATCH("Paths", "MultiMonitorTool")) {
-        SET_STR(multimonitortool);
-    } else if (MATCH("Paths", "MultiMonitorOptions")) {
-        SET_STR(multimonitortool_options);
-    } else if (MATCH("Paths", "MultiMonitorArguments")) {
-        SET_STR(multimonitortool_arguments);
+    } else if (MATCH("Paths", "MonitorApp")) {
+        SET_STR(monitorapp);
+    } else if (MATCH("Paths", "MonitorAppOptions")) {
+        SET_STR(monitorapp_options);
+    } else if (MATCH("Paths", "MonitorAppArguments")) {
+        SET_STR(monitorapp_arguments);
     } else if (MATCH("Paths", "Player1Profile")) {
         SET_STR(player1_profile);
     } else if (MATCH("Paths", "Player2Profile")) {
         SET_STR(player2_profile);
-    } else if (MATCH("Paths", "MediaCenterProfile")) {
-        SET_STR(mediacenter_profile);
-    } else if (MATCH("Paths", "MultiMonitorGamingConfig")) {
-        SET_STR(mm_game_config);
-    } else if (MATCH("Paths", "MultiMonitorDesktopConfig")) {
-        SET_STR(mm_desktop_config);
+    } else if (MATCH("Paths", "DeskProfile")) {
+        SET_STR(desk_profile);
+    } else if (MATCH("Paths", "MonitorGamingConfig")) {
+        SET_STR(monitor_game_config);
+    } else if (MATCH("Paths", "MonitorDesktopConfig")) {
+        SET_STR(monitor_desk_config);
     } else if (MATCH("Paths", "CloudApp")) {
         SET_STR(cloud_app);
     } else if (MATCH("Paths", "CloudAppOptions")) {
@@ -372,14 +372,14 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(player1_profile);
     } else if (MATCH("mapperprofiles", "player2profile")) {
         SET_STR(player2_profile);
-    } else if (MATCH("mapperprofiles", "mediacenterprofile")) {
-        SET_STR(mediacenter_profile);
+    } else if (MATCH("mapperprofiles", "deskprofile")) {
+        SET_STR(desk_profile);
     }
     // [monitorprofiles] section
-    else if (MATCH("monitorprofiles", "multimonitorgamingconfig")) {
-        SET_STR(mm_game_config);
-    } else if (MATCH("monitorprofiles", "multimonitormediacenterconfig")) {
-        SET_STR(mm_desktop_config);
+    else if (MATCH("monitorprofiles", "monitorgamingcfg")) {
+        SET_STR(monitor_game_config);
+    } else if (MATCH("monitorprofiles", "monitordeskcfg")) {
+        SET_STR(monitor_desk_config);
     }
     // [BorderlessProfiles] section
     else if (MATCH("BorderlessProfiles", "enableunbordercfg")) {
@@ -408,14 +408,14 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(audio_game_cfg_options);
     } else if (MATCH("AudioProfiles", "audiogamecfgpatharguments")) {
         SET_STR(audio_game_cfg_arguments);
-    } else if (MATCH("AudioProfiles", "enableaudiomediacentercfg")) {
-        SET_BOOL(audio_mediacenter_cfg_enabled);
-    } else if (MATCH("AudioProfiles", "audiomediacentercfgpath")) {
-        SET_STR(audio_mediacenter_cfg);
-    } else if (MATCH("AudioProfiles", "audiomediacentercfgpathoptions")) {
-        SET_STR(audio_mediacenter_cfg_options);
-    } else if (MATCH("AudioProfiles", "audiomediacentercfgpatharguments")) {
-        SET_STR(audio_mediacenter_cfg_arguments);
+    } else if (MATCH("AudioProfiles", "enableaudiodeskcfg")) {
+        SET_BOOL(audio_desk_cfg_enabled);
+    } else if (MATCH("AudioProfiles", "audiodeskcfgpath")) {
+        SET_STR(audio_desk_cfg);
+    } else if (MATCH("AudioProfiles", "audiodeskcfgpathoptions")) {
+        SET_STR(audio_desk_cfg_options);
+    } else if (MATCH("AudioProfiles", "audiodeskcfgpatharguments")) {
+        SET_STR(audio_desk_cfg_arguments);
     }
     // Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
     else if (MATCH("DiscMountCfg", "enablediscmountcfg")) {
@@ -435,23 +435,15 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("DiscUnmountCfg", "discunmountcfgpatharguments")) {
         SET_STR(disc_unmount_cfg_arguments);
     }
-    // Backward compatibility: old AudioGameCfg/AudioMediacenterCfg sections
-    else if (MATCH("AudioGameCfg", "enableaudiogamecfg")) {
-        SET_BOOL(audio_game_cfg_enabled);
-    } else if (MATCH("AudioGameCfg", "audiogamecfgpath")) {
-        SET_STR(audio_game_cfg);
-    } else if (MATCH("AudioGameCfg", "audiogamecfgpathoptions")) {
-        SET_STR(audio_game_cfg_options);
-    } else if (MATCH("AudioGameCfg", "audiogamecfgpatharguments")) {
-        SET_STR(audio_game_cfg_arguments);
-    } else if (MATCH("AudioMediacenterCfg", "enableaudiomediacentercfg")) {
-        SET_BOOL(audio_mediacenter_cfg_enabled);
-    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpath")) {
-        SET_STR(audio_mediacenter_cfg);
-    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpathoptions")) {
-        SET_STR(audio_mediacenter_cfg_options);
-    } else if (MATCH("AudioMediacenterCfg", "audiomediacentercfgpatharguments")) {
-        SET_STR(audio_mediacenter_cfg_arguments);
+    // Backward compatibility: old AudioGameCfg/AudioDeskCfg sections
+    } else if (MATCH("AudioDeskCfg", "enableaudiodeskcfg")) {
+        SET_BOOL(audio_desk_cfg_enabled);
+    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpath")) {
+        SET_STR(audio_desk_cfg);
+    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpathoptions")) {
+        SET_STR(audio_desk_cfg_options);
+    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpatharguments")) {
+        SET_STR(audio_desk_cfg_arguments);
     }
     // [Options] section
     else if (MATCH("Options", "RunAsAdmin")) {
@@ -680,9 +672,9 @@ void set_taskbar_visibility(BOOL show) {
 
 // --- Action Functions ---
 void action_run_controller_mapper(int is_exit) {
-    char* app = is_exit ? G_CONFIG.mediacenter_profile : G_CONFIG.controller_mapper_app;
-    char* p1 = is_exit ? G_CONFIG.mediacenter_profile : G_CONFIG.player1_profile;
-    char* p2 = is_exit ? G_CONFIG.mediacenter_profile : G_CONFIG.player2_profile;
+    char* app = is_exit ? G_CONFIG.desk_profile : G_CONFIG.controller_mapper_app;
+    char* p1 = is_exit ? G_CONFIG.desk_profile : G_CONFIG.player1_profile;
+    char* p2 = is_exit ? G_CONFIG.desk_profile : G_CONFIG.player2_profile;
     
     if (strlen(app) == 0 || strlen(p1) == 0) {
         show_message("  - Controller Mapper or P1 Profile not configured/found.");
@@ -759,44 +751,44 @@ void action_kill_controller_mapper() {
 }
 
 void action_run_monitor_config_game() {
-    if (strlen(G_CONFIG.multimonitortool) == 0 || strlen(G_CONFIG.mm_game_config) == 0) {
+    if (strlen(G_CONFIG.monitorapp) == 0 || strlen(G_CONFIG.monitor_game_config) == 0) {
         return;
     }
     
-    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitortool);
+    DWORD attribs = GetFileAttributesA(G_CONFIG.monitorapp);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
     
-    attribs = GetFileAttributesA(G_CONFIG.mm_game_config);
+    attribs = GetFileAttributesA(G_CONFIG.monitor_game_config);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
 
     char cmd[MAX_CMD_LEN];
     snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
-             G_CONFIG.multimonitortool,
-             G_CONFIG.multimonitortool_options,
-             G_CONFIG.mm_game_config,
-             G_CONFIG.multimonitortool_arguments);
+             G_CONFIG.monitorapp,
+             G_CONFIG.monitorapp_options,
+             G_CONFIG.monitor_game_config,
+             G_CONFIG.monitorapp_arguments);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);
 }
 
 void action_run_monitor_config_desktop() {
-    if (strlen(G_CONFIG.multimonitortool) == 0 || strlen(G_CONFIG.mm_desktop_config) == 0) {
+    if (strlen(G_CONFIG.monitorapp) == 0 || strlen(G_CONFIG.monitor_desk_config) == 0) {
         return;
     }
     
-    DWORD attribs = GetFileAttributesA(G_CONFIG.multimonitortool);
+    DWORD attribs = GetFileAttributesA(G_CONFIG.monitorapp);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
     
-    attribs = GetFileAttributesA(G_CONFIG.mm_desktop_config);
+    attribs = GetFileAttributesA(G_CONFIG.monitor_desk_config);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
 
     char cmd[MAX_CMD_LEN];
     snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
-             G_CONFIG.multimonitortool,
-             G_CONFIG.multimonitortool_options,
-             G_CONFIG.mm_desktop_config,
-             G_CONFIG.multimonitortool_arguments);
+             G_CONFIG.monitorapp,
+             G_CONFIG.monitorapp_options,
+             G_CONFIG.monitor_desk_config,
+             G_CONFIG.monitorapp_arguments);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);

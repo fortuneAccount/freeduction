@@ -22,6 +22,23 @@ logger = logging.getLogger(__name__)
 # Helpers
 # ---------------------------------------------------------------------------
 
+def _is_system_dark_mode() -> bool:
+    """Detect if the Windows system is in dark mode via registry.
+
+    Returns False (light mode) on non-Windows platforms or on error.
+    """
+    try:
+        import winreg
+        key = winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Themes\Personalize",
+        )
+        value, _ = winreg.QueryValueEx(key, "AppsUseLightTheme")
+        return value == 0
+    except Exception:
+        return False
+
+
 def _get_theme_file(filename: str) -> str | None:
     """Return the absolute path to a bundled theme JSON file, or None."""
     try:
@@ -76,6 +93,62 @@ class DefaultProvider(ThemeProvider):
         return "Default (Qt)"
 
     def apply(self, app) -> None:
+        app.setStyle("Fusion")
+        app.setStyleSheet("")
+        app.setPalette(app.style().standardPalette())
+
+    @classmethod
+    def is_available(cls) -> bool:
+        return True
+
+
+# ---------------------------------------------------------------------------
+# Built-in Qt style providers (Material, Universal, FluentWinUI3)
+# ---------------------------------------------------------------------------
+
+class MaterialProvider(ThemeProvider):
+    """Applies the native Material style and restores the standard palette."""
+
+    @property
+    def name(self) -> str:
+        return "Material"
+
+    def apply(self, app) -> None:
+        app.setStyle("Material")
+        app.setStyleSheet("")
+        app.setPalette(app.style().standardPalette())
+
+    @classmethod
+    def is_available(cls) -> bool:
+        return True
+
+
+class UniversalProvider(ThemeProvider):
+    """Applies the native Universal style and restores the standard palette."""
+
+    @property
+    def name(self) -> str:
+        return "Universal"
+
+    def apply(self, app) -> None:
+        app.setStyle("Universal")
+        app.setStyleSheet("")
+        app.setPalette(app.style().standardPalette())
+
+    @classmethod
+    def is_available(cls) -> bool:
+        return True
+
+
+class FluentWinUI3Provider(ThemeProvider):
+    """Applies the native FluentWinUI3 style and restores the standard palette."""
+
+    @property
+    def name(self) -> str:
+        return "Fluent WinUI 3"
+
+    def apply(self, app) -> None:
+        app.setStyle("FluentWinUI3")
         app.setStyleSheet("")
         app.setPalette(app.style().standardPalette())
 
@@ -306,6 +379,9 @@ class ThemeManager:
     THEME_IDS: list[str] = [
         "qlementine_dark",
         "qlementine_light",
+        "fluent_winui3",
+        "material",
+        "universal",
         "default",
         "fluent_dark",
         "fluent_light",
@@ -318,6 +394,9 @@ class ThemeManager:
         self._registry: dict[str, ThemeProvider] = {
             "qlementine_dark": QlementineDarkProvider(),
             "qlementine_light": QlementineLightProvider(),
+            "fluent_winui3": FluentWinUI3Provider(),
+            "material": MaterialProvider(),
+            "universal": UniversalProvider(),
             "default": DefaultProvider(),
             "fluent_dark": FluentDarkProvider(),
             "fluent_light": FluentLightProvider(),
@@ -347,6 +426,19 @@ class ThemeManager:
         """Return True if the given theme ID is registered and its library is available."""
         provider = self._registry.get(theme_id)
         return provider is not None and provider.is_available()
+
+    def _pick_best_theme_for_mode(self, dark: bool) -> str:
+        """Return the theme_id of the best available theme for *dark* or light mode."""
+        candidates = (
+            ["fluent_winui3", "qlementine_dark", "fluent_dark", "qdarktheme_dark", "qdarkstyle", "default"]
+            if dark
+            else ["fluent_winui3", "qlementine_light", "fluent_light", "qdarktheme_light", "default"]
+        )
+        for theme_id in candidates:
+            provider = self._registry.get(theme_id)
+            if provider is not None and provider.is_available():
+                return theme_id
+        return "default"
 
     # ------------------------------------------------------------------
     # Apply helpers
@@ -421,6 +513,8 @@ class ThemeManager:
 
         try:
             theme_id = getattr(config, "ui_theme", "default") or "default"
+            if theme_id == "default":
+                theme_id = self._pick_best_theme_for_mode(_is_system_dark_mode())
             self.apply_theme(theme_id, app, config=config)
         except Exception:
             logger.exception(

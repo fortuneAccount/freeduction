@@ -1042,7 +1042,7 @@
                                                     <p>Paths in the editor use special prefixes to control how files are handled during deployment:</p>
                                                     <h4>Centralized (CEN) - &lt; prefix</h4>
                                                     <p>The launcher refers to the file path. All games with the CEN propagation flag set reference the same file. Changes to the file affect all games using it.<br>
-                                                    <strong>Example:</strong> <code>&lt;Profiles/MediaCenter.amgp</code><br>
+                                                    <strong>Example:</strong> <code>&lt;Profiles/Desk.amgp</code><br>
                                                     <strong>Use when:</strong> You want all games to share the same controller profile or settings.</p>
                                                     <h4>Local Copy (LC) - &gt; prefix</h4>
                                                     <p>The file is copied to the game's specific profile folder during deployment. Each game gets its own independent copy. Be aware that large files with many profiles may create an excessively large profile directory.<br>
@@ -1108,7 +1108,7 @@
                                                     &bull; <strong>Config Locations:</strong> Configuration file paths<br>
                                                     &bull; <strong>Steam AppID:</strong> Verified Steam AppID from PCGW<br>
                                                     &bull; <strong>Genres & Modes:</strong> Game categories and play modes<br>
-                                                    &bull; <strong>Video Settings:</strong> Widescreen, multimonitor, 4K support<br>
+                                                    &bull; <strong>Video Settings:</strong> Widescreen, monitor, 4K support<br>
                                                     &bull; <strong>Input Settings:</strong> Controller support, remapping capabilities</p>
                                                     <h4>How It Works</h4>
                                                     <p>1. Enable "Download PcGamingWiki" in Deployment tab<br>
@@ -1704,7 +1704,7 @@ class MyToolPlugin(ToolPlugin):
                                                     <p>Loads controller profiles on launch, switches to media center profile on exit. Demonstrates profile handling and multi-controller support.</p>
                                                     <h4>Borderless Gaming</h4>
                                                     <p>Starts borderless windowing tool on launch. Demonstrates simple tool execution with process tracking.</p>
-                                                    <h4>MultiMonitorTool</h4>
+                                                    <h4>MonitorApp</h4>
                                                     <p>Switches monitor configurations on launch and restores on exit. Demonstrates launch/exit action pairs.</p>
                                                     <h4>Rclone (Cloud Backup)</h4>
                                                     <p>Syncs saves to cloud storage. Demonstrates complex configuration with remote paths, sync modes, and timing options.</p>
@@ -2039,7 +2039,7 @@ class MyToolPlugin(ToolPlugin):
                                                     <h4>Layout Not Restoring</h4>
                                                     <p>&bull; Ensure exit sequence includes Monitor-Config<br>
                                                     &bull; Check desktop config path is correct<br>
-                                                    &bull; Verify MultiMonitorTool is still running<br>
+                                                    &bull; Verify MonitorApp is still running<br>
                                                     &bull; Check for Windows display settings conflicts</p>
                                                     <br>
                                                 </div>

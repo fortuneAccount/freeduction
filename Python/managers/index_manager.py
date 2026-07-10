@@ -27,9 +27,9 @@ def save_index(main_window, directory, data):
                               "post1", "post2", "post3", 
                               "pre1", "pre2", "pre3", 
                               "just_after", "just_before", "borderless", 
-                              "as_admin", "no_tb", "mapper", "multimonitor",
+                              "as_admin", "no_tb", "mapper", "monitor",
                               "mapper_opts", "mapper_args", "borderless_opts", "borderless_args",
-                              "multimonitor_opts", "multimonitor_args", "ja_opts", "ja_args",
+                              "monitor_opts", "monitor_args", "ja_opts", "ja_args",
                               "jb_opts", "jb_args", "pre1_opts", "pre1_args", "post1_opts", "post1_args",
                               "pre2_opts", "pre2_args", "post2_opts", "post2_args",
                               "pre3_opts", "pre3_args", "post3_opts", "post3_args",
@@ -45,8 +45,8 @@ def save_index(main_window, directory, data):
                     row_values = []
                     # Define path columns using EditorCols constants
                     path_columns = {constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE.value,
-                                    constants.EditorCols.MEDIACENTER_PROFILE.value, constants.EditorCols.MM_GAME_PROFILE.value,
-                                    constants.EditorCols.MM_DESKTOP_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
+                                    constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_PROFILE.value,
+                                    constants.EditorCols.MONITOR_DESK_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
                     for i, field in enumerate(fields):
                         if i in path_columns:  # Path fields (using EditorCols mapping)
                             # Use the indicator from path_indicators if available
@@ -144,9 +144,9 @@ def load_index(main_window=None, directory=None, prompt_for_filename=False):
                                   "post1", "post2", "post3", 
                                   "pre1", "pre2", "pre3", 
                                   "just_after", "just_before", "borderless", 
-                                  "as_admin", "no_tb", "mapper", "multimonitor",
+                                  "as_admin", "no_tb", "mapper", "monitor",
                                   "mapper_opts", "mapper_args", "borderless_opts", "borderless_args",
-                                  "multimonitor_opts", "multimonitor_args", "ja_opts", "ja_args",
+                                  "monitor_opts", "monitor_args", "ja_opts", "ja_args",
                                   "jb_opts", "jb_args", "pre1_opts", "pre1_args", "post1_opts", "post1_args",
                                   "pre2_opts", "pre2_args", "post2_opts", "post2_args",
                                   "pre3_opts", "pre3_args", "post3_opts", "post3_args",
@@ -160,8 +160,8 @@ def load_index(main_window=None, directory=None, prompt_for_filename=False):
                         path_indicators = {}
                         # Define path columns using EditorCols constants
                         path_columns = {constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE.value,
-                                        constants.EditorCols.MEDIACENTER_PROFILE.value, constants.EditorCols.MM_GAME_PROFILE.value,
-                                        constants.EditorCols.MM_DESKTOP_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
+                                        constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_PROFILE.value,
+                                        constants.EditorCols.MONITOR_DESK_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
                         
                         # Fill in values from parts
                         for i, field in enumerate(fields):

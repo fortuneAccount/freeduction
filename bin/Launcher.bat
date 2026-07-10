@@ -66,18 +66,18 @@ call :ReadINI "%GAMEINI%" "Launcher" "TerminateBorderlessOnExit" TERMBORDERLESS
 REM Parse INI file - mapperprofiles section
 call :ReadINI "%GAMEINI%" "mapperprofiles" "player1profile" PLAYER1PROFILE
 call :ReadINI "%GAMEINI%" "mapperprofiles" "player2profile" PLAYER2PROFILE
-call :ReadINI "%GAMEINI%" "mapperprofiles" "mediacenterprofile" MEDIACENTERPROFILE
+call :ReadINI "%GAMEINI%" "mapperprofiles" "deskprofile" DESKPROFILE
 
 REM Parse INI file - monitorprofiles section
-call :ReadINI "%GAMEINI%" "monitorprofiles" "multimonitorgamingconfig" MMGAMECONFIG
-call :ReadINI "%GAMEINI%" "monitorprofiles" "multimonitormediacenterconfig" MMDESKTOPCONFIG
+call :ReadINI "%GAMEINI%" "monitorprofiles" "monitorgamingcfg" MONGAMECONFIG
+call :ReadINI "%GAMEINI%" "monitorprofiles" "monitordeskcfg" MONDESKCONFIG
 
 REM Backward compatibility: old Profiles section
 if "%PLAYER1PROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "Player1Profile" PLAYER1PROFILE
 if "%PLAYER2PROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "Player2Profile" PLAYER2PROFILE
-if "%MEDIACENTERPROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MediaCenterProfile" MEDIACENTERPROFILE
-if "%MMGAMECONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorGamingConfig" MMGAMECONFIG
-if "%MMDESKTOPCONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MultiMonitorMediaCenterConfig" MMDESKTOPCONFIG
+if "%DESKPROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "DeskProfile" DESKPROFILE
+if "%MONGAMECONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MonitorGamingConfig" MONGAMECONFIG
+if "%MONDESKCONFIG%"=="" call :ReadINI "%GAMEINI%" "Profiles" "MonitorDeskConfig" MONDESKCONFIG
 
 REM Parse INI file - ControllerMapper section
 call :ReadINI "%GAMEINI%" "ControllerMapper" "ControllerMapperPath" MAPPERAPP
@@ -89,10 +89,10 @@ call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPath" BORDER
 call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPathOptions" BORDERLESSOPTS
 call :ReadINI "%GAMEINI%" "BorderlessWindowing" "BorderlessWindowingPathArguments" BORDERLESSARGS
 
-REM Parse INI file - MultiMonitor section
-call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPath" MMTOOL
-call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathOptions" MMOPTS
-call :ReadINI "%GAMEINI%" "MultiMonitor" "MultiMonitorPathArguments" MMARGS
+REM Parse INI file - Monitor section
+call :ReadINI "%GAMEINI%" "Monitor" "monitorapppath" MONTOOL
+call :ReadINI "%GAMEINI%" "Monitor" "monitorapppathoptions" MONOPTS
+call :ReadINI "%GAMEINI%" "Monitor" "monitorapppatharguments" MONARGS
 
 REM Parse INI file - DiscMountProfiles section
 call :ReadINI "%GAMEINI%" "DiscMountProfiles" "EnableDiscMountCfg" MOUNTENABLED
@@ -292,14 +292,14 @@ if /i "%Item%"=="Controller-Mapper" (
 
 if /i "%Item%"=="Monitor-Config" (
     if "%Phase%"=="launch" (
-        if not "%MMTOOL%"=="" if not "%MMGAMECONFIG%"=="" (
+        if not "%MONTOOL%"=="" if not "%MONGAMECONFIG%"=="" (
             echo     Applying gaming monitor config...
-            call :RunApp "%MMTOOL%" "%MMOPTS%" "/LoadConfig "%MMGAMECONFIG%"" "1"
+            call :RunApp "%MONTOOL%" "%MONOPTS%" "/LoadConfig "%MONGAMECONFIG%"" "1"
         )
     ) else (
-        if not "%MMTOOL%"=="" if not "%MMDESKTOPCONFIG%"=="" (
+        if not "%MONTOOL%"=="" if not "%MONDESKCONFIG%"=="" (
             echo     Restoring desktop monitor config...
-            call :RunApp "%MMTOOL%" "%MMOPTS%" "/LoadConfig "%MMDESKTOPCONFIG%"" "1"
+            call :RunApp "%MONTOOL%" "%MONOPTS%" "/LoadConfig "%MONDESKCONFIG%"" "1"
         )
     )
 )

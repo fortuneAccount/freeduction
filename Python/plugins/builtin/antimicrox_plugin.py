@@ -47,13 +47,13 @@ class AntiMicroXPlugin(ToolPlugin):
                 filter='AntiMicroX Profiles (*.amgp);;All Files (*.*)',
                 help_text='Controller profile for Player 2'
             ),
-            'mediacenter_profile': ConfigField(
-                name='mediacenter_profile',
+            'desk_profile': ConfigField(
+                name='desk_profile',
                 field_type='file',
-                label='Media Center Profile',
+                label='Desk Profile',
                 required=False,
                 filter='AntiMicroX Profiles (*.amgp);;All Files (*.*)',
-                help_text='Controller profile for media center/desktop use'
+                help_text='Controller profile for desk use'
             )
         }
     
@@ -91,16 +91,16 @@ class AntiMicroXPlugin(ToolPlugin):
         return cmd
     
     def build_exit_command(self, config: PluginConfig) -> Optional[str]:
-        """Build command for exit sequence (uses media center profile)"""
+        """Build command for exit sequence (uses desk profile)"""
         if not config.tool_path or not os.path.exists(config.tool_path):
             return None
         
-        mc_profile = config.get_field('mediacenter_profile')
-        if not mc_profile or not os.path.exists(mc_profile):
+        desk_profile = config.get_field('desk_profile')
+        if not desk_profile or not os.path.exists(desk_profile):
             return None
         
-        # Build command with media center profile
-        cmd = f'"{config.tool_path}" --tray --hidden --profile "{mc_profile}"'
+        # Build command with desk profile
+        cmd = f'"{config.tool_path}" --tray --hidden --profile "{desk_profile}"'
         
         return cmd
     

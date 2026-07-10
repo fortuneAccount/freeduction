@@ -383,19 +383,19 @@ class GameLauncher:
         if 'mapperprofiles' in config:
             self.player1_profile = config.get('mapperprofiles', 'player1profile', fallback='')
             self.player2_profile = config.get('mapperprofiles', 'player2profile', fallback='')
-            self.mediacenter_profile = config.get('mapperprofiles', 'mediacenterprofile', fallback='')
+            self.desk_profile = config.get('mapperprofiles', 'deskprofile', fallback='')
         else:
             self.player1_profile = ''
             self.player2_profile = ''
-            self.mediacenter_profile = ''
+            self.desk_profile = ''
 
         # Load monitorprofiles section
         if 'monitorprofiles' in config:
-            self.mm_game_config = config.get('monitorprofiles', 'multimonitorgamingconfig', fallback='')
-            self.mm_desktop_config = config.get('monitorprofiles', 'multimonitormediacenterconfig', fallback='')
+            self.monitor_game_cfg = config.get('monitorprofiles', 'monitorgamingcfg', fallback='')
+            self.monitor_desk_cfg = config.get('monitorprofiles', 'monitordeskcfg', fallback='')
         else:
-            self.mm_game_config = ''
-            self.mm_desktop_config = ''
+            self.monitor_game_cfg = ''
+            self.monitor_desk_cfg = ''
         
         # Load ControllerMapper section
         if 'ControllerMapper' in config:
@@ -409,11 +409,11 @@ class GameLauncher:
             self.borderless_options = config.get('BorderlessWindowing', 'borderlesswindowingpathoptions', fallback='')
             self.borderless_arguments = config.get('BorderlessWindowing', 'borderlesswindowingpatharguments', fallback='')
         
-        # Load MultiMonitor section
-        if 'MultiMonitor' in config:
-            self.multimonitortool = config.get('MultiMonitor', 'multimonitorpath', fallback='')
-            self.multimonitortool_options = config.get('MultiMonitor', 'multimonitorpathoptions', fallback='')
-            self.multimonitortool_arguments = config.get('MultiMonitor', 'multimonitorpatharguments', fallback='')
+        # Load Monitor section
+        if 'Monitor' in config:
+            self.monitorapp = config.get('Monitor', 'monitorapppath', fallback='')
+            self.monitorapp_options = config.get('Monitor', 'monitorapppathoptions', fallback='')
+            self.monitorapp_arguments = config.get('Monitor', 'monitorapppatharguments', fallback='')
 
         # Load DiscMount section
         if 'DiscMount' in config:
@@ -469,10 +469,10 @@ class GameLauncher:
             self.audio_game_cfg = config.get('AudioProfiles', 'audiogamecfgpath', fallback='')
             self.audio_game_cfg_options = config.get('AudioProfiles', 'audiogamecfgpathoptions', fallback='')
             self.audio_game_cfg_arguments = config.get('AudioProfiles', 'audiogamecfgpatharguments', fallback='')
-            self.audio_mediacenter_cfg_enabled = config.getboolean('AudioProfiles', 'enableaudiomediacentercfg', fallback=False)
-            self.audio_mediacenter_cfg = config.get('AudioProfiles', 'audiomediacentercfgpath', fallback='')
-            self.audio_mediacenter_cfg_options = config.get('AudioProfiles', 'audiomediacentercfgpathoptions', fallback='')
-            self.audio_mediacenter_cfg_arguments = config.get('AudioProfiles', 'audiomediacentercfgpatharguments', fallback='')
+            self.audio_desk_cfg_enabled = config.getboolean('AudioProfiles', 'enableaudiodeskcfg', fallback=False)
+            self.audio_desk_cfg = config.get('AudioProfiles', 'audiodeskcfgpath', fallback='')
+            self.audio_desk_cfg_options = config.get('AudioProfiles', 'audiodeskcfgpathoptions', fallback='')
+            self.audio_desk_cfg_arguments = config.get('AudioProfiles', 'audiodeskcfgpatharguments', fallback='')
         else:
             # Backward compatibility with old sections
             if 'AudioGameCfg' in config:
@@ -480,11 +480,11 @@ class GameLauncher:
                 self.audio_game_cfg = config.get('AudioGameCfg', 'audiogamecfgpath', fallback='')
                 self.audio_game_cfg_options = config.get('AudioGameCfg', 'audiogamecfgpathoptions', fallback='')
                 self.audio_game_cfg_arguments = config.get('AudioGameCfg', 'audiogamecfgpatharguments', fallback='')
-            if 'AudioMediacenterCfg' in config:
-                self.audio_mediacenter_cfg_enabled = config.getboolean('AudioMediacenterCfg', 'enableaudiomediacentercfg', fallback=False)
-                self.audio_mediacenter_cfg = config.get('AudioMediacenterCfg', 'audiomediacentercfgpath', fallback='')
-                self.audio_mediacenter_cfg_options = config.get('AudioMediacenterCfg', 'audiomediacentercfgpathoptions', fallback='')
-                self.audio_mediacenter_cfg_arguments = config.get('AudioMediacenterCfg', 'audiomediacentercfgpatharguments', fallback='')
+            if 'AudioDeskCfg' in config:
+                self.audio_desk_cfg_enabled = config.getboolean('AudioDeskCfg', 'enableaudiodeskcfg', fallback=False)
+                self.audio_desk_cfg = config.get('AudioDeskCfg', 'audiodeskcfgpath', fallback='')
+                self.audio_desk_cfg_options = config.get('AudioDeskCfg', 'audiodeskcfgpathoptions', fallback='')
+                self.audio_desk_cfg_arguments = config.get('AudioDeskCfg', 'audiodeskcfgpatharguments', fallback='')
 
         # Load CloudSync configuration
         if 'CloudSync' in config:
@@ -651,7 +651,7 @@ class GameLauncher:
         vars_map = {
             '$MAPPER': self.controller_mapper_app,
             '$BORDERLESS': self.borderless_app,
-            '$MMONAPP': self.multimonitortool,
+            '$MONITORAPP': self.monitorapp,
             '$CLOUDAPP': getattr(self, 'cloud_app', ''),
             '$BACKUPAPP': getattr(self, 'backup_app', ''),
             '$GAMEDIR': self.game_dir,

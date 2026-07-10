@@ -1,8 +1,24 @@
 from PyQt6.QtWidgets import (
-    QApplication, QWidget, QVBoxLayout, QScrollArea, QToolButton,
-    QSizePolicy, QFrame, QLabel
+    QApplication, QWidget, QVBoxLayout, QStackedWidget, QToolButton,
+    QSizePolicy, QLabel
 )
-from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, pyqtSlot
+from PyQt6.QtCore import Qt, QPropertyAnimation, QEasingCurve, QTimer, pyqtSlot
+from PyQt6.QtGui import QPainter
+
+
+class _BlankPage(QWidget):
+    """Empty widget used as page 0 of the animation target QStackedWidget.
+    When Fusion's backing store fails to clear, this gives the compositor
+    a clean, zero-content surface to blit instead of a stale buffer."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.eraseRect(self.rect())
+        painter.end()
 
 
 class AccordionSection(QWidget):
@@ -28,6 +44,14 @@ class AccordionSection(QWidget):
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         self._max_height = max_height if max_height is not None else self.EXPANDED_MAX
 
+        # ---- widget attributes that break Fusion's paint-cache behaviour ----
+        # Forces a complete redrawing of the background canvas on every
+        # geometry update.
+        self.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+        # Breaks Fusion's optimisation that skips redrawing overlapping child
+        # boundaries.
+        self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
+
         self.toggle_button = QToolButton(text=title, checkable=True, checked=start_expanded)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
         self.toggle_button.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -36,29 +60,37 @@ class AccordionSection(QWidget):
         if qlementine_style:
             self._apply_qlementine_style()
 
-        self.content_area = QScrollArea()
-        self.content_area.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.content_area.setFrameShape(QFrame.Shape.NoFrame)
-        self.content_area.setWidgetResizable(True)
-        self.content_area.setMinimumHeight(0)
-        # When expanded use max_height; when collapsed use 0
-        initial_height = self._max_height if start_expanded else 0
-        self.content_area.setMaximumHeight(initial_height)
-        self.content_area.setWidget(content)
+        # ---- animation target: QStackedWidget with blank + content pages ----
+        # Page 0: blank surface that Fusion can blit cleanly when the backing
+        #          store fails to clear stale buffer content.
+        # Page 1: the actual content widget.
+        # The QStackedWidget itself carries the same widget attributes so its
+        # own surface is always repainted from scratch.
+        self._stack = QStackedWidget()
+        self._stack.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
+        self._stack.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
 
-        self.animation = QPropertyAnimation(self.content_area, b"maximumHeight")
+        self._blank_page = _BlankPage()
+        self._stack.addWidget(self._blank_page)   # index 0
+        self._stack.addWidget(content)             # index 1
+        self._stack.setCurrentIndex(1 if start_expanded else 0)
+
+        initial_height = self._max_height if start_expanded else 0
+        self._stack.setMaximumHeight(initial_height)
+
+        self.animation = QPropertyAnimation(self._stack, b"maximumHeight")
         self.animation.setDuration(animation_duration)
         self.animation.setEasingCurve(QEasingCurve.Type.InOutQuad)
+        self.animation.valueChanged.connect(self._on_animation_frame)
 
         # Keep content_height for backward compatibility with external code that reads/writes it.
-        # It no longer affects animation (we always expand to EXPANDED_MAX) but must exist.
         self.content_height = content.sizeHint().height()
 
         layout = QVBoxLayout(self)
-        layout.setSpacing(0)
+        layout.setSpacing(2)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.toggle_button)
-        layout.addWidget(self.content_area)
+        layout.addWidget(self._stack)
 
     def _apply_qlementine_style(self) -> None:
         """Apply Qlementine-compatible styling to the toggle button.
@@ -80,6 +112,43 @@ class AccordionSection(QWidget):
             "QToolButton#qlementineAccordionToggle::menu-indicator { image: none; width: 0px; }"
         )
 
+    # ------------------------------------------------------------------
+    # Fusion paint-cache purge
+    # ------------------------------------------------------------------
+
+    def paintEvent(self, event):
+        """Override to force Fusion to drop its visual cache and repaint
+        the viewport surface from scratch.  Without this, Fusion's
+        aggressive layout-reuse optimisation leaves stale glyph fragments
+        when children resize during animation frames."""
+        painter = QPainter(self)
+        painter.setClipRect(event.rect())
+        painter.eraseRect(event.rect())
+        painter.end()
+        super().paintEvent(event)
+
+    @pyqtSlot()
+    def _on_animation_frame(self):
+        """Called on every animation value change.  Forces child widgets to
+        clean themselves up and prompts the parent layout to re-synchronise
+        so Fusion cannot cache stale geometry."""
+        for child in self._stack.findChildren(QWidget):
+            child.update()
+        parent_layout = self.parent().layout() if self.parent() else None
+        if parent_layout is not None:
+            parent_layout.activate()
+        QTimer.singleShot(0, self._deferred_sync)
+
+    def _deferred_sync(self):
+        """Asynchronous layout pass that runs after the current event loop
+        iteration finishes, ensuring the underlying layout engine fully
+        synchronises before the next frame is painted."""
+        if self.parent() is not None:
+            self.parent().updateGeometry()
+            self.parent().update()
+        self.updateGeometry()
+        self.update()
+
     @pyqtSlot()
     def toggle(self):
         checked = self.toggle_button.isChecked()
@@ -96,8 +165,11 @@ class AccordionSection(QWidget):
                 except Exception:
                     pass
 
-        start_height = self.content_area.maximumHeight()
+        start_height = self._stack.maximumHeight()
         end_height = self._max_height if checked else 0
+
+        # Switch to blank page while collapsed so Fusion blits a clean surface.
+        self._stack.setCurrentIndex(1 if checked else 0)
 
         self.animation.stop()
         self.animation.setStartValue(start_height)

@@ -51,7 +51,7 @@ Creates a specialized launcher and profile-folder (jacket) for each game which h
  keyboad-mapping and monitor layout.  Tools which automate the process of creating and loading presets for devices, games and settings at 
  a granular level are downloaded and installed directly from within the program.
 
-AntimicroX, keySticks, multimonitortool,  borderless-gaming,  borderless ,  rclone,  ludusavi,  WinCDEmu,  OSFMount,  imgdrive
+AntimicroX, keySticks, monitorapp,  borderless-gaming,  borderless ,  rclone,  ludusavi,  WinCDEmu,  OSFMount,  imgdrive
 
 
 ## Installation
@@ -84,7 +84,7 @@ freeduction/
 │   │   ├── qlementine_dark.json
 │   │   └── qlementine_light.json
 │   ├── antimicrox_Keyboard.amgp.set
-│   ├── antimicrox_MediaCenter.amgp.set
+│   ├── antimicrox_Desk.amgp.set
 │   ├── antimicrox_Player.amgp.set
 │   ├── antimicrox_Trigger.set
 │   ├── combined.cmd.set
@@ -96,7 +96,7 @@ freeduction/
 │   ├── governed_executables.set
 │   ├── Joystick.ico
 │   ├── keysticks_Blank.keysticks.set
-│   ├── keysticks_MediaCenter.keysticks.set
+│   ├── keysticks_Desk.keysticks.set
 │   ├── keysticks_Player.keysticks.set
 │   ├── killprocs.set
 │   ├── ks_Trigger.set
@@ -143,7 +143,7 @@ freeduction/
 │   │   │   ├── antimicrox_plugin.py
 │   │   │   ├── borderless_plugin.py
 │   │   │   ├── cloud_backup_plugin.py
-│   │   │   └── multimonitor_plugin.py
+│   │   │   └── monitor_plugin.py
 │   │   ├── __init__.py
 │   │   ├── base_plugin.py
 │   │   ├── manifest.py

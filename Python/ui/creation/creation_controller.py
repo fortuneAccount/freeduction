@@ -66,9 +66,9 @@ class CreationController:
             profile_keys = [
                 ('player1_profile', 'Player 1 Profile'),
                 ('player2_profile', 'Player 2 Profile'),
-                ('mm_game_profile', 'MM Game Config'),
-                ('mm_desktop_profile', 'MM Desktop Config'),
-                ('mediacenter_profile', 'Media Center Profile')
+                ('monitor_game_profile', 'MON Game Config'),
+                ('monitor_desk_profile', 'MON Desk Config'),
+                ('desk_profile', 'Desk Profile')
             ]
             
             for key, label in profile_keys:
@@ -101,7 +101,7 @@ class CreationController:
             app_keys = [
                 ('controller_mapper_path', 'Controller Mapper', 'controller_mapper_enabled'),
                 ('borderless_windowing_path', 'Borderless Gaming', 'borderless_windowing_enabled'),
-                ('multimonitortool_path', 'Multi-Monitor Tool', 'multimonitortool_enabled'),
+                ('monitorapp_path', 'Monitor App', 'monitorapp_enabled'),
                 ('just_after_launch_path', 'Just After Launch', 'just_after_launch_enabled'),
                 ('just_before_exit_path', 'Just Before Exit', 'just_before_exit_enabled'),
                 ('pre1_path', 'Pre-Launch 1', 'pre_1_enabled'),
@@ -650,26 +650,26 @@ class CreationController:
         else:
             config.set('mapperprofiles', 'player2profile', "")
         
-        if game_data.get('mediacenter_profile_enabled', True):
-            val = self._get_profile_path('mediacenter_profile', game_data, game_profile_dir)
-            config.set('mapperprofiles', 'mediacenterprofile', val)
+        if game_data.get('desk_profile_enabled', True):
+            val = self._get_profile_path('desk_profile', game_data, game_profile_dir)
+            config.set('mapperprofiles', 'deskprofile', val)
         else:
-            config.set('mapperprofiles', 'mediacenterprofile', "")
+            config.set('mapperprofiles', 'deskprofile', "")
 
         # --- [monitorprofiles] Section ---
         config.add_section('monitorprofiles')
         
-        if game_data.get('mm_game_profile_enabled', True):
-            val = self._get_profile_path('mm_game_profile', game_data, game_profile_dir)
-            config.set('monitorprofiles', 'multimonitorgamingconfig', val)
+        if game_data.get('monitor_game_profile_enabled', True):
+            val = self._get_profile_path('monitor_game_profile', game_data, game_profile_dir)
+            config.set('monitorprofiles', 'monitorgamingcfg', val)
         else:
-            config.set('monitorprofiles', 'multimonitorgamingconfig', "")
+            config.set('monitorprofiles', 'monitorgamingcfg', "")
         
-        if game_data.get('mm_desktop_profile_enabled', True):
-            val = self._get_profile_path('mm_desktop_profile', game_data, game_profile_dir)
-            config.set('monitorprofiles', 'multimonitormediacenterconfig', val)
+        if game_data.get('monitor_desk_profile_enabled', True):
+            val = self._get_profile_path('monitor_desk_profile', game_data, game_profile_dir)
+            config.set('monitorprofiles', 'monitordeskcfg', val)
         else:
-            config.set('monitorprofiles', 'multimonitormediacenterconfig', "")
+            config.set('monitorprofiles', 'monitordeskcfg', "")
 
         # --- [DiscMount] Section ---
         config.add_section('DiscMount')
@@ -715,10 +715,10 @@ class CreationController:
         config.set('AudioProfiles', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
         config.set('AudioProfiles', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
         config.set('AudioProfiles', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
-        config.set('AudioProfiles', 'enableaudiomediacentercfg', str(game_data.get('audio_mediacenter_cfg_enabled', False)))
-        config.set('AudioProfiles', 'audiomediacentercfgpath', game_data.get('audio_mediacenter_cfg', ''))
-        config.set('AudioProfiles', 'audiomediacentercfgpathoptions', game_data.get('audio_mediacenter_cfg_options', ''))
-        config.set('AudioProfiles', 'audiomediacentercfgpatharguments', game_data.get('audio_mediacenter_cfg_arguments', ''))
+        config.set('AudioProfiles', 'enableaudiodeskcfg', str(game_data.get('audio_desk_cfg_enabled', False)))
+        config.set('AudioProfiles', 'audiodeskcfgpath', game_data.get('audio_desk_cfg', ''))
+        config.set('AudioProfiles', 'audiodeskcfgpathoptions', game_data.get('audio_desk_cfg_options', ''))
+        config.set('AudioProfiles', 'audiodeskcfgpatharguments', game_data.get('audio_desk_cfg_arguments', ''))
 
         # --- [ControllerMapper] Section ---
         config.add_section('ControllerMapper')
@@ -736,13 +736,13 @@ class CreationController:
         config.set('BorderlessWindowing', 'borderlesswindowingpatharguments', game_data.get('borderless_windowing_arguments', app_config.borderless_gaming_path_arguments))
         config.set('BorderlessWindowing', 'borderlesswindowingpathrunwait', str(game_data.get('borderless_windowing_run_wait', False)))
 
-        # --- [MultiMonitor] Section ---
-        config.add_section('MultiMonitor')
-        config.set('MultiMonitor', 'enablemultimonitor', str(game_data.get('multimonitortool_enabled', True)))
-        config.set('MultiMonitor', 'multimonitorpath', self._get_app_path_for_ini('multimonitortool_path', game_data, game_profile_dir))
-        config.set('MultiMonitor', 'multimonitorpathoptions', game_data.get('multimonitortool_options', app_config.multimonitortool_options))
-        config.set('MultiMonitor', 'multimonitorpatharguments', game_data.get('multimonitortool_arguments', app_config.multimonitortool_arguments))
-        config.set('MultiMonitor', 'multimonitorpathrunwait', str(game_data.get('multimonitortool_run_wait', False)))
+        # --- [Monitor] Section ---
+        config.add_section('Monitor')
+        config.set('Monitor', 'enablemonitorapp', str(game_data.get('monitorapp_enabled', True)))
+        config.set('Monitor', 'monitorapppath', self._get_app_path_for_ini('monitorapp_path', game_data, game_profile_dir))
+        config.set('Monitor', 'monitorapppathoptions', game_data.get('monitorapp_options', app_config.monitorapp_options))
+        config.set('Monitor', 'monitorapppatharguments', game_data.get('monitorapp_arguments', app_config.monitorapp_arguments))
+        config.set('Monitor', 'monitorapppathrunwait', str(game_data.get('monitorapp_run_wait', False)))
 
         # --- [JustAfterLaunch] Section ---
         config.add_section('JustAfterLaunch')
@@ -819,9 +819,9 @@ class CreationController:
         source_map = [
             ('player1profile', 'player1_profile', 'p1_profile_path'),
             ('player2profile', 'player2_profile', 'p2_profile_path'),
-            ('multimonitorgamingconfig', 'mm_game_profile', 'multimonitor_gaming_path'),
-            ('multimonitormediacenterconfig', 'mm_desktop_profile', 'multimonitor_media_path'),
-            ('mediacenterprofile', 'mediacenter_profile', 'mediacenter_profile_path'),
+            ('monitorgamingcfg', 'monitor_game_profile', 'monitor_gaming_path'),
+            ('monitordeskcfg', 'monitor_desk_profile', 'monitor_desk_path'),
+            ('deskprofile', 'desk_profile', 'desk_profile_path'),
         ]
 
         for ini_key, data_key, config_key in source_map:
@@ -847,7 +847,7 @@ class CreationController:
         app_source_map = [
             ('antimicrox', 'controller_mapper_path', 'controller_mapper_path'),
             ('borderless', 'borderless_windowing_path', 'borderless_gaming_path'),
-            ('multimonitortool', 'multimonitortool_path', 'multimonitortool_path'),
+            ('monitorapp', 'monitorapp_path', 'monitorapp_path'),
             ('wincdemu', 'disc_mount_path', 'disc_mount_path'),
             ('audioapp', 'audio_app_path', 'audio_tool_path'),
             ('unbordercfg', 'unborder_cfg', 'unborder_cfg'),
@@ -955,9 +955,9 @@ class CreationController:
             'player2_profile': 'p2_profile_path',
             'player3_profile': 'p3_profile_path',
             'player4_profile': 'p4_profile_path',
-            'mm_game_profile': 'multimonitor_gaming_path',
-            'mm_desktop_profile': 'multimonitor_media_path',
-            'mediacenter_profile': 'mediacenter_profile_path'
+            'monitor_game_profile': 'monitor_gaming_path',
+            'monitor_desk_profile': 'monitor_desk_path',
+            'desk_profile': 'desk_profile_path'
         }
         config_key = config_key_map.get(profile_key, profile_key)
         
@@ -999,7 +999,7 @@ class CreationController:
         # Map key to config_key
         config_key_map = {
             'borderless_windowing_path': 'borderless_gaming_path',
-            'multimonitortool_path': 'multimonitortool_path'
+            'monitorapp_path': 'monitorapp_path'
         }
         config_key = config_key_map.get(key, key)
         
@@ -1033,7 +1033,7 @@ class CreationController:
         Downloads/Extracts if supported in repos.set, otherwise copies.
         """
         app_keys = [
-            'controller_mapper_path', 'borderless_windowing_path', 'multimonitortool_path',
+            'controller_mapper_path', 'borderless_windowing_path', 'monitorapp_path',
             'just_after_launch_path', 'just_before_exit_path',
             'pre1_path', 'pre2_path', 'pre3_path',
             'post1_path', 'post2_path', 'post3_path'
@@ -1041,7 +1041,7 @@ class CreationController:
 
         config_key_map = {
             'borderless_windowing_path': 'borderless_gaming_path',
-            'multimonitortool_path': 'multimonitortool_path'
+            'monitorapp_path': 'monitorapp_path'
         }
 
         for key in app_keys:
@@ -1114,9 +1114,9 @@ class CreationController:
         profile_map = {
             'player1_profile': 'p1_profile_path',
             'player2_profile': 'p2_profile_path',
-            'mm_game_profile': 'multimonitor_gaming_path',
-            'mm_desktop_profile': 'multimonitor_media_path',
-            'mediacenter_profile': 'mediacenter_profile_path'
+            'monitor_game_profile': 'monitor_gaming_path',
+            'monitor_desk_profile': 'monitor_desk_path',
+            'desk_profile': 'desk_profile_path'
         }
 
         for key, config_key in profile_map.items():

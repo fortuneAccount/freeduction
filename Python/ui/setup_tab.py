@@ -1,5 +1,6 @@
 import logging
 import os
+from pathlib import Path
 import configparser
 import requests
 import zipfile
@@ -194,13 +195,13 @@ class SetupTab(QWidget):
     PATH_ATTRIBUTES = [
         "profiles_dir", "launchers_dir", "launcher_executable", "controller_mapper_path",
         "borderless_gaming_path", "disc_mount_path", "p1_profile_path",
-        "p2_profile_path", "mediacenter_profile_path",
-        "multimonitortool_path", "multimonitortool_gaming_path",
-        "multimonitortool_media_path", "pre1_path", "pre2_path", "pre3_path",
+        "p2_profile_path", "desk_profile_path",
+        "monitorapp_path", "monitor_gaming_path",
+        "monitor_desk_path", "pre1_path", "pre2_path", "pre3_path",
         "just_after_launch_path", "just_before_exit_path",
         "post1_path", "post2_path", "post3_path",
         "cloud_sync_path", "local_backup_path", "audio_tool_path",
-        "disc_mount_cfg", "disc_unmount_cfg", "audio_game_cfg", "audio_mediacenter_cfg",
+        "disc_mount_cfg", "disc_unmount_cfg", "audio_game_cfg", "audio_desk_cfg",
         "unborder_cfg", "reborder_cfg"
     ]
 
@@ -441,8 +442,8 @@ class SetupTab(QWidget):
         self._add_path_row(mapper_layout, "    Player 1 Profile:", "p1_profile_path", self.path_rows["p1_profile_path"])
         self.path_rows["p2_profile_path"] = PathConfigRow("p2_profile_path", add_enabled=True)
         self._add_path_row(mapper_layout, "    Player 2 Profile:", "p2_profile_path", self.path_rows["p2_profile_path"])
-        self.path_rows["mediacenter_profile_path"] = PathConfigRow("mediacenter_profile_path", add_enabled=True)
-        self._add_path_row(mapper_layout, "    Media Center Profile:", "mediacenter_profile_path", self.path_rows["mediacenter_profile_path"])
+        self.path_rows["desk_profile_path"] = PathConfigRow("desk_profile_path", add_enabled=True)
+        self._add_path_row(mapper_layout, "    Desk Profile:", "desk_profile_path", self.path_rows["desk_profile_path"])
         mapping_tab_layout.addWidget(mapper_group)
         mapping_tab_layout.addStretch()
         self.paths_tabs.addTab(mapping_tab, "MAPPING")
@@ -452,21 +453,23 @@ class SetupTab(QWidget):
         display_tab_layout = QVBoxLayout(display_tab)
         display_group = QGroupBox("Monitor Configuration Tool")
         display_layout = QFormLayout(display_group)
-        self.path_rows["multimonitortool_path"] = PathConfigRow(
-            "multimonitortool_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
-        self.path_rows["multimonitortool_path"].enabled_cb.setToolTip("Enable monitor configuration tool")
+        self.path_rows["monitorapp_path"] = PathConfigRow(
+            "monitorapp_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
+        self.path_rows["monitorapp_path"].enabled_cb.setToolTip("Enable monitor app")
         
-        # Prioritize MultiMonitorTool.exe from the freeduction bin directory
-        native_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'bin', 'multimonitortool', 'multimonitortool.exe')
-        if os.path.exists(native_path):
-            combo = self.path_rows["multimonitortool_path"].combo
-            # Insert as first item and select it
-            if combo.findText(native_path) == -1:
-                combo.insertItem(0, native_path)
-            combo.setCurrentIndex(0)
-            # Make the combobox selectable but not editable (dropdown only)
-            self.path_rows["multimonitortool_path"].combo.setEnabled(True)
-            self.path_rows["multimonitortool_path"].combo.lineEdit().setReadOnly(True)
+        # Prioritize monitorapp.exe from the freeduction bin directory (new + legacy paths)
+        repo_root = Path(__file__).resolve().parents[2]
+        for subdir, exe in [("monitorapp", "monitorapp.exe"), ("monitorapp", "MonitorApp.exe"),
+                            ("multimonitortool", "multimonitortool.exe"), ("multimonitortool", "MultiMonitorTool.exe")]:
+            native_path = str(repo_root / "bin" / subdir / exe)
+            if os.path.exists(native_path):
+                combo = self.path_rows["monitorapp_path"].combo
+                if combo.findText(native_path) == -1:
+                    combo.insertItem(0, native_path)
+                combo.setCurrentIndex(0)
+                self.path_rows["monitorapp_path"].combo.setEnabled(True)
+                self.path_rows["monitorapp_path"].combo.lineEdit().setReadOnly(True)
+                break
 
         self.wizard_btn = QPushButton("Open Monitor Wizard")
         self.wizard_btn.setToolTip("Open the monitor wizard to query supported resolutions, refresh rates, and bit depths")
@@ -484,12 +487,12 @@ class SetupTab(QWidget):
         display_note.setWordWrap(True)
         display_layout.addRow(display_note)
 
-        self._add_path_row(display_layout, "Monitor-Config App:", "multimonitortool_path",
-                           self.path_rows["multimonitortool_path"])
-        self.path_rows["multimonitortool_gaming_path"] = PathConfigRow("multimonitortool_gaming_path", add_enabled=True)
-        self._add_path_row(display_layout, "    MM Gaming Config:", "multimonitortool_gaming_path", self.path_rows["multimonitortool_gaming_path"])
-        self.path_rows["multimonitortool_media_path"] = PathConfigRow("multimonitortool_media_path", add_enabled=True)
-        self._add_path_row(display_layout, "    MM Desktop Config:", "multimonitortool_media_path", self.path_rows["multimonitortool_media_path"])
+        self._add_path_row(display_layout, "Monitor-Config App:", "monitorapp_path",
+                           self.path_rows["monitorapp_path"])
+        self.path_rows["monitor_gaming_path"] = PathConfigRow("monitor_gaming_path", add_enabled=True)
+        self._add_path_row(display_layout, "    Monitor Gaming Config:", "monitor_gaming_path", self.path_rows["monitor_gaming_path"])
+        self.path_rows["monitor_desk_path"] = PathConfigRow("monitor_desk_path", add_enabled=True)
+        self._add_path_row(display_layout, "    Monitor Desk Config:", "monitor_desk_path", self.path_rows["monitor_desk_path"])
         display_tab_layout.addWidget(display_group)
         display_tab_layout.addStretch()
         self.paths_tabs.addTab(display_tab, "DISPLAY")
@@ -706,11 +709,11 @@ class SetupTab(QWidget):
         self.path_rows["audio_game_cfg"].enabled_cb.setToolTip("Enable Game Audio Config")
         self._add_path_row(audio_layout, "    Game-Audio:", "audio_game_cfg",
                            self.path_rows["audio_game_cfg"])
-        self.path_rows["audio_mediacenter_cfg"] = PathConfigRow(
-            "audio_mediacenter_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
-        self.path_rows["audio_mediacenter_cfg"].enabled_cb.setToolTip("Enable MediaCenter Audio Config")
-        self._add_path_row(audio_layout, "    MediaCenter/OS-Audio:", "audio_mediacenter_cfg",
-                           self.path_rows["audio_mediacenter_cfg"])
+        self.path_rows["audio_desk_cfg"] = PathConfigRow(
+            "audio_desk_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
+        self.path_rows["audio_desk_cfg"].enabled_cb.setToolTip("Enable Desk Audio Config")
+        self._add_path_row(audio_layout, "    Desk/OS-Audio:", "audio_desk_cfg",
+                           self.path_rows["audio_desk_cfg"])
         audio_tab_layout.addWidget(audio_group)
         audio_tab_layout.addStretch()
         self.paths_tabs.addTab(audio_tab, "AUDIO")
@@ -1213,7 +1216,7 @@ class SetupTab(QWidget):
 
     def _on_wizard_button_clicked(self):
         """Open the monitor configuration wizard from the wizard button."""
-        row = self.path_rows.get("multimonitortool_path")
+        row = self.path_rows.get("monitorapp_path")
         if not row or not row.path:
             QMessageBox.information(self, "Display Wizard", "Please select a display tool first.")
             return
@@ -1223,7 +1226,7 @@ class SetupTab(QWidget):
         if tool_name and "." in tool_name:
             tool_name = tool_name.rsplit(".", 1)[0]
         if not tool_name:
-            tool_name = "MultiMonitorTool"
+            tool_name = "MonitorApp"
 
         wizard = DisplayWizard(self, windowing_app_name=tool_name, tool_path=selected_path)
         wizard.exec()
@@ -1636,7 +1639,7 @@ exit 1
         needs_population = (
             not config.p1_profile_path or
             not config.p2_profile_path or
-            not config.mediacenter_profile_path
+            not config.desk_profile_path
         )
         if not needs_population:
             return
@@ -2091,7 +2094,7 @@ exit 1
             'Taskbar':           lambda: config.hide_taskbar,
             'Controller-Mapper': lambda: has_path('controller_mapper_path'),
             'Borderless':        lambda: has_path('borderless_gaming_path'),
-            'Monitor-Config':    lambda: has_path('multimonitortool_path'),
+            'Monitor-Config':    lambda: has_path('monitorapp_path'),
             'Cloud-Sync':        lambda: has_path('cloud_sync_path'),
             'mount-disc':        lambda: has_path('disc_mount_path'),
             'Unmount-disc':      lambda: has_path('disc_mount_path') or bool(getattr(config, 'disc_unmount_cfg', '') and config.defaults.get('disc_unmount_cfg_enabled', True)),
@@ -2293,8 +2296,8 @@ exit 1
         # Auto-populate Monitor-Config gaming/media paths from root .cfg files
         _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         _auto_populate_pairs = [
-            ("multimonitortool_gaming_path", "G_MON.cfg", "multimonitortool_gaming_enabled"),
-            ("multimonitortool_media_path", "DT_MC.cfg", "multimonitortool_media_enabled"),
+            ("monitor_gaming_path", "G_MON.cfg", "monitor_gaming_enabled"),
+            ("monitor_desk_path", "DT_D.cfg", "monitor_desk_enabled"),
         ]
         _auto_populated = False
         for _path_key, _cfg_file, _enabled_key in _auto_populate_pairs:
@@ -2304,6 +2307,7 @@ exit 1
                 if os.path.exists(_cfg_path):
                     setattr(config, _path_key, _cfg_path)
                     setattr(config, _enabled_key, True)
+                    config.defaults[f'{_path_key}_enabled'] = True
                     _auto_populated = True
                     if _path_key in self.path_rows:
                         row = self.path_rows[_path_key]
@@ -2418,8 +2422,8 @@ exit 1
             )
 
     def _reset_theme(self):
-        """Reset theme to default."""
-        idx = self.theme_selector.findData("default")
+        """Reset theme to default (Fluent WinUI 3)."""
+        idx = self.theme_selector.findData("fluent_winui3")
         self.theme_selector.setCurrentIndex(idx if idx >= 0 else 0)
 
     def _reset_ui_font(self):

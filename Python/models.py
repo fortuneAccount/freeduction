@@ -5,7 +5,7 @@ class AppConfig:
         self.source_dirs = []
         self.excluded_dirs = []
         self.logging_verbosity = "Low"
-        self.ui_theme: str = "default"
+        self.ui_theme: str = "fluent_winui3"
         self.plugin_creation_mode: bool = False
         self.game_managers_present = "None"
         self.exclude_selected_manager_games = False
@@ -22,10 +22,10 @@ class AppConfig:
         self.borderless_gaming_path = ""
         self.p1_profile_path = ""
         self.p2_profile_path = ""
-        self.mediacenter_profile_path = ""
-        self.multimonitortool_path = ""
-        self.multimonitortool_gaming_path = ""
-        self.multimonitortool_media_path = ""
+        self.desk_profile_path = ""
+        self.monitorapp_path = ""
+        self.monitor_gaming_path = ""
+        self.monitor_desk_path = ""
         self.filtered_steam_cache_path = ""
         
         # Pre/Post launch apps
@@ -57,7 +57,7 @@ class AppConfig:
         
         # Audio config file paths
         self.audio_game_cfg = ""
-        self.audio_mediacenter_cfg = ""
+        self.audio_desk_cfg = ""
         
         # Cloud backup tools
         self.rclone_path = ""
@@ -69,18 +69,18 @@ class AppConfig:
         self.controller_mapper_path_arguments = ""
         self.borderless_gaming_path_options = ""
         self.borderless_gaming_path_arguments = ""
-        self.multimonitortool_options = ""
-        self.multimonitortool_arguments = ""
+        self.monitorapp_options = ""
+        self.monitorapp_arguments = ""
         self.p1_profile_path_options = ""
         self.p1_profile_path_arguments = ""
         self.p2_profile_path_options = ""
         self.p2_profile_path_arguments = ""
-        self.mediacenter_profile_path_options = ""
-        self.mediacenter_profile_path_arguments = ""
-        self.multimonitortool_gaming_options = ""
-        self.multimonitortool_gaming_arguments = ""
-        self.multimonitortool_media_options = ""
-        self.multimonitortool_media_arguments = ""
+        self.desk_profile_path_options = ""
+        self.desk_profile_path_arguments = ""
+        self.monitor_gaming_options = ""
+        self.monitor_gaming_arguments = ""
+        self.monitor_desk_options = ""
+        self.monitor_desk_arguments = ""
         
         self.just_after_launch_path_options = ""
         self.just_after_launch_path_arguments = ""
@@ -100,8 +100,8 @@ class AppConfig:
         self.disc_unmount_cfg_arguments = ""
         self.audio_game_cfg_options = ""
         self.audio_game_cfg_arguments = ""
-        self.audio_mediacenter_cfg_options = ""
-        self.audio_mediacenter_cfg_arguments = ""
+        self.audio_desk_cfg_options = ""
+        self.audio_desk_cfg_arguments = ""
         
         # Unborder/reborder config paths
         self.unborder_cfg = ""
@@ -179,9 +179,9 @@ class AppConfig:
         # CEN/LC states for profile paths
         self.p1_profile_mode = "CEN"  # or "LC"
         self.p2_profile_mode = "CEN"
-        self.mediacenter_profile_mode = "CEN"
-        self.multimonitortool_gaming_mode = "CEN"
-        self.multimonitortool_media_mode = "CEN"
+        self.desk_profile_mode = "CEN"
+        self.monitor_gaming_mode = "CEN"
+        self.monitor_desk_mode = "CEN"
 
         # Setup Tab: Behavior
         self.editor_page_size = 50
@@ -211,7 +211,7 @@ class AppConfig:
         # Enable toggles for applications defined in Setup -> Applications
         self.enable_controller_mapper = False
         self.enable_borderless_app = False
-        self.enable_multimonitortool = False
+        self.enable_monitorapp = False
         self.enable_after_launch_app = False
         self.enable_before_exit_app = False
         self.enable_cloud_backup = False
@@ -230,13 +230,13 @@ class AppConfig:
         self.cloud_sync_path_arguments = ""
         self.local_backup_path_options = ""
         self.local_backup_path_arguments = ""
-        self.multimonitortool_gaming_enabled = True
-        self.multimonitortool_media_enabled = True
+        self.monitor_gaming_enabled = True
+        self.monitor_desk_enabled = True
         self.p1_profile_enabled = True
         self.p2_profile_enabled = True
-        self.mediacenter_profile_enabled = True
+        self.desk_profile_enabled = True
         self.audio_game_cfg_enabled = False
-        self.audio_mediacenter_cfg_enabled = False
+        self.audio_desk_cfg_enabled = False
         self.unborder_cfg_enabled = False
         self.reborder_cfg_enabled = False
 
@@ -256,7 +256,7 @@ class AppConfig:
             "launchers_dir": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
-            "mediacenter_profile_path": True
+            "desk_profile_path": True
         }
 
         # Default run-wait states for various features

@@ -78,18 +78,18 @@ TERMBORDERLESS=$(read_ini "$GAMEINI" "Launcher" "TerminateBorderlessOnExit")
 # mapperprofiles section
 PLAYER1PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player1profile")
 PLAYER2PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player2profile")
-MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "mediacenterprofile")
+DESKPROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "deskprofile")
 
 # monitorprofiles section
-MMGAMECONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "multimonitorgamingconfig")
-MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "multimonitormediacenterconfig")
+MONGAMECONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "monitorgamingcfg")
+MONDESKCONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "monitordeskcfg")
 
 # Backward compatibility: old Profiles section
 [ -z "$PLAYER1PROFILE" ] && PLAYER1PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player1Profile")
 [ -z "$PLAYER2PROFILE" ] && PLAYER2PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player2Profile")
-[ -z "$MEDIACENTERPROFILE" ] && MEDIACENTERPROFILE=$(read_ini "$GAMEINI" "Profiles" "MediaCenterProfile")
-[ -z "$MMGAMECONFIG" ] && MMGAMECONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorGamingConfig")
-[ -z "$MMDESKTOPCONFIG" ] && MMDESKTOPCONFIG=$(read_ini "$GAMEINI" "Profiles" "MultiMonitorMediaCenterConfig")
+[ -z "$DESKPROFILE" ] && DESKPROFILE=$(read_ini "$GAMEINI" "Profiles" "DeskProfile")
+[ -z "$MONGAMECONFIG" ] && MONGAMECONFIG=$(read_ini "$GAMEINI" "Profiles" "MonitorGamingConfig")
+[ -z "$MONDESKCONFIG" ] && MONDESKCONFIG=$(read_ini "$GAMEINI" "Profiles" "MonitorDeskConfig")
 
 # ControllerMapper section
 MAPPERAPP=$(read_ini "$GAMEINI" "ControllerMapper" "ControllerMapperPath")
@@ -101,10 +101,10 @@ BORDERLESSAPP=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPa
 BORDERLESSOPTS=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPathOptions")
 BORDERLESSARGS=$(read_ini "$GAMEINI" "BorderlessWindowing" "BorderlessWindowingPathArguments")
 
-# MultiMonitor section
-MMTOOL=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPath")
-MMOPTS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathOptions")
-MMARGS=$(read_ini "$GAMEINI" "MultiMonitor" "MultiMonitorPathArguments")
+# Monitor section
+MONTOOL=$(read_ini "$GAMEINI" "Monitor" "monitorapppath")
+MONOPTS=$(read_ini "$GAMEINI" "Monitor" "monitorapppathoptions")
+MONARGS=$(read_ini "$GAMEINI" "Monitor" "monitorapppatharguments")
 
 # DiscMountProfiles section
 MOUNTENABLED=$(read_ini "$GAMEINI" "DiscMountProfiles" "EnableDiscMountCfg")
@@ -230,9 +230,9 @@ execute_sequence_item() {
             fi ;;
         "Monitor-Config")
             if [ "$phase" = "launch" ]; then
-                [ -n "$MMTOOL" ] && [ -n "$MMGAMECONFIG" ] && echo "    Applying gaming monitor config..." && run_app "$MMTOOL" "$MMOPTS" "/LoadConfig \"$MMGAMECONFIG\"" "1"
+                [ -n "$MONTOOL" ] && [ -n "$MONGAMECONFIG" ] && echo "    Applying gaming monitor config..." && run_app "$MONTOOL" "$MONOPTS" "/LoadConfig \"$MONGAMECONFIG\"" "1"
             else
-                [ -n "$MMTOOL" ] && [ -n "$MMDESKTOPCONFIG" ] && echo "    Restoring desktop monitor config..." && run_app "$MMTOOL" "$MMOPTS" "/LoadConfig \"$MMDESKTOPCONFIG\"" "1"
+                [ -n "$MONTOOL" ] && [ -n "$MONDESKCONFIG" ] && echo "    Restoring desktop monitor config..." && run_app "$MONTOOL" "$MONOPTS" "/LoadConfig \"$MONDESKCONFIG\"" "1"
             fi ;;
         "mount-disc")
             [ -n "$MOUNTAPP" ] && [ -n "$ISOPATH" ] && echo "    Mounting disc: $ISOPATH..." && run_app "$MOUNTAPP" "$MOUNTOPTS" "\"$ISOPATH\" $MOUNTARGS" "$MOUNTWAIT" ;;

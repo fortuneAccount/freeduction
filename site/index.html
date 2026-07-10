@@ -802,7 +802,7 @@
                                 <br><strong>Cloud Backup Tab:</strong> A dedicated configuration interface for all backup and sync tools, providing unified settings for cloud storage (Rclone, Syncthing, EmuSync) and local backup solutions (Ludusavi, Game Backup Monitor, Game Save Manager, Save State).</p>
                                 <p><strong>Supported Tool Categories:</strong>
                                 <br>&bull; <strong>Input Mappers:</strong> AntimicroX, Keysticks
-                                <br>&bull; <strong>Display Tools:</strong> MultiMonitorTool, Borderless Gaming
+                                <br>&bull; <strong>Display Tools:</strong> MonitorApp, Borderless Gaming
                                 <br>&bull; <strong>Cloud Sync:</strong> Rclone, Syncthing, EmuSync
                                 <br>&bull; <strong>Local Backup:</strong> Ludusavi, Game Backup Monitor, Game Save Manager, Save State
                                 <br>&bull; <strong>Disc Mounting:</strong> WinCDEmu, ImgDrive, OSFMount</p>
@@ -823,7 +823,7 @@
                                                     &bull; <code>wincdemu.exe</code> &rarr; Disc mounting path<br>
                                                     &bull; <code>osfmount.exe</code> &rarr; Disc mounting path<br>
                                                     &bull; <code>antimicrox.exe</code> &rarr; Controller mapper path<br>
-                                                    &bull; <code>MultiMonitorTool.exe</code> &rarr; Display config path<br>
+                                                    &bull; <code>MonitorApp.exe</code> &rarr; Display config path<br>
                                                     &bull; <code>BorderlessGaming.exe</code> &rarr; Windowing path</p>
                                                     <h4>How It Works</h4>
                                                     <p>1. On first run, the application scans <code>/bin</code> recursively<br>
@@ -1042,7 +1042,7 @@
                                                     <p>Paths in the editor use special prefixes to control how files are handled during deployment:</p>
                                                     <h4>Centralized (CEN) - &lt; prefix</h4>
                                                     <p>The launcher refers to the file path. All games with the CEN propagation flag set reference the same file. Changes to the file affect all games using it.<br>
-                                                    <strong>Example:</strong> <code>&lt;Profiles/MediaCenter.amgp</code><br>
+                                                    <strong>Example:</strong> <code>&lt;Profiles/Desk.amgp</code><br>
                                                     <strong>Use when:</strong> You want all games to share the same controller profile or settings.</p>
                                                     <h4>Local Copy (LC) - &gt; prefix</h4>
                                                     <p>The file is copied to the game's specific profile folder during deployment. Each game gets its own independent copy. Be aware that large files with many profiles may create an excessively large profile directory.<br>
@@ -1108,7 +1108,7 @@
                                                     &bull; <strong>Config Locations:</strong> Configuration file paths<br>
                                                     &bull; <strong>Steam AppID:</strong> Verified Steam AppID from PCGW<br>
                                                     &bull; <strong>Genres & Modes:</strong> Game categories and play modes<br>
-                                                    &bull; <strong>Video Settings:</strong> Widescreen, multimonitor, 4K support<br>
+                                                    &bull; <strong>Video Settings:</strong> Widescreen, monitor, 4K support<br>
                                                     &bull; <strong>Input Settings:</strong> Controller support, remapping capabilities</p>
                                                     <h4>How It Works</h4>
                                                     <p>1. Enable "Download PcGamingWiki" in Deployment tab<br>
@@ -1632,7 +1632,7 @@ class MyToolPlugin(ToolPlugin):
                                                     <h4>Plugin Categories</h4>
                                                     <p>&bull; <strong>MAPPERS:</strong> Controller mappers (AntiMicroX, KeySticks)<br>
                                                     &bull; <strong>WINDOWING:</strong> Window management (Borderless Gaming)<br>
-                                                    &bull; <strong>DISPLAY:</strong> Monitor configuration (MultiMonitorTool)<br>
+                                                    &bull; <strong>DISPLAY:</strong> Monitor configuration (MonitorApp)<br>
                                                     &bull; <strong>SYNC:</strong> Cloud backup (Rclone, Ludusavi)<br>
                                                     &bull; <strong>AUDIO:</strong> Audio tools<br>
                                                     &bull; <strong>DISCS:</strong> Disc mounting<br>
@@ -1704,7 +1704,7 @@ class MyToolPlugin(ToolPlugin):
                                                     <p>Loads controller profiles on launch, switches to media center profile on exit. Demonstrates profile handling and multi-controller support.</p>
                                                     <h4>Borderless Gaming</h4>
                                                     <p>Starts borderless windowing tool on launch. Demonstrates simple tool execution with process tracking.</p>
-                                                    <h4>MultiMonitorTool</h4>
+                                                    <h4>MonitorApp</h4>
                                                     <p>Switches monitor configurations on launch and restores on exit. Demonstrates launch/exit action pairs.</p>
                                                     <h4>Rclone (Cloud Backup)</h4>
                                                     <p>Syncs saves to cloud storage. Demonstrates complex configuration with remote paths, sync modes, and timing options.</p>
@@ -2027,7 +2027,7 @@ class MyToolPlugin(ToolPlugin):
                                             <div id="detailsdiv" align="left">
                                                 <div>
                                                     <h4>Monitors Don't Switch</h4>
-                                                    <p>&bull; Save configurations with MultiMonitorTool first<br>
+                                                    <p>&bull; Save configurations with MonitorApp first<br>
                                                     &bull; Verify paths to .cfg files<br>
                                                     &bull; Test configurations manually<br>
                                                     &bull; Run application as Administrator</p>
@@ -2035,11 +2035,11 @@ class MyToolPlugin(ToolPlugin):
                                                     <p>&bull; Re-save the configuration file<br>
                                                     &bull; Check monitor IDs haven't changed<br>
                                                     &bull; Verify primary monitor setting<br>
-                                                    &bull; Use MultiMonitorTool GUI to verify</p>
+                                                    &bull; Use MonitorApp GUI to verify</p>
                                                     <h4>Layout Not Restoring</h4>
                                                     <p>&bull; Ensure exit sequence includes Monitor-Config<br>
                                                     &bull; Check desktop config path is correct<br>
-                                                    &bull; Verify MultiMonitorTool is still running<br>
+                                                    &bull; Verify MonitorApp is still running<br>
                                                     &bull; Check for Windows display settings conflicts</p>
                                                     <br>
                                                 </div>

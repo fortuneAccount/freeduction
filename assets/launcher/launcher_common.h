@@ -32,14 +32,14 @@ typedef struct {
     char borderless_windowing_app[MAX_PATH_LEN];
     char borderless_options[MAX_CMD_LEN];
     char borderless_arguments[MAX_CMD_LEN];
-    char multimonitortool[MAX_PATH_LEN];
-    char multimonitortool_options[MAX_CMD_LEN];
-    char multimonitortool_arguments[MAX_CMD_LEN];
+    char monitorapp[MAX_PATH_LEN];
+    char monitorapp_options[MAX_CMD_LEN];
+    char monitorapp_arguments[MAX_CMD_LEN];
     char player1_profile[MAX_PATH_LEN];
     char player2_profile[MAX_PATH_LEN];
-    char mediacenter_profile[MAX_PATH_LEN];
-    char mm_game_config[MAX_PATH_LEN];
-    char mm_desktop_config[MAX_PATH_LEN];
+    char desk_profile[MAX_PATH_LEN];
+    char monitor_game_config[MAX_PATH_LEN];
+    char monitor_desk_config[MAX_PATH_LEN];
     char cloud_app[MAX_PATH_LEN];
     char cloud_app_options[MAX_CMD_LEN];
     char cloud_app_arguments[MAX_CMD_LEN];
@@ -79,10 +79,10 @@ typedef struct {
     char audio_game_cfg[MAX_PATH_LEN];
     char audio_game_cfg_options[MAX_CMD_LEN];
     char audio_game_cfg_arguments[MAX_CMD_LEN];
-    int audio_mediacenter_cfg_enabled;
-    char audio_mediacenter_cfg[MAX_PATH_LEN];
-    char audio_mediacenter_cfg_options[MAX_CMD_LEN];
-    char audio_mediacenter_cfg_arguments[MAX_CMD_LEN];
+    int audio_desk_cfg_enabled;
+    char audio_desk_cfg[MAX_PATH_LEN];
+    char audio_desk_cfg_options[MAX_CMD_LEN];
+    char audio_desk_cfg_arguments[MAX_CMD_LEN];
 
     // [Options]
     int run_as_admin;

@@ -142,7 +142,7 @@ class MainWindow(QMainWindow):
     def _setup_ui(self):
         self.setWindowTitle("[RJPROJ]" + (" [Plugin Creation Mode]" if self.plugin_mode else ""))
         self.setWindowIcon(QIcon(constants.APP_ICON))
-        self.setGeometry(100, 100, 880, 500)
+        self.setGeometry(100, 100, 930, 500)
 
         if self.plugin_mode:
             self.setStyleSheet("""
@@ -176,12 +176,40 @@ class MainWindow(QMainWindow):
             # Highlight unpopulated items in deployment tab with red color
             self.deployment_tab.highlight_unpopulated_items(self)
 
+        # Force all accordion layouts to resynchronise when tabs switch,
+        # so Fusion cannot carry stale paint-cache state across pages.
+        self.tabs.currentChanged.connect(self._on_tab_switched)
+
         # Apply Qlementine-specific UI enhancements (nav bar, popover QSS).
         # This is a no-op when Qlementine is not the active theme.
         self.apply_ui_capabilities()
 
         # Create status bar
         self.statusBar().showMessage("Ready")
+
+    def _on_tab_switched(self, index):
+        """Strict raster flush when the active tab changes.
+
+        Qt tells widgets they are unhidden on tab switch, but Fusion's
+        backing store often fails to clear the buffer before painting
+        them again.  This sequence forces a complete discard of cached
+        geometry, a style-metrics re-read, and a full window repaint."""
+        widget = self.tabs.widget(index)
+        if widget is None:
+            return
+
+        # 1. Force the layout engine to completely discard cached geometry.
+        widget.hide()
+
+        # 2. Tell the style engine to re-read system style metrics.
+        widget.ensurePolished()
+
+        # 3. Show again -- forces an absolute window update mask creation.
+        widget.show()
+
+        # 4. Trigger a low-level repaint on the global window viewport.
+        if widget.window():
+            widget.window().repaint()
 
     def apply_ui_capabilities(self) -> None:
         """Apply (or remove) Qlementine-specific UI enhancements based on the
@@ -540,10 +568,10 @@ class MainWindow(QMainWindow):
         
         file_keys = [
             "launcher_executable",
-            "controller_mapper_path", "borderless_gaming_path", "multimonitortool_path",
+            "controller_mapper_path", "borderless_gaming_path", "monitorapp_path",
             "just_after_launch_path", "just_before_exit_path",
-            "p1_profile_path", "p2_profile_path", "mediacenter_profile_path",
-            "multimonitor_gaming_path", "multimonitor_media_path",
+            "p1_profile_path", "p2_profile_path", "desk_profile_path",
+            "monitor_gaming_path", "monitor_desk_path",
             "pre1_path", "post1_path", "pre2_path", "post2_path", "pre3_path", "post3_path"
         ]
         
@@ -641,7 +669,7 @@ class MainWindow(QMainWindow):
             mapping = [
                 ('controller_mapper_enabled', 'controller_mapper_path_enabled', 'CME'),
                 ('borderless_windowing_enabled', 'borderless_gaming_path_enabled', 'BWE'),
-                ('multimonitortool_enabled', 'multimonitortool_path_enabled', 'MME'),
+                ('monitorapp_enabled', 'monitorapp_path_enabled', 'MAE'),
                 ('just_after_launch_enabled', 'just_after_launch_path_enabled', 'JAL'),
                 ('just_before_exit_enabled', 'just_before_exit_path_enabled', 'JBE'),
                 ('pre_1_enabled', 'pre1_path_enabled', 'P1'),

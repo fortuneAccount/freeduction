@@ -50,7 +50,7 @@ class SequenceExecutorV2:
         # Plugin-based actions
         self.plugin_actions = {
             'Controller-Mapper': 'antimicrox',
-            'Monitor-Config': 'multimonitortool',
+            'Monitor-Config': 'monitorapp',
             'Borderless': 'borderless',
             'Cloud-Sync': 'rclone',  # or 'ludusavi'
         }
@@ -168,7 +168,7 @@ class SequenceExecutorV2:
             # Try alternative attribute names
             alt_names = {
                 'antimicrox': 'controller_mapper_app',
-                'multimonitortool': 'multimonitortool',
+                'monitorapp': 'monitorapp',
                 'borderless': 'borderless_app',
                 'rclone': 'rclone_app',
                 'ludusavi': 'ludusavi_app'

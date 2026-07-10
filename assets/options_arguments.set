@@ -38,7 +38,7 @@ arguments =
 options = 
 arguments = 
 
-[multimonitortool]
+[monitorapp]
 options = /loadconfig
 arguments = 
 
