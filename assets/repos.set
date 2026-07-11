@@ -7,23 +7,23 @@
 #   PORTABLE - Portable executable (default, no installation needed)
 
 [GLOBAL]
-RJ_PROJ= f
-GITUSER = f
-GIT_SOURCE = https://github.com/f/f
-GIT_WEB = https://f.github.io
-PORTABLE = $SOURCEHOST/f/releases/download/portable/portable.zip
-RELEASEPG =  https://github.com/f/f/releases
-PAYPAL = https://payp
-TAGLINE = F
+RJ_PROJ= freeduction
+GITUSER = fortuneAccount
+GIT_SOURCE = https://github.com/fortuneAccount/freeduction
+GIT_WEB = https://fortuneAccount.github.io
+PORTABLE = https://github.com/fortuneAccount/freeduction/releases/download/portable/portable.zip
+RELEASEPG =  https://github.com/fortuneAccount/f/releases
+PAYPAL = https://paypal/fortuneAccount
+TAGLINE = For Your Pleasure
 CLOUDLOC = {{REMOTEDRIVE}}
-HOSTINGURL = https://github.com/f/f
-SOURCEHOST = https://github.com/f
+HOSTINGURL = https://github.com/fortuneAccount/freeduction
+SOURCEHOST = https://github.com/fortuneAccount
 ALTHOST = https://github.com/oldtools
-EXHOST = https://github.com/f
-VERSION = 9
-UPDATEFILE = $SOURCEHOST/f/releases/download/portable/portable.zip
-STEAMJSON1 = https://raw.githubusercontent.com/f/f/steam.json/refs/heads/main/steam.json
-STEAMJSON2 = https://raw.githubusercontent.com/f/f/refs/heads/main/steam.json
+EXHOST = https://github.com/fortuneAccount
+VERSION = 99.98.34.14
+UPDATEFILE = https://github.com/fortuneAccount/freeduction/releases/download/portable/portable.zip
+STEAMJSON1 = https://raw.githubusercontent.com/fortuneAccount/f/steam.json/refs/heads/main/steam.json
+STEAMJSON2 = https://raw.githubusercontent.com/fortuneAccount/f/refs/heads/main/steam.json
 STEAMIDB = https://store.steampowered.com/api/appdetails?appids=
 PC_GWB = https://pcgamingwiki.com
 PCGWB = https://www.pcgamingwiki.com
