@@ -434,7 +434,6 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(disc_unmount_cfg_options);
     } else if (MATCH("DiscUnmountCfg", "discunmountcfgpatharguments")) {
         SET_STR(disc_unmount_cfg_arguments);
-    }
     // Backward compatibility: old AudioGameCfg/AudioDeskCfg sections
     } else if (MATCH("AudioDeskCfg", "enableaudiodeskcfg")) {
         SET_BOOL(audio_desk_cfg_enabled);

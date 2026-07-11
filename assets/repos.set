@@ -7,15 +7,23 @@
 #   PORTABLE - Portable executable (default, no installation needed)
 
 [GLOBAL]
-CLOUDLOC = [REMOTEDRIVE]
-HOSTINGURL = [SITE]
-SOURCEHOST = https://github.com/oldtools
-ALTHOST = https://github.com/
-EXHOST = https://github.com/fortuneAccount
-Version = [VERSION]
-UPDATEFILE = $SOURCEHOST/anattaGen/releases/download/portable/portable.zip
-STEAMJSON1 = https://raw.githubusercontent.com/fortuneAccount/steam.json/refs/heads/main/steam.json
-STEAMJSON2 = https://raw.githubusercontent.com/fortuneAccount/fortuneAccount/refs/heads/main/steam.json
+RJ_PROJ= f
+GITUSER = f
+GIT_SOURCE = https://github.com/f/f
+GIT_WEB = https://f.github.io
+PORTABLE = $SOURCEHOST/f/releases/download/portable/portable.zip
+RELEASEPG =  https://github.com/f/f/releases
+PAYPAL = https://payp
+TAGLINE = F
+CLOUDLOC = {{REMOTEDRIVE}}
+HOSTINGURL = https://github.com/f/f
+SOURCEHOST = https://github.com/f
+ALTHOST = https://github.com/oldtools
+EXHOST = https://github.com/f
+VERSION = 9
+UPDATEFILE = $SOURCEHOST/f/releases/download/portable/portable.zip
+STEAMJSON1 = https://raw.githubusercontent.com/f/f/steam.json/refs/heads/main/steam.json
+STEAMJSON2 = https://raw.githubusercontent.com/f/f/refs/heads/main/steam.json
 STEAMIDB = https://store.steampowered.com/api/appdetails?appids=
 PC_GWB = https://pcgamingwiki.com
 PCGWB = https://www.pcgamingwiki.com

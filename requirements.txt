@@ -1,9 +1,7 @@
-setuptools
 py7zr
 PyQt6
 nltk
 requests
-screeninfo
 beautifulsoup4
 configparser
 psutil
@@ -13,7 +11,9 @@ cloudscraper
 pystray
 pillow
 
-qdarkstyle
-PyQt6-Fluent-Widgets[full]
-pyqtdarktheme
-PyQt6-Qlementine
+#setuptools
+#qdarkstyle
+#screeninfo
+#PyQt6-Fluent-Widgets[full]
+#pyqtdarktheme
+#PyQt6-Qlementine

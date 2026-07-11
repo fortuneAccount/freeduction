@@ -18,7 +18,7 @@ GAME_DIRECTORY_NAMES = [
 ]
 ANTIMICROX_EXES = ["antimicrox.exe", "antimicrox"]
 KEYSTICKS_EXES = ["keysticks.exe"]
-MONITOR_EXES = ["monitorapp.exe", "MonitorApp.exe", "multimonitortool.exe", "MultiMonitorTool.exe"]
+MONITOR_EXES = ["multimonitortool.exe", "MultiMonitorTool.exe"]
 BORDERLESS_EXES = ["borderlessgaming.exe"]
 
 
@@ -97,7 +97,7 @@ class ConfigManager(QObject):
         config.defaults = {
             'controller_mapper_path_enabled': True,
             'borderless_gaming_path_enabled': False,
-            'monitorapp_path_enabled': False,
+            'monitorapp_path_enabled': True,
             'just_after_launch_path_enabled': False,
             'just_before_exit_path_enabled': False,
             'pre1_path_enabled': False,

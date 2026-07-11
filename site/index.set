@@ -4,6 +4,7 @@
     <meta charset="utf-8">
     <meta content="width=device-width, initial-scale=1" name="viewport">
     <title>{{RJ_PROJ}}</title>
+    <!--<RJ_PROJ>{{RJ_PROJ}}</RJ_PROJ>-->
     <style>
         @font-face {
             font-family: 'Anka/Coder';
@@ -150,15 +151,6 @@
             font-size: 40px;
             padding: 35px 18px;
             text-align: center;
-        }
-        h99 {
-            font-weight: bolder;
-        }
-        h88 {}
-        h77 {}
-        h66 {}
-        h55 {
-            font-weight: bolder;
         }
         main {
             margin-top: 55px;
@@ -671,23 +663,25 @@
             </div>
             <div id="superflex" align="center">
                 <br>
-                <!-- <span class="tfnt">skeletonKeY</span>-->
                 <div id="msriv">
                     <h1>{{RJ_PROJ}}</h1>
+                <!--<RJ_PROJ>{{RJ_PROJ}}</RJ_PROJ>-->
                 </div>  
                 <a id="DOWNLOAD"></a>
+
                 <p>{{TAGLINE}}</p>
+                <!--<TAGLINE>{{TAGLINE}}</TAGLINE>-->
                 <div align="left" id="outer">
                     <div id="inner">
                         <br>
                         <br>
-                        <h99>{{VERSION}}</h99>
                         <br>
                         <em>for Windows</em><br>
                         <br>
                         <ul>
                             <li>
                                 <h2><a href="{{VERSION}}">Installer </a></h2>
+                                <!--<VERSION>{{VERSION}}</VERSION>-->
                             </li>
                         </ul>
                         Installer<br> (recommended)<br>
@@ -695,15 +689,16 @@
                             </li>
                         </ul>
                         Installer<br> (recommended)<br>
-                        <strong>size:</strong>
-                        <h88>{{RSIZE}}</h88>
+                        <strong>size:{{RSIZE}}</strong>
+                        <!--<RSIZE>{{RSIZE}}</RSIZE>-->
                         mb<br>
-                        <strong>SHA1 :</strong>
-                        <h77>{{RSHA1}}</h77>
+                        <strong>SHA1 :{{RSHA1}}</strong>
+                        <!--<RSHA1>{{RSHA1}}</RSHA1>-->
                         <hr>
                         <ul>
                             <li>
                                 <h2><a href="{{PORTABLE}}">Portable Binary �</a></h2>
+                                  <!--<PORTABLE>{{PORTABLE}}</PORTABLE>-->
                             </li>
                         </ul>
                         This is the compressed {{RJ_PROJ}} executable.<br> Extract into a {{RJ_PROJ}} directory.
@@ -711,14 +706,18 @@
                     <br>
                     <div id="inner">
                         <br>
-                        <strong>Developer Website:</strong> <a href="{{GIT_WEB}}/{{RJ_PROJ}}/index.html" target="_top">{{GIT_WEB}}/{{RJ_PROJ}}/index.html</a><br>
+                        <strong>Developer Website:</strong> <a hfref="{{GIT_WEB}}/{{GITUSER}}/index.html" target="_top">{{GIT_WEB}}/{{RJ_PROJ}}/index.html</a><br>
                         <strong>Source code:</strong>
                         <a id="COMMENT"></a> <a href="{{GIT_WEB}}/{{RJ_PROJ}}">Github Page</a><br>
                         <!-- <strong>Resources and Releases:</strong>
 					<a href="{{RELEASEPG}}">Release Page</a>
+                       <!--<RELEASEPG>{{RELEASEPG}}</RELEASEPG>-->
 					<br> -->
                         <strong>Released :</strong>
-                        <h66>{{RDATE}} by {{GITUSER}}</h66>
+                        <p>{{RDATE}} by {{GITUSER}}</p>
+                        <!--<RDATE>{{RDATE}}</RDATE>-->
+                        <!--<GITUSER>{{GITUSER}}</GITUSER>-->
+
                         <br>
                     </div>
                     <br>
@@ -776,12 +775,13 @@
                         <h3><a>To Do:</a></h3>
                             <a href="#FAQS" data-smoothie>- Ask for your feature</a>
                             <a href="{{PAYPAL}}"></a>
+                            <!--<PAYPAL><{{PAYPAL}}</PAYPAL>-->
                         </p>
                         <div align="right">
                             <img alt="" src="img/tip.png" width="14" height="14"><br>
                             <span style="font-size: xx-small">
 							now @ $
-							<h55>{{PAYPAL}}</h55>
+							<p>{{PAYPAL}}</p>
 						</span>
                         </div>
                     </div>
@@ -1952,7 +1952,7 @@ class MyToolPlugin(ToolPlugin):
                                                     <div id="detailsdiv" align="left">
                                                         <h8 class="tabItemHeading"></h8>
                                                         <div>
-                                                            <p><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/key.png" alt="" height="27" width="24"><a href="https://www.paypal.me/romjacket/8.88">Toss a coin to your witcher</a></p>
+                                                            <p><img src="https://{{GIT_WEB}}/img/key.png" alt="" height="27" width="24"><a href="{{PAYPAL}}}">Toss a coin to your witcher</a></p>
                                                             <div id="HCB_comment_box">
                                                                 <a href="http://www.htmlcommentbox.com"></a>loading comments...</div>
                                                             <link rel="stylesheet" type="text/css" href="https://www.htmlcommentbox.com/static/skins/bootstrap/twitter-bootstrap.css?v=0" />
@@ -2111,16 +2111,15 @@ class MyToolPlugin(ToolPlugin):
                                 </ul>
                                 <footer>
                                     <h5>
-                                        <a href="http://github.com/{{GITUSER}}" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/github.png"></a>
-                                        <a href="http://reddit.com/u/{{GITUSER}}" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/reddit.png"></a>
-                                        <a href="https://www.youtube.com/channel/UC-7Z3ORO-pejhzfYSklZgOg?" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/youtube.png"></a>
-                                        <a href="http://facebook.com/{{GITUSER}}" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/facebook.png"></a>
-                                        <a href="http://paypal.me/{{GITUSER}}/8.88" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/paypal.png"></a>
-                                        <a href="http://instagram.com/rom_jacket" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/instagram.png"></a>
-                                        <a href="https://twitter.com/{{GITUSER}}" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/twitter.png"></a>
-                                        <a href="https://discord.gg/HyebHhk" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/discord.png" height="32px"></a>
-                                        <a href="mailto:{{GITUSER}}@protonmail.com" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/email.png"></a>
-                                        <a href="https://www.buymeacoffee.com/{{GITUSER}}" target="_blank"><img src="https://{{GITUSER}}.{{GIT_WEB}}/img/coffee.png"></a>
+                                        <a href="http://github.com/{{GITUSER}}" target="_blank"><img src="https://{{GIT_WEB}}/img/github.png"></a>
+                                        <a href="http://reddit.com/u/{{GITUSER}}" target="_blank"><img src="https://{{GIT_WEB}}/img/reddit.png"></a>
+                                        <a href="https://www.youtube.com/channel/UC-7Z3ORO-pejhzfYSklZgOg?" target="_blank"><img src="https://{{GIT_WEB}}/img/youtube.png"></a>
+                                        <a href="http://facebook.com/{{GITUSER}}" target="_blank"><img src="https://{{GIT_WEB}}/img/facebook.png"></a>
+                                        <a href="http://instagram.com/rom_jacket" target="_blank"><img src="https://{{GIT_WEB}}/img/instagram.png"></a>
+                                        <a href="https://twitter.com/{{GITUSER}}" target="_blank"><img src="https://{{GIT_WEB}}/img/twitter.png"></a>
+                                        <a href="https://discord.gg/HyebHhk" target="_blank"><img src="https://{{GIT_WEB}}/img/discord.png" height="32px"></a>
+                                        <a href="mailto:{{GITUSER}}@protonmail.com" target="_blank"><img src="https://{{GIT_WEB}}/img/email.png"></a>
+                                        <a href="https://www.buymeacoffee.com/{{GITUSER}}" target="_blank"><img src="https://{{GIT_WEB}}/img/coffee.png"></a>
                                     </h5>
                                 </footer>
                                 </div>

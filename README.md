@@ -56,7 +56,7 @@ AntimicroX, keySticks, monitorapp,  borderless-gaming,  borderless ,  rclone,  l
 
 ## Installation
 
-99.98.34.10
+99.98.32.13
 
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
@@ -220,7 +220,7 @@ freeduction/
 ```
 		sudo apt install python3-venv python3-pip
 		cd ~
-		git clone --recursive fortuneaccount/freeduction/fortuneaccount/freeduction.git
+		git clone --recursive https://github.com/fortuneaccount/freeduction/fortuneaccount/freeduction.git
 		cd freeduction
 		python3 -m venv .venv
 		source .venv/bin/activate
@@ -236,7 +236,7 @@ win
 ### Now you can clone or download the repo, and install the requirements via pip
 ```
 		cd %userprofile%/Downloads
-		git clone --recursive fortuneaccount/freeduction/fortuneaccount/freeduction/
+		git clone --recursive https://github.com/fortuneaccount/freeduction/fortuneaccount/freeduction/
 		cd freeduction
 		python -m pip install -r requirements_win.txt
 		python -m Python\main.py

@@ -142,11 +142,11 @@ class PluginManager:
             self.logger.warning(f"Could not load Borderless Gaming plugin: {e}")
         
         try:
-            from Python.plugins.builtin.monitor_app_plugin import MonitorAppPlugin
-            self.registry.register(MonitorAppPlugin())
-            self.logger.info("Loaded MonitorApp plugin")
+            from Python.plugins.builtin.monitor_app_plugin import MultiMonitorToolPlugin
+            self.registry.register(MultiMonitorToolPlugin())
+            self.logger.info("Loaded MultiMonitorTool plugin")
         except ImportError as e:
-            self.logger.warning(f"Could not load MonitorApp plugin: {e}")
+            self.logger.warning(f"Could not load MultiMonitorTool plugin: {e}")
         
         try:
             from Python.plugins.builtin.cloud_backup_plugin import RcloneBackupPlugin, LudusaviBackupPlugin

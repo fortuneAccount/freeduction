@@ -456,11 +456,12 @@ class SetupTab(QWidget):
         self.path_rows["monitorapp_path"] = PathConfigRow(
             "monitorapp_path", add_run_wait=True, repo_items=self.repos.get("DISPLAY"), empty_combo=True)
         self.path_rows["monitorapp_path"].enabled_cb.setToolTip("Enable monitor app")
+        self.path_rows["monitorapp_path"].enabled_cb.stateChanged.connect(
+            self._on_monitorapp_enabled_changed)
         
-        # Prioritize monitorapp.exe from the freeduction bin directory (new + legacy paths)
+        # Prioritize multimonitortool.exe from the freeduction bin directory
         repo_root = Path(__file__).resolve().parents[2]
-        for subdir, exe in [("monitorapp", "monitorapp.exe"), ("monitorapp", "MonitorApp.exe"),
-                            ("multimonitortool", "multimonitortool.exe"), ("multimonitortool", "MultiMonitorTool.exe")]:
+        for subdir, exe in [("multimonitortool", "multimonitortool.exe"), ("multimonitortool", "MultiMonitorTool.exe")]:
             native_path = str(repo_root / "bin" / subdir / exe)
             if os.path.exists(native_path):
                 combo = self.path_rows["monitorapp_path"].combo
@@ -1098,6 +1099,18 @@ class SetupTab(QWidget):
         if "local_backup_path" in self.path_rows:
             self.path_rows["local_backup_path"].enabled_cb.stateChanged.connect(self._update_local_backup_state)
 
+    def _on_monitorapp_enabled_changed(self, state):
+        """When the monitor config app is enabled, auto-select multimonitortool.exe
+        from the combobox if it is present."""
+        if not self.path_rows["monitorapp_path"].enabled_cb.isChecked():
+            return
+        combo = self.path_rows["monitorapp_path"].combo
+        for i in range(combo.count()):
+            text = combo.itemText(i).lower()
+            if "multimonitortool" in text:
+                combo.setCurrentIndex(i)
+                return
+
     def _update_cloud_backup_state(self):
         """Enable/Disable Cloud-Sync tab widgets based on the cloud sync enable checkbox."""
         enabled = self.path_rows["cloud_sync_path"].enabled
@@ -1226,7 +1239,7 @@ class SetupTab(QWidget):
         if tool_name and "." in tool_name:
             tool_name = tool_name.rsplit(".", 1)[0]
         if not tool_name:
-            tool_name = "MonitorApp"
+            tool_name = "MultiMonitorTool"
 
         wizard = DisplayWizard(self, windowing_app_name=tool_name, tool_path=selected_path)
         wizard.exec()

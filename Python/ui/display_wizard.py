@@ -99,15 +99,15 @@ class DisplayWizard(QDialog):
     @staticmethod
     def _detect_save_format(tool_path):
         path = tool_path.lower()
-        if "monitorapp" in path:
-            return "monitorapp"
+        if "multimonitortool" in path:
+            return "multimonitortool"
         if "displaychanger" in path:
             return "displaychanger"
         return "json"
 
     def _get_default_extension(self):
         path = (self.tool_path or "").lower()
-        if "monitorapp" in path:
+        if "multimonitortool" in path:
             return ".cfg"
         if "displaychanger" in path:
             return ".xml"
@@ -126,8 +126,8 @@ class DisplayWizard(QDialog):
     def _query_current_monitorapp_config(self):
         """Query current monitor settings from MonitorApp /saveconfig."""
         repo_root = Path(__file__).resolve().parents[2]
-        for exe_name in ["MonitorApp.exe", "monitorapp.exe", "MultiMonitorTool.exe", "multimonitortool.exe"]:
-            exe_path = repo_root / "bin" / "monitorapp" / exe_name
+        for exe_name in ["MultiMonitorTool.exe", "multimonitortool.exe"]:
+            exe_path = repo_root / "bin" / "multimonitortool" / exe_name
             if not exe_path.exists():
                 continue
             try:
