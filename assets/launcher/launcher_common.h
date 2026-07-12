@@ -36,10 +36,20 @@ typedef struct {
     char monitorapp_options[MAX_CMD_LEN];
     char monitorapp_arguments[MAX_CMD_LEN];
     char player1_profile[MAX_PATH_LEN];
+    char player1_profile_options[MAX_CMD_LEN];
+    char player1_profile_arguments[MAX_CMD_LEN];
     char player2_profile[MAX_PATH_LEN];
+    char player2_profile_options[MAX_CMD_LEN];
+    char player2_profile_arguments[MAX_CMD_LEN];
     char desk_profile[MAX_PATH_LEN];
+    char desk_profile_options[MAX_CMD_LEN];
+    char desk_profile_arguments[MAX_CMD_LEN];
     char monitor_game_config[MAX_PATH_LEN];
+    char monitor_game_config_options[MAX_CMD_LEN];
+    char monitor_game_config_arguments[MAX_CMD_LEN];
     char monitor_desk_config[MAX_PATH_LEN];
+    char monitor_desk_config_options[MAX_CMD_LEN];
+    char monitor_desk_config_arguments[MAX_CMD_LEN];
     char cloud_app[MAX_PATH_LEN];
     char cloud_app_options[MAX_CMD_LEN];
     char cloud_app_arguments[MAX_CMD_LEN];
@@ -64,7 +74,7 @@ typedef struct {
     char reborder_cfg_arguments[MAX_CMD_LEN];
     int reborder_cfg_enabled;
 
-    // [DiscMountProfiles]
+    // [DiscDrivePrefs]
     int disc_mount_cfg_enabled;
     char disc_mount_cfg[MAX_PATH_LEN];
     char disc_mount_cfg_options[MAX_CMD_LEN];
@@ -74,7 +84,13 @@ typedef struct {
     char disc_unmount_cfg_options[MAX_CMD_LEN];
     char disc_unmount_cfg_arguments[MAX_CMD_LEN];
 
-    // [AudioProfiles]
+    // [AudioApp]
+    char audio_app_path[MAX_PATH_LEN];
+    char audio_app_options[MAX_CMD_LEN];
+    char audio_app_arguments[MAX_CMD_LEN];
+    int audio_app_run_wait;
+
+    // [AudioPresets]
     int audio_game_cfg_enabled;
     char audio_game_cfg[MAX_PATH_LEN];
     char audio_game_cfg_options[MAX_CMD_LEN];

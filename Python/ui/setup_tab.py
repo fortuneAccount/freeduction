@@ -196,7 +196,7 @@ class SetupTab(QWidget):
         "profiles_dir", "launchers_dir", "launcher_executable", "controller_mapper_path",
         "borderless_gaming_path", "disc_mount_path", "p1_profile_path",
         "p2_profile_path", "desk_profile_path",
-        "monitorapp_path", "monitor_gaming_path",
+        "monitorapp_path", "monitor_game_path",
         "monitor_desk_path", "pre1_path", "pre2_path", "pre3_path",
         "just_after_launch_path", "just_before_exit_path",
         "post1_path", "post2_path", "post3_path",
@@ -490,8 +490,8 @@ class SetupTab(QWidget):
 
         self._add_path_row(display_layout, "Monitor-Config App:", "monitorapp_path",
                            self.path_rows["monitorapp_path"])
-        self.path_rows["monitor_gaming_path"] = PathConfigRow("monitor_gaming_path", add_enabled=True)
-        self._add_path_row(display_layout, "    Monitor Gaming Config:", "monitor_gaming_path", self.path_rows["monitor_gaming_path"])
+        self.path_rows["monitor_game_path"] = PathConfigRow("monitor_game_path", add_enabled=True)
+        self._add_path_row(display_layout, "    Monitor Game Config:", "monitor_game_path", self.path_rows["monitor_game_path"])
         self.path_rows["monitor_desk_path"] = PathConfigRow("monitor_desk_path", add_enabled=True)
         self._add_path_row(display_layout, "    Monitor Desk Config:", "monitor_desk_path", self.path_rows["monitor_desk_path"])
         display_tab_layout.addWidget(display_group)
@@ -2306,10 +2306,10 @@ exit 1
         # Update initial state of sub-tab widgets
         self._update_cloud_backup_state()
 
-        # Auto-populate Monitor-Config gaming/media paths from root .cfg files
+        # Auto-populate Monitor-Config Game/Desk paths from root .cfg files
         _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         _auto_populate_pairs = [
-            ("monitor_gaming_path", "G_MON.cfg", "monitor_gaming_enabled"),
+            ("monitor_game_path", "G_MON.cfg", "monitor_game_enabled"),
             ("monitor_desk_path", "DT_D.cfg", "monitor_desk_enabled"),
         ]
         _auto_populated = False

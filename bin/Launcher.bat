@@ -68,9 +68,9 @@ call :ReadINI "%GAMEINI%" "mapperprofiles" "player1profile" PLAYER1PROFILE
 call :ReadINI "%GAMEINI%" "mapperprofiles" "player2profile" PLAYER2PROFILE
 call :ReadINI "%GAMEINI%" "mapperprofiles" "deskprofile" DESKPROFILE
 
-REM Parse INI file - monitorprofiles section
-call :ReadINI "%GAMEINI%" "monitorprofiles" "monitorgamingcfg" MONGAMECONFIG
-call :ReadINI "%GAMEINI%" "monitorprofiles" "monitordeskcfg" MONDESKCONFIG
+REM Parse INI file - monitorcfgs section
+call :ReadINI "%GAMEINI%" "monitorcfgs" "monitorgamingcfg" MONGAMECONFIG
+call :ReadINI "%GAMEINI%" "monitorcfgs" "monitordeskcfg" MONDESKCONFIG
 
 REM Backward compatibility: old Profiles section
 if "%PLAYER1PROFILE%"=="" call :ReadINI "%GAMEINI%" "Profiles" "Player1Profile" PLAYER1PROFILE
@@ -94,15 +94,15 @@ call :ReadINI "%GAMEINI%" "Monitor" "monitorapppath" MONTOOL
 call :ReadINI "%GAMEINI%" "Monitor" "monitorapppathoptions" MONOPTS
 call :ReadINI "%GAMEINI%" "Monitor" "monitorapppatharguments" MONARGS
 
-REM Parse INI file - DiscMountProfiles section
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "EnableDiscMountCfg" MOUNTENABLED
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPath" MOUNTCFGAPP
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPathOptions" MOUNTCFGOPTS
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscMountCfgPathArguments" MOUNTCFARGS
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "EnableDiscUnmountCfg" UNMOUNTENABLED
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPath" UNMOUNTCFGAPP
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPathOptions" UNMOUNTCFGOPTS
-call :ReadINI "%GAMEINI%" "DiscMountProfiles" "DiscUnmountCfgPathArguments" UNMOUNTCFARGS
+REM Parse INI file - DiscDrivePrefs section
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "EnableDiscMountCfg" MOUNTENABLED
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscMountCfgPath" MOUNTCFGAPP
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscMountCfgPathOptions" MOUNTCFGOPTS
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscMountCfgPathArguments" MOUNTCFARGS
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "EnableDiscUnmountCfg" UNMOUNTENABLED
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscUnmountCfgPath" UNMOUNTCFGAPP
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscUnmountCfgPathOptions" UNMOUNTCFGOPTS
+call :ReadINI "%GAMEINI%" "DiscDrivePrefs" "DiscUnmountCfgPathArguments" UNMOUNTCFARGS
 
 REM Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
 if "%MOUNTCFGAPP%"=="" call :ReadINI "%GAMEINI%" "DiscMountCfg" "EnableDiscMountCfg" MOUNTENABLED

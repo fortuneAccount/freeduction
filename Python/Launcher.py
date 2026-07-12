@@ -133,6 +133,15 @@ class GameLauncher:
         # Load configuration
         self.update_splash_progress(50, "Loading configuration...")
         self.load_config()
+        # Update log to write to Game.ini directory (matching C launcher behavior)
+        if self.ini_path:
+            log_dir = os.path.dirname(self.ini_path)
+            log_file = os.path.join(log_dir, "launcher.log")
+            for handler in logging.getLogger().handlers:
+                if isinstance(handler, logging.FileHandler):
+                    handler.close()
+                    handler.baseFilename = os.path.abspath(log_file)
+                    break
         
         # Modify config if requested via CLI
         if self.args and (self.args.set or self.args.clear):
@@ -264,7 +273,7 @@ class GameLauncher:
     
     def setup_message_display(self):
         """Set up message display (tooltip or console)"""
-        # Configure logging to file
+        # Configure logging to file (default to home, will update to Game.ini dir later)
         log_file = os.path.join(self.home, "launcher.log")
         logging.basicConfig(
             filename=log_file,
@@ -382,20 +391,41 @@ class GameLauncher:
         # Load mapperprofiles section
         if 'mapperprofiles' in config:
             self.player1_profile = config.get('mapperprofiles', 'player1profile', fallback='')
+            self.player1_profile_options = config.get('mapperprofiles', 'player1profileoptions', fallback='')
+            self.player1_profile_arguments = config.get('mapperprofiles', 'player1profilearguments', fallback='')
             self.player2_profile = config.get('mapperprofiles', 'player2profile', fallback='')
+            self.player2_profile_options = config.get('mapperprofiles', 'player2profileoptions', fallback='')
+            self.player2_profile_arguments = config.get('mapperprofiles', 'player2profilearguments', fallback='')
             self.desk_profile = config.get('mapperprofiles', 'deskprofile', fallback='')
+            self.desk_profile_options = config.get('mapperprofiles', 'deskprofileoptions', fallback='')
+            self.desk_profile_arguments = config.get('mapperprofiles', 'deskprofilearguments', fallback='')
         else:
             self.player1_profile = ''
+            self.player1_profile_options = ''
+            self.player1_profile_arguments = ''
             self.player2_profile = ''
+            self.player2_profile_options = ''
+            self.player2_profile_arguments = ''
             self.desk_profile = ''
+            self.desk_profile_options = ''
+            self.desk_profile_arguments = ''
 
-        # Load monitorprofiles section
-        if 'monitorprofiles' in config:
-            self.monitor_game_cfg = config.get('monitorprofiles', 'monitorgamingcfg', fallback='')
-            self.monitor_desk_cfg = config.get('monitorprofiles', 'monitordeskcfg', fallback='')
+        # Load MonitorLayouts section
+        if 'MonitorLayouts' in config:
+            self.monitor_game_cfg = config.get('MonitorLayouts', 'monitorgamecfg', fallback='')
+            self.monitor_game_cfg_options = config.get('MonitorLayouts', 'monitorgamecfgoptions', fallback='')
+            self.monitor_game_cfg_arguments = config.get('MonitorLayouts', 'monitorgamecfgarguments', fallback='')
+            self.monitor_desk_cfg = config.get('MonitorLayouts', 'monitordeskcfg', fallback='')
+            self.monitor_desk_cfg_options = config.get('MonitorLayouts', 'monitordeskcfgoptions', fallback='')
+            self.monitor_desk_cfg_arguments = config.get('MonitorLayouts', 'monitordeskcfgarguments', fallback='')
         else:
+            # Fallback to old Paths section for backward compatibility
             self.monitor_game_cfg = ''
+            self.monitor_game_cfg_options = ''
+            self.monitor_game_cfg_arguments = ''
             self.monitor_desk_cfg = ''
+            self.monitor_desk_cfg_options = ''
+            self.monitor_desk_cfg_arguments = ''
         
         # Load ControllerMapper section
         if 'ControllerMapper' in config:
@@ -421,16 +451,16 @@ class GameLauncher:
             self.disc_mount_options = config.get('DiscMount', 'discmountpathoptions', fallback='')
             self.disc_mount_arguments = config.get('DiscMount', 'discmountpatharguments', fallback='')
             self.disc_mount_wait = config.getboolean('DiscMount', 'discmountpathrunwait', fallback=False)
-        # Load DiscMountProfiles section
-        if 'DiscMountProfiles' in config:
-            self.disc_mount_cfg_enabled = config.getboolean('DiscMountProfiles', 'enablediscmountcfg', fallback=False)
-            self.disc_mount_cfg = config.get('DiscMountProfiles', 'discmountcfgpath', fallback='')
-            self.disc_mount_cfg_options = config.get('DiscMountProfiles', 'discmountcfgpathoptions', fallback='')
-            self.disc_mount_cfg_arguments = config.get('DiscMountProfiles', 'discmountcfgpatharguments', fallback='')
-            self.disc_unmount_cfg_enabled = config.getboolean('DiscMountProfiles', 'enablediscunmountcfg', fallback=False)
-            self.disc_unmount_cfg = config.get('DiscMountProfiles', 'discunmountcfgpath', fallback='')
-            self.disc_unmount_cfg_options = config.get('DiscMountProfiles', 'discunmountcfgpathoptions', fallback='')
-            self.disc_unmount_cfg_arguments = config.get('DiscMountProfiles', 'discunmountcfgpatharguments', fallback='')
+        # Load DiscDrivePrefs section
+        if 'DiscDrivePrefs' in config:
+            self.disc_mount_cfg_enabled = config.getboolean('DiscDrivePrefs', 'enablediscmountcfg', fallback=False)
+            self.disc_mount_cfg = config.get('DiscDrivePrefs', 'discmountcfgpath', fallback='')
+            self.disc_mount_cfg_options = config.get('DiscDrivePrefs', 'discmountcfgpathoptions', fallback='')
+            self.disc_mount_cfg_arguments = config.get('DiscDrivePrefs', 'discmountcfgpatharguments', fallback='')
+            self.disc_unmount_cfg_enabled = config.getboolean('DiscDrivePrefs', 'enablediscunmountcfg', fallback=False)
+            self.disc_unmount_cfg = config.get('DiscDrivePrefs', 'discunmountcfgpath', fallback='')
+            self.disc_unmount_cfg_options = config.get('DiscDrivePrefs', 'discunmountcfgpathoptions', fallback='')
+            self.disc_unmount_cfg_arguments = config.get('DiscDrivePrefs', 'discunmountcfgpatharguments', fallback='')
         else:
             # Backward compatibility with old sections
             if 'DiscMountCfg' in config:
@@ -463,16 +493,16 @@ class GameLauncher:
             self.reborder_cfg_options = config.get('BorderlessProfiles', 'rebordercfgpathoptions', fallback='')
             self.reborder_cfg_arguments = config.get('BorderlessProfiles', 'rebordercfgpatharguments', fallback='')
 
-        # Load AudioProfiles section
-        if 'AudioProfiles' in config:
-            self.audio_game_cfg_enabled = config.getboolean('AudioProfiles', 'enableaudiogamecfg', fallback=False)
-            self.audio_game_cfg = config.get('AudioProfiles', 'audiogamecfgpath', fallback='')
-            self.audio_game_cfg_options = config.get('AudioProfiles', 'audiogamecfgpathoptions', fallback='')
-            self.audio_game_cfg_arguments = config.get('AudioProfiles', 'audiogamecfgpatharguments', fallback='')
-            self.audio_desk_cfg_enabled = config.getboolean('AudioProfiles', 'enableaudiodeskcfg', fallback=False)
-            self.audio_desk_cfg = config.get('AudioProfiles', 'audiodeskcfgpath', fallback='')
-            self.audio_desk_cfg_options = config.get('AudioProfiles', 'audiodeskcfgpathoptions', fallback='')
-            self.audio_desk_cfg_arguments = config.get('AudioProfiles', 'audiodeskcfgpatharguments', fallback='')
+        # Load AudioPresets section
+        if 'AudioPresets' in config:
+            self.audio_game_cfg_enabled = config.getboolean('AudioPresets', 'enableaudiogamecfg', fallback=False)
+            self.audio_game_cfg = config.get('AudioPresets', 'audiogamecfgpath', fallback='')
+            self.audio_game_cfg_options = config.get('AudioPresets', 'audiogamecfgpathoptions', fallback='')
+            self.audio_game_cfg_arguments = config.get('AudioPresets', 'audiogamecfgpatharguments', fallback='')
+            self.audio_desk_cfg_enabled = config.getboolean('AudioPresets', 'enableaudiodeskcfg', fallback=False)
+            self.audio_desk_cfg = config.get('AudioPresets', 'audiodeskcfgpath', fallback='')
+            self.audio_desk_cfg_options = config.get('AudioPresets', 'audiodeskcfgpathoptions', fallback='')
+            self.audio_desk_cfg_arguments = config.get('AudioPresets', 'audiodeskcfgpatharguments', fallback='')
         else:
             # Backward compatibility with old sections
             if 'AudioGameCfg' in config:
@@ -569,12 +599,18 @@ class GameLauncher:
                 self.launch_sequence = [
                     "Controller-Mapper", 
                     "Monitor-Config", 
+                    "Kill-List",
+                    "Kill-Game",
+                    "mount-disc"
                     "No-TB",
                     "Pre1", 
                     "Pre2", 
+                    "Borderless", 
                     "Pre3", 
+                    "Cloud-Sync",
                     "Borderless",
                     "RunAudio"
+                    "Backup",
                 ]
             
             # Get exit sequence
@@ -584,14 +620,19 @@ class GameLauncher:
             else:
                 # Default exit sequence
                 self.exit_sequence = [
-                    "Post1", 
-                    "Post2", 
-                    "Post3", 
-                    "ReturnAudio",
+                    "Kill-Game",
+                    "Kill-List",
                     "Monitor-Config", 
                     "Taskbar",
+                    "Post1", 
                     "Controller-Mapper",
-                    "Backup"
+                    "Borderless", 
+                    "Post2", 
+                    "ReturnAudio",
+                    "Post3", 
+                    "Unmount-disc",
+                    "Cloud-Sync",
+                    "Backup",
                 ]
         
         # Run path discovery if needed (discover save/config files from PCGW templates)

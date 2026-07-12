@@ -79,7 +79,7 @@ class MonitorCanvas(QWidget):
                 painter.drawText(rect.adjusted(5, 5, 0, 0), Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop, "Primary")
 
 class DisplayWizard(QDialog):
-    """Wizard to capture monitor profile settings for the selected display tool."""
+    """Wizard to capture monitor-layout settings for the selected display tool."""
     def __init__(self, parent=None, windowing_app_name="", tool_path=""):
         super().__init__(parent)
         self.setup_tab = parent
@@ -236,7 +236,7 @@ class DisplayWizard(QDialog):
         return tab_text
 
     def _save_configuration(self):
-        """Save the collected monitor profile settings via a save-as file dialog."""
+        """Save the collected monitor-layout settings via a save-as file dialog."""
         current_tab_text = self.tab_widget.tabText(self.tab_widget.currentIndex())
         state_title = self._get_state_title_from_tab(current_tab_text)
         if "Desktop" in current_tab_text or "Exit" in current_tab_text:
@@ -381,8 +381,8 @@ class DisplayWizard(QDialog):
 
         config.monitor_wizard_profiles = profile_data
         if current_state_title == "Game / Running State":
-            config.monitor_gaming_path = file_path
-            config.defaults['monitor_gaming_path_enabled'] = True
+            config.monitor_game_path = file_path
+            config.defaults['monitor_game_path_enabled'] = True
         elif current_state_title == "Desktop / Exit State":
             config.monitor_desk_path = file_path
             config.defaults['monitor_desk_path_enabled'] = True

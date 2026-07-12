@@ -80,9 +80,9 @@ PLAYER1PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player1profile")
 PLAYER2PROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "player2profile")
 DESKPROFILE=$(read_ini "$GAMEINI" "mapperprofiles" "deskprofile")
 
-# monitorprofiles section
-MONGAMECONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "monitorgamingcfg")
-MONDESKCONFIG=$(read_ini "$GAMEINI" "monitorprofiles" "monitordeskcfg")
+# monitorcfgs section
+MONGAMECONFIG=$(read_ini "$GAMEINI" "monitorcfgs" "monitorgamingcfg")
+MONDESKCONFIG=$(read_ini "$GAMEINI" "monitorcfgs" "monitordeskcfg")
 
 # Backward compatibility: old Profiles section
 [ -z "$PLAYER1PROFILE" ] && PLAYER1PROFILE=$(read_ini "$GAMEINI" "Profiles" "Player1Profile")
@@ -106,15 +106,15 @@ MONTOOL=$(read_ini "$GAMEINI" "Monitor" "monitorapppath")
 MONOPTS=$(read_ini "$GAMEINI" "Monitor" "monitorapppathoptions")
 MONARGS=$(read_ini "$GAMEINI" "Monitor" "monitorapppatharguments")
 
-# DiscMountProfiles section
-MOUNTENABLED=$(read_ini "$GAMEINI" "DiscMountProfiles" "EnableDiscMountCfg")
-MOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPath")
-MOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPathOptions")
-MOUNTCFARGS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscMountCfgPathArguments")
-UNMOUNTENABLED=$(read_ini "$GAMEINI" "DiscMountProfiles" "EnableDiscUnmountCfg")
-UNMOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPath")
-UNMOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPathOptions")
-UNMOUNTCFARGS=$(read_ini "$GAMEINI" "DiscMountProfiles" "DiscUnmountCfgPathArguments")
+# DiscDrivePrefs section
+MOUNTENABLED=$(read_ini "$GAMEINI" "DiscDrivePrefs" "EnableDiscMountCfg")
+MOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscMountCfgPath")
+MOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscMountCfgPathOptions")
+MOUNTCFARGS=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscMountCfgPathArguments")
+UNMOUNTENABLED=$(read_ini "$GAMEINI" "DiscDrivePrefs" "EnableDiscUnmountCfg")
+UNMOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscUnmountCfgPath")
+UNMOUNTCFGOPTS=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscUnmountCfgPathOptions")
+UNMOUNTCFARGS=$(read_ini "$GAMEINI" "DiscDrivePrefs" "DiscUnmountCfgPathArguments")
 
 # Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
 [ -z "$MOUNTCFGAPP" ] && MOUNTCFGAPP=$(read_ini "$GAMEINI" "DiscMountCfg" "DiscMountCfgPath")

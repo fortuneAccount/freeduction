@@ -109,7 +109,7 @@ class ConfigManager(QObject):
             'p1_profile_path_enabled': True,
             'p2_profile_path_enabled': True,
             'desk_profile_path_enabled': True,
-            'monitor_gaming_path_enabled': False,
+            'monitor_game_path_enabled': False,
             'monitor_desk_path_enabled': False,
             'profiles_dir_enabled': True,
             'launchers_dir_enabled': True,
@@ -145,7 +145,7 @@ class ConfigManager(QObject):
             "launchers_dir": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
-            "desk_profile_path": True
+            "desk_profile_path": FalseTrue
         }
 
         # Set default deployment tab options
@@ -318,9 +318,9 @@ class ConfigManager(QObject):
                         config.defaults[f"{config_attr}_enabled"] = True
                         config.overwrite_states[config_attr] = True
                         config.deployment_path_modes[config_attr] = "LC"
-                        logging.info(f"Created {search_name} profile from template: {output_path}")
+                        logging.info(f"Created {search_name} layout from template: {output_path}")
                     except Exception as e:
-                        logging.error(f"Failed to create {search_name} profile from template: {e}")
+                        logging.error(f"Failed to create {se_name} layout from template: {e}")
             else:
                 # Output exists but was not found in search - use it anyway
                 setattr(config, config_attr, str(output_path))
@@ -395,7 +395,7 @@ class ConfigManager(QObject):
         if config.monitorapp_path:
             mdir = Path(config.monitorapp_path).parent
             if mdir.exists():
-                for attr, keyword in [('monitor_gaming_path', 'gaming'), ('monitor_desk_path', 'desktop')]:
+                for attr, keyword in [('monitor_game_path', 'gaming'), ('monitor_desk_path', 'desktop')]:
                     if not getattr(config, attr, ''):
                         for f in mdir.glob(f'*{keyword}*.cfg'):
                             setattr(config, attr, str(f))
@@ -473,8 +473,8 @@ class ConfigManager(QObject):
             'p1_profile_path': ('p1_profile_path_options', 'p1_profile_path_arguments'),
             'p2_profile_path': ('p2_profile_path_options', 'p2_profile_path_arguments'),
             'desk_profile_path': ('desk_profile_path_options', 'desk_profile_path_arguments'),
-            'monitor_gaming_path': ('monitor_gaming_options', 'monitor_gaming_arguments'),
-            'monitor_desk_path': ('monitor_desk_options', 'monitor_desk_arguments'),
+            'monitor_game_path': ('monitor_game_cfg_options', 'monitor_game_arguments'),
+            'monitor_desk_path': ('monitor_desk_cfg_options', 'monitor_desk_arguments'),
         }
         
         if config_attr not in attr_mapping:

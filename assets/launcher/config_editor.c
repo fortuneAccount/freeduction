@@ -96,7 +96,7 @@ static const KeyTypeDef KEY_TYPES[] = {
     
     // [Profiles] section
     {"player1profile", CTRL_PATH_FILE}, {"player2profile", CTRL_PATH_FILE},
-    {"deskprofile", CTRL_PATH_FILE}, {"monitorgamingcfg", CTRL_PATH_FILE},
+    {"deskprofile", CTRL_PATH_FILE}, {"monitorgamecfg", CTRL_PATH_FILE},
     {"monitordeskcfg", CTRL_PATH_FILE},
     
     // Application sections - all follow same pattern: path, pathoptions, patharguments, pathrunwait
@@ -162,12 +162,12 @@ static const KeyTypeDef KEY_TYPES[] = {
     // [Sequences] section
     {"launchsequence", CTRL_LIST}, {"exitsequence", CTRL_LIST},
     
-    // [SourceProfiles] and [SourceApplications] sections
-    {"monitorapp", CTRL_PATH_FILE}, {"antimicrox", CTRL_PATH_FILE},
-    {"rclone", CTRL_PATH_FILE}, {"wincdemu", CTRL_PATH_FILE},
-    {"osf", CTRL_PATH_FILE}, {"imgdrive", CTRL_PATH_FILE},
-    {"cdmage", CTRL_PATH_FILE}, {"ludusavi", CTRL_PATH_FILE},
-    {"gamesavemanager", CTRL_PATH_FILE}, {"gamebackupmonitor", CTRL_PATH_FILE},
+    // [SourceTemplates] and [SourceApplications] sections
+    {"monitorappSRC", CTRL_PATH_FILE}, {"antimicroxSRC", CTRL_PATH_FILE},
+    {"rcloneSRC", CTRL_PATH_FILE}, {"wincdemuSRC", CTRL_PATH_FILE},
+    {"osfSRC", CTRL_PATH_FILE}, {"imgdriveSRC", CTRL_PATH_FILE},
+    {"cdmageSRC", CTRL_PATH_FILE}, {"ludusaviSRC", CTRL_PATH_FILE},
+    {"gamesavemanagerSRC", CTRL_PATH_FILE}, {"gamebackupmonitorSRC", CTRL_PATH_FILE},
     
     {NULL, CTRL_TEXT}
 };
@@ -192,8 +192,8 @@ static const KeyAbbrev KEY_ABBREVS[] = {
     
     // [Profiles] section
     {"player1profile", "P1 Profile"}, {"player2profile", "P2 Profile"},
-    {"deskprofile", "Desk Profile"}, {"monitorgamingcfg", "Gaming"},
-    {"monitordeskcfg", "Desktop"},
+    {"deskprofile", "Desk Profile"}, {"monitorgamecfg", "Game-Mon"},
+    {"monitordeskcfg", "Desk-Mon"},
     
     // [ControllerMapper] section
     {"enablecontrollermapper", "Enable Ctrl"}, {"controllermapperpath", "Ctrl Path"},

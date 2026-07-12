@@ -45,7 +45,7 @@ def save_index(main_window, directory, data):
                     row_values = []
                     # Define path columns using EditorCols constants
                     path_columns = {constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE.value,
-                                    constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_PROFILE.value,
+                                    constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_CFG.value,
                                     constants.EditorCols.MONITOR_DESK_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
                     for i, field in enumerate(fields):
                         if i in path_columns:  # Path fields (using EditorCols mapping)
@@ -160,7 +160,7 @@ def load_index(main_window=None, directory=None, prompt_for_filename=False):
                         path_indicators = {}
                         # Define path columns using EditorCols constants
                         path_columns = {constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE.value,
-                                        constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_PROFILE.value,
+                                        constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.MONITOR_GAME_CFG.value,
                                         constants.EditorCols.MONITOR_DESK_PROFILE.value, constants.EditorCols.LAUNCHER_EXE.value}
                         
                         # Fill in values from parts

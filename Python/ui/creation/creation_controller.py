@@ -66,8 +66,8 @@ class CreationController:
             profile_keys = [
                 ('player1_profile', 'Player 1 Profile'),
                 ('player2_profile', 'Player 2 Profile'),
-                ('monitor_game_profile', 'MON Game Config'),
-                ('monitor_desk_profile', 'MON Desk Config'),
+                ('monitor_game_cfg', 'MON Game Config'),
+                ('monitor_desk_cfg', 'MON Desk Config'),
                 ('desk_profile', 'Desk Profile')
             ]
             
@@ -655,21 +655,33 @@ class CreationController:
             config.set('mapperprofiles', 'deskprofile', val)
         else:
             config.set('mapperprofiles', 'deskprofile', "")
+        
+        config.set('mapperprofiles', 'player1profileoptions', game_data.get('player1_profile_options', app_config.p1_profile_path_options))
+        config.set('mapperprofiles', 'player1profilearguments', game_data.get('player1_profile_arguments', app_config.p1_profile_path_arguments))
+        config.set('mapperprofiles', 'player2profileoptions', game_data.get('player2_profile_options', app_config.p2_profile_path_options))
+        config.set('mapperprofiles', 'player2profilearguments', game_data.get('player2_profile_arguments', app_config.p2_profile_path_arguments))
+        config.set('mapperprofiles', 'deskprofileoptions', game_data.get('desk_profile_options', app_config.desk_profile_path_options))
+        config.set('mapperprofiles', 'deskprofilearguments', game_data.get('desk_profile_arguments', app_config.desk_profile_path_arguments))
 
-        # --- [monitorprofiles] Section ---
-        config.add_section('monitorprofiles')
+        # --- [MonitorLayouts] Section ---
+        config.add_section('MonitorLayouts')
         
-        if game_data.get('monitor_game_profile_enabled', True):
-            val = self._get_profile_path('monitor_game_profile', game_data, game_profile_dir)
-            config.set('monitorprofiles', 'monitorgamingcfg', val)
+        if game_data.get('monitor_game_cfg_enabled', True):
+            val = self._get_cfg_path('monitor_game_cfg', game_data, game_profile_dir)
+            config.set('MonitorLayouts', 'monitorgamecfg', val)
         else:
-            config.set('monitorprofiles', 'monitorgamingcfg', "")
+            config.set('MonitorLayouts', 'monitorgamecfg', "")
         
-        if game_data.get('monitor_desk_profile_enabled', True):
-            val = self._get_profile_path('monitor_desk_profile', game_data, game_profile_dir)
-            config.set('monitorprofiles', 'monitordeskcfg', val)
+        if game_data.get('monitor_desk_cfg_enabled', True):
+            val = self._get_cfg_path('monitor_desk_cfg', game_data, game_profile_dir)
+            config.set('MonitorLayouts', 'monitordeskcfg', val)
         else:
-            config.set('monitorprofiles', 'monitordeskcfg', "")
+            config.set('MonitorLayouts', 'monitordeskcfg', "")
+        
+        config.set('MonitorLayouts', 'monitorgamecfgoptions', game_data.get('monitor_game_cfg_options', ''))
+        config.set('MonitorLayouts', 'monitorgamecfgarguments', game_data.get('monitor_game_cfg_arguments', ''))
+        config.set('MonitorLayouts', 'monitordeskcfgoptions', game_data.get('monitor_desk_cfg_options', ''))
+        config.set('MonitorLayouts', 'monitordeskcfgarguments', game_data.get('monitor_desk_cfg_arguments', ''))
 
         # --- [DiscMount] Section ---
         config.add_section('DiscMount')
@@ -679,16 +691,16 @@ class CreationController:
         config.set('DiscMount', 'discmountpatharguments', game_data.get('disc_mount_args', ''))
         config.set('DiscMount', 'discmountpathrunwait', str(game_data.get('disc_mount_wait', False)))
 
-        # --- [DiscMountProfiles] Section ---
-        config.add_section('DiscMountProfiles')
-        config.set('DiscMountProfiles', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
-        config.set('DiscMountProfiles', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
-        config.set('DiscMountProfiles', 'discmountcfgpathoptions', game_data.get('disc_mount_cfg_options', ''))
-        config.set('DiscMountProfiles', 'discmountcfgpatharguments', game_data.get('disc_mount_cfg_arguments', ''))
-        config.set('DiscMountProfiles', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
-        config.set('DiscMountProfiles', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
-        config.set('DiscMountProfiles', 'discunmountcfgpathoptions', game_data.get('disc_unmount_cfg_options', ''))
-        config.set('DiscMountProfiles', 'discunmountcfgpatharguments', game_data.get('disc_unmount_cfg_arguments', ''))
+        # --- [DiscDrivePrefs] Section ---
+        config.add_section('DiscDrivePrefs')
+        config.set('DiscDrivePrefs', 'enablediscmountcfg', str(game_data.get('disc_mount_cfg_enabled', False)))
+        config.set('DiscDrivePrefs', 'discmountcfgpath', game_data.get('disc_mount_cfg', ''))
+        config.set('DiscDrivePrefs', 'discmountcfgpathoptions', game_data.get('disc_mount_cfg_options', ''))
+        config.set('DiscDrivePrefs', 'discmountcfgpatharguments', game_data.get('disc_mount_cfg_arguments', ''))
+        config.set('DiscDrivePrefs', 'enablediscunmountcfg', str(game_data.get('disc_unmount_cfg_enabled', False)))
+        config.set('DiscDrivePrefs', 'discunmountcfgpath', game_data.get('disc_unmount_cfg', ''))
+        config.set('DiscDrivePrefs', 'discunmountcfgpathoptions', game_data.get('disc_unmount_cfg_options', ''))
+        config.set('DiscDrivePrefs', 'discunmountcfgpatharguments', game_data.get('disc_unmount_cfg_arguments', ''))
 
         # --- [AudioApp] Section ---
         config.add_section('AudioApp')
@@ -709,16 +721,16 @@ class CreationController:
         config.set('BorderlessProfiles', 'rebordercfgpathoptions', game_data.get('reborder_cfg_options', ''))
         config.set('BorderlessProfiles', 'rebordercfgpatharguments', game_data.get('reborder_cfg_arguments', ''))
 
-        # --- [AudioProfiles] Section ---
-        config.add_section('AudioProfiles')
-        config.set('AudioProfiles', 'enableaudiogamecfg', str(game_data.get('audio_game_cfg_enabled', False)))
-        config.set('AudioProfiles', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
-        config.set('AudioProfiles', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
-        config.set('AudioProfiles', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
-        config.set('AudioProfiles', 'enableaudiodeskcfg', str(game_data.get('audio_desk_cfg_enabled', False)))
-        config.set('AudioProfiles', 'audiodeskcfgpath', game_data.get('audio_desk_cfg', ''))
-        config.set('AudioProfiles', 'audiodeskcfgpathoptions', game_data.get('audio_desk_cfg_options', ''))
-        config.set('AudioProfiles', 'audiodeskcfgpatharguments', game_data.get('audio_desk_cfg_arguments', ''))
+        # --- [AudioPresets] Section ---
+        config.add_section('AudioPresets')
+        config.set('AudioPresets', 'enableaudiogamecfg', str(game_data.get('audio_game_cfg_enabled', False)))
+        config.set('AudioPresets', 'audiogamecfgpath', game_data.get('audio_game_cfg', ''))
+        config.set('AudioPresets', 'audiogamecfgpathoptions', game_data.get('audio_game_cfg_options', ''))
+        config.set('AudioPresets', 'audiogamecfgpatharguments', game_data.get('audio_game_cfg_arguments', ''))
+        config.set('AudioPresets', 'enableaudiodeskcfg', str(game_data.get('audio_desk_cfg_enabled', False)))
+        config.set('AudioPresets', 'audiodeskcfgpath', game_data.get('audio_desk_cfg', ''))
+        config.set('AudioPresets', 'audiodeskcfgpathoptions', game_data.get('audio_desk_cfg_options', ''))
+        config.set('AudioPresets', 'audiodeskcfgpatharguments', game_data.get('audio_desk_cfg_arguments', ''))
 
         # --- [ControllerMapper] Section ---
         config.add_section('ControllerMapper')
@@ -813,14 +825,14 @@ class CreationController:
         config.set('Sequences', 'launchsequence', ",".join(app_config.launch_sequence))
         config.set('Sequences', 'exitsequence', ",".join(app_config.exit_sequence))
 
-        # --- [SourceProfiles] Section ---
-        config.add_section('SourceProfiles')
+        # --- [SourceTemplates] Section ---
+        config.add_section('SourceTemplates')
         
         source_map = [
             ('player1profile', 'player1_profile', 'p1_profile_path'),
             ('player2profile', 'player2_profile', 'p2_profile_path'),
-            ('monitorgamingcfg', 'monitor_game_profile', 'monitor_gaming_path'),
-            ('monitordeskcfg', 'monitor_desk_profile', 'monitor_desk_path'),
+            ('monitorgamecfg', 'monitor_game_cfg', 'monitor_game_path'),
+            ('monitordeskcfg', 'monitor_desk_cfg', 'monitor_desk_path'),
             ('deskprofile', 'desk_profile', 'desk_profile_path'),
         ]
 
@@ -839,7 +851,7 @@ class CreationController:
                     elif '4' in data_key: extra_context['$player_number'] = '4'
                 
                 resolved_source = self._transform_path(clean_path, game_data, extra_context)
-                config.set('SourceProfiles', ini_key, resolved_source)
+                config.set('SourceTemplates', ini_key, resolved_source)
 
         # --- [SourceApplications] Section ---
         config.add_section('SourceApplications')
@@ -875,7 +887,7 @@ class CreationController:
             # Create sections
             if save_locations or config_locations:
                 config.add_section('SYSTEM')
-                config.add_section('SAVE')
+         &       config.add_section('SAVE')
                 config.add_section('CONFIG')
             
             # Process each platform
@@ -955,8 +967,8 @@ class CreationController:
             'player2_profile': 'p2_profile_path',
             'player3_profile': 'p3_profile_path',
             'player4_profile': 'p4_profile_path',
-            'monitor_game_profile': 'monitor_gaming_path',
-            'monitor_desk_profile': 'monitor_desk_path',
+            'monitor_game_cfg': 'monitor_game_path',
+            'monitor_desk_cfg': 'monitor_desk_path',
             'desk_profile': 'desk_profile_path'
         }
         config_key = config_key_map.get(profile_key, profile_key)
@@ -1110,12 +1122,12 @@ class CreationController:
         """
         app_config = self.main_window.config
         
-        # Map profile keys to their overwrite config keys
+        # Map profile k?eys to their overwrite config keys
         profile_map = {
             'player1_profile': 'p1_profile_path',
             'player2_profile': 'p2_profile_path',
-            'monitor_game_profile': 'monitor_gaming_path',
-            'monitor_desk_profile': 'monitor_desk_path',
+            'monitor_game_cfg': 'monitor_game_path',
+            'monitor_desk_cfg': 'monitor_desk_path',
             'desk_profile': 'desk_profile_path'
         }
 

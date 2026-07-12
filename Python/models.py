@@ -5,7 +5,7 @@ class AppConfig:
         self.source_dirs = []
         self.excluded_dirs = []
         self.logging_verbosity = "Low"
-        self.ui_theme: str = "fluent_winui3"
+        self.ui_theme: str = "Universal"
         self.plugin_creation_mode: bool = False
         self.game_managers_present = "None"
         self.exclude_selected_manager_games = False
@@ -24,7 +24,7 @@ class AppConfig:
         self.p2_profile_path = ""
         self.desk_profile_path = ""
         self.monitorapp_path = ""
-        self.monitor_gaming_path = ""
+        self.monitor_game_path = ""
         self.monitor_desk_path = ""
         self.filtered_steam_cache_path = ""
         
@@ -77,10 +77,10 @@ class AppConfig:
         self.p2_profile_path_arguments = ""
         self.desk_profile_path_options = ""
         self.desk_profile_path_arguments = ""
-        self.monitor_gaming_options = ""
-        self.monitor_gaming_arguments = ""
-        self.monitor_desk_options = ""
-        self.monitor_desk_arguments = ""
+        self.monitor_game_cfg_options = ""
+        self.monitor_game_cfg_arguments = ""
+        self.monitor_desk_cfg_options = ""
+        self.monitor_desk_cfg_arguments = ""
         
         self.just_after_launch_path_options = ""
         self.just_after_launch_path_arguments = ""
@@ -180,7 +180,7 @@ class AppConfig:
         self.p1_profile_mode = "CEN"  # or "LC"
         self.p2_profile_mode = "CEN"
         self.desk_profile_mode = "CEN"
-        self.monitor_gaming_mode = "CEN"
+        self.monitor_game_mode = "CEN"
         self.monitor_desk_mode = "CEN"
 
         # Setup Tab: Behavior
@@ -230,7 +230,7 @@ class AppConfig:
         self.cloud_sync_path_arguments = ""
         self.local_backup_path_options = ""
         self.local_backup_path_arguments = ""
-        self.monitor_gaming_enabled = True
+        self.monitor_game_enabled = True
         self.monitor_desk_enabled = True
         self.p1_profile_enabled = True
         self.p2_profile_enabled = True

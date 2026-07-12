@@ -74,7 +74,7 @@ void show_message(const char* message);
 void log_message(const char* level, const char* message);
 void log_debug(const char* message);
 static int config_handler(void* user, const char* section, const char* name, const char* value);
-int load_configuration(const char* ini_path);
+int load_configuratiozn(const char* ini_path);
 void execute_sequence(const char* sequence_str, int is_exit_sequence);
 void execute_action(const char* action, int is_exit_sequence);
 void run_game_process();
@@ -111,6 +111,8 @@ void action_mount_iso();
 void action_unmount_iso();
 void action_mount_disc_with_app();
 void action_unmount_disc_with_app();
+void action_run_audio_game();
+void action_run_audio_desktop();
 
 // --- Logging Implementation ---
 void log_message(const char* level, const char* message) {
@@ -322,7 +324,7 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(player2_profile);
     } else if (MATCH("Paths", "DeskProfile")) {
         SET_STR(desk_profile);
-    } else if (MATCH("Paths", "MonitorGamingConfig")) {
+    } else if (MATCH("Paths", "MonitorGameConfig")) {
         SET_STR(monitor_game_config);
     } else if (MATCH("Paths", "MonitorDesktopConfig")) {
         SET_STR(monitor_desk_config);
@@ -349,22 +351,66 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("Paths", "DiscUnmountWait")) {
         SET_BOOL(disc_unmount_wait);
     }
-    // [DiscMountProfiles] section
-    else if (MATCH("DiscMountProfiles", "enablediscmountcfg")) {
+    // [ControllerMapper] section
+    else if (MATCH("ControllerMapper", "controllermapperpath")) {
+        SET_STR(controller_mapper_app);
+    } else if (MATCH("ControllerMapper", "controllermapperpathoptions")) {
+        SET_STR(controller_mapper_options);
+    } else if (MATCH("ControllerMapper", "controllermapperpatharguments")) {
+        SET_STR(controller_mapper_arguments);
+    }
+    // [BorderlessWindowing] section
+    else if (MATCH("BorderlessWindowing", "borderlesswindowingpath")) {
+        SET_STR(borderless_windowing_app);
+    } else if (MATCH("BorderlessWindowing", "borderlesswindowingpathoptions")) {
+        SET_STR(borderless_options);
+    } else if (MATCH("BorderlessWindowing", "borderlesswindowingpatharguments")) {
+        SET_STR(borderless_arguments);
+    }
+    // [Monitor] section
+    else if (MATCH("Monitor", "monitorapppath")) {
+        SET_STR(monitorapp);
+    } else if (MATCH("Monitor", "monitorapppathoptions")) {
+        SET_STR(monitorapp_options);
+    } else if (MATCH("Monitor", "monitorapppatharguments")) {
+        SET_STR(monitorapp_arguments);
+    }
+    // [DiscMount] section
+    else if (MATCH("DiscMount", "discmountpath")) {
+        SET_STR(disc_mount_app);
+    } else if (MATCH("DiscMount", "discmountpathoptions")) {
+        SET_STR(disc_mount_options);
+    } else if (MATCH("DiscMount", "discmountpatharguments")) {
+        SET_STR(disc_mount_arguments);
+    } else if (MATCH("DiscMount", "discmountpathrunwait")) {
+        SET_BOOL(disc_mount_wait);
+    }
+    // [AudioApp] section
+    else if (MATCH("AudioApp", "audioapppath")) {
+        SET_STR(audio_app_path);
+    } else if (MATCH("AudioApp", "audioapppathoptions")) {
+        SET_STR(audio_app_options);
+    } else if (MATCH("AudioApp", "audioapppatharguments")) {
+        SET_STR(audio_app_arguments);
+    } else if (MATCH("AudioApp", "audioapppathrunwait")) {
+        SET_BOOL(audio_app_run_wait);
+    }
+    // [DiscDrivePrefs] section
+    else if (MATCH("DiscDrivePrefs", "enablediscmountcfg")) {
         SET_BOOL(disc_mount_cfg_enabled);
-    } else if (MATCH("DiscMountProfiles", "discmountcfgpath")) {
+    } else if (MATCH("DiscDrivePrefs", "discmountcfgpath")) {
         SET_STR(disc_mount_cfg);
-    } else if (MATCH("DiscMountProfiles", "discmountcfgpathoptions")) {
+    } else if (MATCH("DiscDrivePrefs", "discmountcfgpathoptions")) {
         SET_STR(disc_mount_cfg_options);
-    } else if (MATCH("DiscMountProfiles", "discmountcfgpatharguments")) {
+    } else if (MATCH("DiscDrivePrefs", "discmountcfgpatharguments")) {
         SET_STR(disc_mount_cfg_arguments);
-    } else if (MATCH("DiscMountProfiles", "enablediscunmountcfg")) {
+    } else if (MATCH("DiscDrivePrefs", "enablediscunmountcfg")) {
         SET_BOOL(disc_unmount_cfg_enabled);
-    } else if (MATCH("DiscMountProfiles", "discunmountcfgpath")) {
+    } else if (MATCH("DiscDrivePrefs", "discunmountcfgpath")) {
         SET_STR(disc_unmount_cfg);
-    } else if (MATCH("DiscMountProfiles", "discunmountcfgpathoptions")) {
+    } else if (MATCH("DiscDrivePrefs", "discunmountcfgpathoptions")) {
         SET_STR(disc_unmount_cfg_options);
-    } else if (MATCH("DiscMountProfiles", "discunmountcfgpatharguments")) {
+    } else if (MATCH("DiscDrivePrefs", "discunmountcfgpatharguments")) {
         SET_STR(disc_unmount_cfg_arguments);
     }
     // [mapperprofiles] section
@@ -374,12 +420,32 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(player2_profile);
     } else if (MATCH("mapperprofiles", "deskprofile")) {
         SET_STR(desk_profile);
+    } else if (MATCH("mapperprofiles", "player1profileoptions")) {
+        SET_STR(player1_profile_options);
+    } else if (MATCH("mapperprofiles", "player1profilearguments")) {
+        SET_STR(player1_profile_arguments);
+    } else if (MATCH("mapperprofiles", "player2profileoptions")) {
+        SET_STR(player2_profile_options);
+    } else if (MATCH("mapperprofiles", "player2profilearguments")) {
+        SET_STR(player2_profile_arguments);
+    } else if (MATCH("mapperprofiles", "deskprofileoptions")) {
+        SET_STR(desk_profile_options);
+    } else if (MATCH("mapperprofiles", "deskprofilearguments")) {
+        SET_STR(desk_profile_arguments);
     }
-    // [monitorprofiles] section
-    else if (MATCH("monitorprofiles", "monitorgamingcfg")) {
+    // [MonitorLayouts] section
+    else if (MATCH("MonitorLayouts", "monitorgamecfg")) {
         SET_STR(monitor_game_config);
-    } else if (MATCH("monitorprofiles", "monitordeskcfg")) {
+    } else if (MATCH("MonitorLayouts", "monitordeskcfg")) {
         SET_STR(monitor_desk_config);
+    } else if (MATCH("MonitorLayouts", "monitorgamecfgoptions")) {
+        SET_STR(monitor_game_config_options);
+    } else if (MATCH("MonitorLayouts", "monitorgamecfgarguments")) {
+        SET_STR(monitor_game_config_arguments);
+    } else if (MATCH("MonitorLayouts", "monitordeskcfgoptions")) {
+        SET_STR(monitor_desk_config_options);
+    } else if (MATCH("MonitorLayouts", "monitordeskcfgarguments")) {
+        SET_STR(monitor_desk_config_arguments);
     }
     // [BorderlessProfiles] section
     else if (MATCH("BorderlessProfiles", "enableunbordercfg")) {
@@ -399,22 +465,22 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("BorderlessProfiles", "rebordercfgpatharguments")) {
         SET_STR(reborder_cfg_arguments);
     }
-    // [AudioProfiles] section
-    else if (MATCH("AudioProfiles", "enableaudiogamecfg")) {
+    // [AudioPresets] section
+    else if (MATCH("AudioPresets", "enableaudiogamecfg")) {
         SET_BOOL(audio_game_cfg_enabled);
-    } else if (MATCH("AudioProfiles", "audiogamecfgpath")) {
+    } else if (MATCH("AudioPresets", "audiogamecfgpath")) {
         SET_STR(audio_game_cfg);
-    } else if (MATCH("AudioProfiles", "audiogamecfgpathoptions")) {
+    } else if (MATCH("AudioPresets", "audiogamecfgpathoptions")) {
         SET_STR(audio_game_cfg_options);
-    } else if (MATCH("AudioProfiles", "audiogamecfgpatharguments")) {
+    } else if (MATCH("AudioPresets", "audiogamecfgpatharguments")) {
         SET_STR(audio_game_cfg_arguments);
-    } else if (MATCH("AudioProfiles", "enableaudiodeskcfg")) {
+    } else if (MATCH("AudioPresets", "enableaudiodeskcfg")) {
         SET_BOOL(audio_desk_cfg_enabled);
-    } else if (MATCH("AudioProfiles", "audiodeskcfgpath")) {
+    } else if (MATCH("AudioPresets", "audiodeskcfgpath")) {
         SET_STR(audio_desk_cfg);
-    } else if (MATCH("AudioProfiles", "audiodeskcfgpathoptions")) {
+    } else if (MATCH("AudioPresets", "audiodeskcfgpathoptions")) {
         SET_STR(audio_desk_cfg_options);
-    } else if (MATCH("AudioProfiles", "audiodeskcfgpatharguments")) {
+    } else if (MATCH("AudioPresets", "audiodeskcfgpatharguments")) {
         SET_STR(audio_desk_cfg_arguments);
     }
     // Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
@@ -670,76 +736,108 @@ void set_taskbar_visibility(BOOL show) {
 }
 
 // --- Action Functions ---
+static void build_cm_cmd(char* cmd, size_t cmd_size, const char* app,
+                          const char* app_opts, const char* app_args,
+                          const char* profile_opts, const char* profile_args,
+                          const char* profile, const char* player_num) {
+    char opts[MAX_CMD_LEN], args[MAX_CMD_LEN];
+    const char* use_opts = strlen(profile_opts) > 0 ? profile_opts : app_opts;
+    const char* use_args = strlen(profile_args) > 0 ? profile_args : app_args;
+    string_replace(opts, sizeof(opts), use_opts, "${P#}", player_num);
+    string_replace(args, sizeof(args), use_args, "${P#}", player_num);
+    snprintf(cmd, cmd_size, "\"%s\" %s \"%s\" %s", app, opts, profile, args);
+}
+
 void action_run_controller_mapper(int is_exit) {
-    char* app = is_exit ? G_CONFIG.desk_profile : G_CONFIG.controller_mapper_app;
-    char* p1 = is_exit ? G_CONFIG.desk_profile : G_CONFIG.player1_profile;
-    char* p2 = is_exit ? G_CONFIG.desk_profile : G_CONFIG.player2_profile;
-    
-    if (strlen(app) == 0 || strlen(p1) == 0) {
-        show_message("  - Controller Mapper or P1 Profile not configured/found.");
-        return;
-    }
-    
-    // Check if files exist
-    DWORD attribs = GetFileAttributesA(app);
-    if (attribs == INVALID_FILE_ATTRIBUTES) {
-        show_message("  - Controller Mapper executable not found.");
-        return;
-    }
-    
-    attribs = GetFileAttributesA(p1);
-    if (attribs == INVALID_FILE_ATTRIBUTES) {
-        show_message("  - Player 1 profile not found.");
-        return;
-    }
-
     char cmd[MAX_CMD_LEN];
+    const char* profile1;
+    const char* profile2;
+    PROCESS_INFORMATION pi;
     
-    // Check which mapper we're using
-    char* mapper_name = strrchr(app, '\\');
-    if (!mapper_name) mapper_name = strrchr(app, '/');
-    if (!mapper_name) mapper_name = app;
-    else mapper_name++;
-    
-    if (strstr(mapper_name, "antimicro") != NULL) {
-        snprintf(cmd, sizeof(cmd), "\"%s\" %s --tray --hidden --profile \"%s\" %s",
-                 app, 
-                 G_CONFIG.controller_mapper_options,
-                 p1,
-                 G_CONFIG.controller_mapper_arguments);
-        if (strlen(p2) > 0) {
-            char p2_cmd[MAX_CMD_LEN];
-            snprintf(p2_cmd, sizeof(p2_cmd), " --next --profile-controller 2 --profile \"%s\"", p2);
-            strncat(cmd, p2_cmd, sizeof(cmd) - strlen(cmd) - 1);
+    if (is_exit) {
+        action_kill_controller_mapper();
+        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.desk_profile) == 0) {
+            show_message("  - Controller Mapper or Desk Profile not configured/found.");
+            return;
         }
-    } else if (strstr(mapper_name, "joyxoff") != NULL || 
-               strstr(mapper_name, "joy2key") != NULL || 
-               strstr(mapper_name, "keysticks") != NULL) {
-        snprintf(cmd, sizeof(cmd), "\"%s\" -load \"%s\" %s %s",
-                 app, p1, 
-                 G_CONFIG.controller_mapper_options,
-                 G_CONFIG.controller_mapper_arguments);
+        DWORD attribs = GetFileAttributesA(G_CONFIG.controller_mapper_app);
+        if (attribs == INVALID_FILE_ATTRIBUTES) {
+            show_message("  - Controller Mapper executable not found.");
+            return;
+        }
+        attribs = GetFileAttributesA(G_CONFIG.desk_profile);
+        if (attribs == INVALID_FILE_ATTRIBUTES) {
+            show_message("  - Desk profile not found.");
+            return;
+        }
+        profile1 = G_CONFIG.desk_profile;
+        profile2 = G_CONFIG.desk_profile;
     } else {
-        snprintf(cmd, sizeof(cmd), "\"%s\" %s %s",
-                 app,
-                 G_CONFIG.controller_mapper_options,
-                 G_CONFIG.controller_mapper_arguments);
+        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.player1_profile) == 0) {
+            show_message("  - Controller Mapper or P1 Profile not configured/found.");
+            return;
+        }
+        DWORD attribs = GetFileAttributesA(G_CONFIG.controller_mapper_app);
+        if (attribs == INVALID_FILE_ATTRIBUTES) {
+            show_message("  - Controller Mapper executable not found.");
+            return;
+        }
+        attribs = GetFileAttributesA(G_CONFIG.player1_profile);
+        if (attribs == INVALID_FILE_ATTRIBUTES) {
+            show_message("  - Player 1 profile not found.");
+            return;
+        }
+        profile1 = G_CONFIG.player1_profile;
+        profile2 = strlen(G_CONFIG.player2_profile) > 0 ? G_CONFIG.player2_profile : NULL;
     }
 
-    PROCESS_INFORMATION pi;
-    if (run_process(cmd, NULL, FALSE, &pi)) {
-        add_tracked_process("controller_mapper", &pi);
+    if (is_exit) {
+        // Exit: use desk profile options/arguments for both players
+        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
+                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
+                     G_CONFIG.desk_profile_options, G_CONFIG.desk_profile_arguments,
+                     profile1, "1");
+        if (run_process(cmd, NULL, FALSE, &pi)) {
+            add_tracked_process("controller_mapper", &pi);
+        }
+        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
+                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
+                     G_CONFIG.desk_profile_options, G_CONFIG.desk_profile_arguments,
+                     profile2, "2");
+        if (run_process(cmd, NULL, FALSE, &pi)) {
+            add_tracked_process("controller_mapper", &pi);
+        }
+    } else {
+        // Launch: use per-player profile options/arguments
+        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
+                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
+                     G_CONFIG.player1_profile_options, G_CONFIG.player1_profile_arguments,
+                     profile1, "1");
+        if (run_process(cmd, NULL, FALSE, &pi)) {
+            add_tracked_process("controller_mapper", &pi);
+        }
+        if (profile2) {
+            build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
+                         G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
+                         G_CONFIG.player2_profile_options, G_CONFIG.player2_profile_arguments,
+                         profile2, "2");
+            if (run_process(cmd, NULL, FALSE, &pi)) {
+                add_tracked_process("controller_mapper", &pi);
+            }
+        }
     }
 }
 
 void action_kill_controller_mapper() {
-    TrackedProcess* tp = find_tracked_process("controller_mapper");
-    if (tp) {
+    // Kill all tracked controller mapper processes (there may be multiple from P1/P2)
+    TrackedProcess* tp;
+    while ((tp = find_tracked_process("controller_mapper")) != NULL) {
         terminate_process_tree(tp->pi.dwProcessId);
         CloseHandle(tp->pi.hProcess);
         CloseHandle(tp->pi.hThread);
         remove_tracked_process("controller_mapper");
-    } else if (strlen(G_CONFIG.controller_mapper_app) > 0) {
+    }
+    if (strlen(G_CONFIG.controller_mapper_app) > 0) {
         // Fallback: kill by name
         char* name = strrchr(G_CONFIG.controller_mapper_app, '\\');
         if (!name) name = strrchr(G_CONFIG.controller_mapper_app, '/');
@@ -760,12 +858,18 @@ void action_run_monitor_config_game() {
     attribs = GetFileAttributesA(G_CONFIG.monitor_game_config);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
 
+    const char* use_opts = strlen(G_CONFIG.monitor_game_config_options) > 0
+                             ? G_CONFIG.monitor_game_config_options
+                             : G_CONFIG.monitorapp_options;
+    const char* use_args = strlen(G_CONFIG.monitor_game_config_arguments) > 0
+                             ? G_CONFIG.monitor_game_config_arguments
+                             : G_CONFIG.monitorapp_arguments;
     char cmd[MAX_CMD_LEN];
-    snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
+    snprintf(cmd, sizeof(cmd), "\"%s\" %s \"%s\" %s",
              G_CONFIG.monitorapp,
-             G_CONFIG.monitorapp_options,
+             use_opts,
              G_CONFIG.monitor_game_config,
-             G_CONFIG.monitorapp_arguments);
+             use_args);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);
@@ -782,12 +886,18 @@ void action_run_monitor_config_desktop() {
     attribs = GetFileAttributesA(G_CONFIG.monitor_desk_config);
     if (attribs == INVALID_FILE_ATTRIBUTES) return;
 
+    const char* use_opts = strlen(G_CONFIG.monitor_desk_config_options) > 0
+                             ? G_CONFIG.monitor_desk_config_options
+                             : G_CONFIG.monitorapp_options;
+    const char* use_args = strlen(G_CONFIG.monitor_desk_config_arguments) > 0
+                             ? G_CONFIG.monitor_desk_config_arguments
+                             : G_CONFIG.monitorapp_arguments;
     char cmd[MAX_CMD_LEN];
-    snprintf(cmd, sizeof(cmd), "\"%s\" %s /load \"%s\" %s",
+    snprintf(cmd, sizeof(cmd), "\"%s\" %s \"%s\" %s",
              G_CONFIG.monitorapp,
-             G_CONFIG.monitorapp_options,
+             use_opts,
              G_CONFIG.monitor_desk_config,
-             G_CONFIG.monitorapp_arguments);
+             use_args);
     
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, TRUE, &pi);
@@ -1044,6 +1154,50 @@ void action_unmount_iso() {
     run_process(cmd, NULL, TRUE, &pi);
 }
 
+void action_run_audio_game() {
+    if (strlen(G_CONFIG.audio_app_path) == 0 || strlen(G_CONFIG.audio_game_cfg) == 0) {
+        return;
+    }
+    DWORD attribs = GetFileAttributesA(G_CONFIG.audio_app_path);
+    if (attribs == INVALID_FILE_ATTRIBUTES) return;
+    attribs = GetFileAttributesA(G_CONFIG.audio_game_cfg);
+    if (attribs == INVALID_FILE_ATTRIBUTES) return;
+
+    char cmd[MAX_CMD_LEN];
+    snprintf(cmd, sizeof(cmd), "\"%s\" %s %s\"%s\"%s %s",
+             G_CONFIG.audio_app_path,
+             G_CONFIG.audio_app_options,
+             G_CONFIG.audio_game_cfg_options,
+             G_CONFIG.audio_game_cfg,
+             G_CONFIG.audio_game_cfg_arguments,
+             G_CONFIG.audio_app_arguments);
+
+    PROCESS_INFORMATION pi;
+    run_process(cmd, NULL, G_CONFIG.audio_app_run_wait, &pi);
+}
+
+void action_run_audio_desktop() {
+    if (strlen(G_CONFIG.audio_app_path) == 0 || strlen(G_CONFIG.audio_desk_cfg) == 0) {
+        return;
+    }
+    DWORD attribs = GetFileAttributesA(G_CONFIG.audio_app_path);
+    if (attribs == INVALID_FILE_ATTRIBUTES) return;
+    attribs = GetFileAttributesA(G_CONFIG.audio_desk_cfg);
+    if (attribs == INVALID_FILE_ATTRIBUTES) return;
+
+    char cmd[MAX_CMD_LEN];
+    snprintf(cmd, sizeof(cmd), "\"%s\" %s %s\"%s\"%s %s",
+             G_CONFIG.audio_app_path,
+             G_CONFIG.audio_app_options,
+             G_CONFIG.audio_desk_cfg_options,
+             G_CONFIG.audio_desk_cfg,
+             G_CONFIG.audio_desk_cfg_arguments,
+             G_CONFIG.audio_app_arguments);
+
+    PROCESS_INFORMATION pi;
+    run_process(cmd, NULL, G_CONFIG.audio_app_run_wait, &pi);
+}
+
 // --- Sequence Execution ---
 void execute_action(const char* action, int is_exit_sequence) {
     show_message(action);
@@ -1059,11 +1213,7 @@ void execute_action(const char* action, int is_exit_sequence) {
     } else if (strcmp(action, "Kill-List") == 0) {
         action_kill_process_list();
     } else if (strcmp(action, "Controller-Mapper") == 0) {
-        if (is_exit_sequence) {
-            action_kill_controller_mapper();
-        } else {
-            action_run_controller_mapper(0);
-        }
+        action_run_controller_mapper(is_exit_sequence);
     } else if (strcmp(action, "Monitor-Config") == 0) {
         if (is_exit_sequence) {
             action_run_monitor_config_desktop();
@@ -1086,6 +1236,10 @@ void execute_action(const char* action, int is_exit_sequence) {
         if (!is_exit_sequence) action_mount_disc_with_app();
     } else if (strcmp(action, "Unmount-disc") == 0) {
         if (is_exit_sequence) action_unmount_disc_with_app();
+    } else if (strcmp(action, "RunAudio") == 0) {
+        if (!is_exit_sequence) action_run_audio_game();
+    } else if (strcmp(action, "ReturnAudio") == 0) {
+        if (is_exit_sequence) action_run_audio_desktop();
     } else if (strcmp(action, "Pre1") == 0) {
         action_run_generic_app(G_CONFIG.pre_launch_app_1, G_CONFIG.pre_launch_app_1_wait, 
                               G_CONFIG.pre_launch_app_1_options, G_CONFIG.pre_launch_app_1_arguments);

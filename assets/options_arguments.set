@@ -1,67 +1,88 @@
+[multimonitortool]
+options =" /loadconfig "
+arguments = " >NUL 2&>1"
+
+[MONITOR_DESK_CFG]
+options = " /loadconfig "\"${monitordeskcfg}\""
+arguments = " >NUL 2&>1"
+
+[MONITOR_GAME_CFG]
+options = " /loadconfig "\"${monitorgamecfg}\""
+arguments = " >NUL 2&>1"
+
 [antimicrox]
-options = --tray --hidden --profile-controller 1 --profile
-arguments = --next --profile-controller 2 --profile
+options = " --tray --hidden --profile-controller ${P#} --profile "
+arguments = " >NUL 2&>1"
+
+[Player1_Profile]
+options = " --tray --hidden --profile-controller 1 --profile \"${player1profile}\""
+arguments = " >NUL 2&>1"
+
+[Player2_Profile]
+options = " --tray --hidden --profile-controller 2 --profile \"${player2profile}\""
+arguments = " >NUL 2&>1"
+
+[Player${P#}_Profile]
+options = " --tray --hidden --profile-controller ${P#} --profile \"${player${P#}profile}\""
+arguments = " >NUL 2&>1"
+
+[DESK_PROFILE]
+options = " --tray --hidden --profile-controller ${P#} --profile \"${deskprofile}\""
+arguments = " >NUL 2&>1"
 
 [border_stripper]
-options = 
-arguments = 
-
-[NATIVE]
-options = /loadconfig 
-arguments = 
+options = " "
+arguments = ""
 
 [borderlessgaming]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [displaychanger]
-options = -configure=
-arguments = 
+options = " -configure="
+arguments = ""
 
 [ds4windows]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [ds4windowscmd]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [fullscreenizer]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [keysticks]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [ludusavi]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
-[monitorapp]
-options = /loadconfig
-arguments = 
 
 [opencloudsave]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [rclone]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [setsounddevice]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [soundvolumeview]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [swre]
-options = 
-arguments = 
+options = " "
+arguments = ""
 
 [syncthing]
-options = 
-arguments = 
+options = " "
+arguments = ""

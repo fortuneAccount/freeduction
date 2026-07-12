@@ -9,7 +9,7 @@ from .cloud_backup_plugin import RcloneBackupPlugin, LudusaviBackupPlugin
 
 __all__ = [
     'AntiMicroXPlugin',
-    'BorderlessGamingPlugin', 
+    'BorderlessGamingPlugin', {}
     'MultiMonitorToolPlugin',
     'RcloneBackupPlugin',
     'LudusaviBackupPlugin'

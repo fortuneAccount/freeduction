@@ -327,9 +327,9 @@ class EditorTab(QWidget):
             "Path to the ReBorder configuration file",
             "Options for the ReBorder configuration file",
             "Arguments for the ReBorder configuration file",
-            "Config file path for Monitor Gaming profile",
-            "Options passed to the Monitor Gaming profile",
-            "Arguments passed to the Monitor Gaming profile",
+            "Config file path for Monitor Game profile",
+            "Options passed to the Monitor Game profile",
+            "Arguments passed to the Monitor Game profile",
             "Config file path for Monitor Desktop profile",
             "Options passed to the Monitor Desktop profile",
             "Arguments passed to the Monitor Desktop profile",
@@ -722,8 +722,8 @@ class EditorTab(QWidget):
             constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH,
             constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
             constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS,
-            constants.EditorCols.MONITOR_GAME_PROFILE, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS,
-            constants.EditorCols.MONITOR_DESK_PROFILE, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS,
+            constants.EditorCols.MONITOR_GAME_CFG, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS,
+            constants.EditorCols.MONITOR_DESK_CFG, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS,
             constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
             constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
             constants.EditorCols.DESK_PROFILE, constants.EditorCols.DESK_PROFILE_OPTIONS, constants.EditorCols.DESK_PROFILE_ARGUMENTS,
@@ -1077,8 +1077,8 @@ class EditorTab(QWidget):
             'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "", 'player1_profile_enabled': config.defaults.get('p1_profile_path_enabled', True), 'player1_profile_overwrite': config.overwrite_states.get('p1_profile_path', True),
             'player2_profile': config.p2_profile_path if config.defaults.get('p2_profile_path_enabled', True) else "", 'player2_profile_enabled': config.defaults.get('p2_profile_path_enabled', True), 'player2_profile_overwrite': config.overwrite_states.get('p2_profile_path', True),
             'desk_profile': config.desk_profile_path if config.defaults.get('desk_profile_path_enabled', True) else "", 'desk_profile_enabled': config.defaults.get('desk_profile_path_enabled', True), 'desk_profile_overwrite': config.overwrite_states.get('desk_profile_path', True),
-            'monitor_game_profile': config.monitor_gaming_path if config.defaults.get('monitor_gaming_path_enabled', False) else "", 'monitor_game_profile_enabled': config.defaults.get('monitor_gaming_path_enabled', False), 'monitor_game_profile_overwrite': config.overwrite_states.get('monitor_gaming_path', True),
-            'monitor_desk_profile': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "", 'monitor_desk_profile_enabled': config.defaults.get('monitor_desk_path_enabled', False), 'monitor_desk_profile_overwrite': config.overwrite_states.get('monitor_desk_path', True),
+            'monitor_game_cfg': config.monitor_game_path if config.defaults.get('monitor_game_path_enabled', False) else "", 'monitor_game_cfg_enabled': config.defaults.get('monitor_game_path_enabled', False), 'monitor_game_cfg_overwrite': config.overwrite_states.get('monitor_game_path', True),
+            'monitor_desk_cfg': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "", 'monitor_desk_cfg_enabled': config.defaults.get('monitor_desk_path_enabled', False), 'monitor_desk_cfg_overwrite': config.overwrite_states.get('monitor_desk_path', True),
 
             # Launcher Executable
             'launcher_executable': (config.launcher_executable if config.launcher_executable else constants.LAUNCHER_EXECUTABLE) if config.defaults.get('launcher_executable_enabled', True) else "", 'launcher_executable_enabled': config.defaults.get('launcher_executable_enabled', True), 'launcher_executable_overwrite': config.overwrite_states.get('launcher_executable', True),
@@ -1180,8 +1180,8 @@ class EditorTab(QWidget):
             constants.EditorCols.CM_PATH.value, constants.EditorCols.BW_PATH.value,
             constants.EditorCols.UNBORDER_CFG.value, constants.EditorCols.UNBORDER_CFG_OPTIONS.value, constants.EditorCols.UNBORDER_CFG_ARGUMENTS.value,
             constants.EditorCols.REBORDER_CFG.value, constants.EditorCols.REBORDER_CFG_OPTIONS.value, constants.EditorCols.REBORDER_CFG_ARGUMENTS.value,
-            constants.EditorCols.MONITOR_GAME_PROFILE.value, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS.value, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS.value,
-            constants.EditorCols.MONITOR_DESK_PROFILE.value, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS.value, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS.value,
+            constants.EditorCols.MONITOR_GAME_CFG.value, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS.value, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS.value,
+            constants.EditorCols.MONITOR_DESK_CFG.value, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS.value, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS.value,
             constants.EditorCols.PLAYER1_PROFILE.value, constants.EditorCols.PLAYER1_PROFILE_OPTIONS.value, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS.value,
             constants.EditorCols.PLAYER2_PROFILE.value, constants.EditorCols.PLAYER2_PROFILE_OPTIONS.value, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS.value,
             constants.EditorCols.DESK_PROFILE.value, constants.EditorCols.DESK_PROFILE_OPTIONS.value, constants.EditorCols.DESK_PROFILE_ARGUMENTS.value,
@@ -1376,8 +1376,8 @@ class EditorTab(QWidget):
             constants.EditorCols.PRE1_PATH, constants.EditorCols.PRE2_PATH, constants.EditorCols.PRE3_PATH,
             constants.EditorCols.POST1_PATH, constants.EditorCols.POST2_PATH, constants.EditorCols.POST3_PATH,
             constants.EditorCols.LAUNCHER_EXE,
-            constants.EditorCols.MONITOR_GAME_PROFILE, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS,
-            constants.EditorCols.MONITOR_DESK_PROFILE, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS,
+            constants.EditorCols.MONITOR_GAME_CFG, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS,
+            constants.EditorCols.MONITOR_DESK_CFG, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS,
             constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
             constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
             constants.EditorCols.DESK_PROFILE, constants.EditorCols.DESK_PROFILE_OPTIONS, constants.EditorCols.DESK_PROFILE_ARGUMENTS,
@@ -2295,8 +2295,8 @@ class EditorTab(QWidget):
         groups.append((constants.EditorCols.DM_UNMOUNT_CFG, [constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.UNBORDER_CFG, [constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.REBORDER_CFG, [constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.MONITOR_GAME_PROFILE, [constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS]))
-        groups.append((constants.EditorCols.MONITOR_DESK_PROFILE, [constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS]))
+        groups.append((constants.EditorCols.MONITOR_GAME_CFG, [constants.EditorCols.MONITOR_GAME_CFG_OPTIONS, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS]))
+        groups.append((constants.EditorCols.MONITOR_DESK_CFG, [constants.EditorCols.MONITOR_DESK_CFG_OPTIONS, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS]))
         groups.append((constants.EditorCols.PLAYER1_PROFILE, [constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS]))
         groups.append((constants.EditorCols.PLAYER2_PROFILE, [constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS]))
         groups.append((constants.EditorCols.DESK_PROFILE, [constants.EditorCols.DESK_PROFILE_OPTIONS, constants.EditorCols.DESK_PROFILE_ARGUMENTS]))
@@ -2454,16 +2454,16 @@ class EditorTab(QWidget):
             game['monitorapp_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.MONITORAPP_RUN_WAIT.value:
             game['monitorapp_run_wait'] = self._get_checkbox_value(row, col)
-        elif col == constants.EditorCols.MONITOR_GAME_PROFILE.value:
+        elif col == constants.EditorCols.MONITOR_GAME_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
-            game['monitor_game_profile_enabled'] = en
-            game['monitor_game_profile'] = path
-            game['monitor_game_profile_overwrite'] = ov
-        elif col == constants.EditorCols.MONITOR_DESK_PROFILE.value:
+            game['monitor_game_cfg_enabled'] = en
+            game['monitor_game_cfg'] = path
+            game['monitor_game_cfg_overwrite'] = ov
+        elif col == constants.EditorCols.MONITOR_DESK_CFG.value:
             en, path, ov = self._get_merged_path_data(row, col)
-            game['monitor_desk_profile_enabled'] = en
-            game['monitor_desk_profile'] = path
-            game['monitor_desk_profile_overwrite'] = ov
+            game['monitor_desk_cfg_enabled'] = en
+            game['monitor_desk_cfg'] = path
+            game['monitor_desk_cfg_overwrite'] = ov
         elif col == constants.EditorCols.PLAYER1_PROFILE.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['player1_profile_enabled'] = en
@@ -2483,14 +2483,14 @@ class EditorTab(QWidget):
             game['desk_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.DESK_PROFILE_ARGUMENTS.value:
             game['desk_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS.value:
-            game['monitor_game_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS.value:
-            game['monitor_game_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS.value:
-            game['monitor_desk_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
-        elif col == constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS.value:
-            game['monitor_desk_profile_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MONITOR_GAME_CFG_OPTIONS.value:
+            game['monitor_game_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS.value:
+            game['monitor_game_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MONITOR_DESK_CFG_OPTIONS.value:
+            game['monitor_desk_cfg_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
+        elif col == constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS.value:
+            game['monitor_desk_cfg_arguments'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PLAYER1_PROFILE_OPTIONS.value:
             game['player1_profile_options'] = self.table.item(row, col).text()  # type: ignore[union-attr]
         elif col == constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS.value:
@@ -2690,8 +2690,8 @@ class EditorTab(QWidget):
             constants.EditorCols.CM_PATH, constants.EditorCols.BW_PATH,
             constants.EditorCols.UNBORDER_CFG, constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS,
             constants.EditorCols.REBORDER_CFG, constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS,
-            constants.EditorCols.MONITOR_GAME_PROFILE, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS,
-            constants.EditorCols.MONITOR_DESK_PROFILE, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS,
+            constants.EditorCols.MONITOR_GAME_CFG, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS,
+            constants.EditorCols.MONITOR_DESK_CFG, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS,
             constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
             constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS,
             constants.EditorCols.DESK_PROFILE, constants.EditorCols.DESK_PROFILE_OPTIONS, constants.EditorCols.DESK_PROFILE_ARGUMENTS,
@@ -2910,8 +2910,8 @@ class EditorTab(QWidget):
             ('player1_profile', 'player1_profile_enabled'),
             ('player2_profile', 'player2_profile_enabled'),
             ('desk_profile', 'desk_profile_enabled'),
-            ('monitor_game_profile', 'monitor_game_profile_enabled'),
-            ('monitor_desk_profile', 'monitor_desk_profile_enabled'),
+            ('monitor_game_cfg', 'monitor_game_cfg_enabled'),
+            ('monitor_desk_cfg', 'monitor_desk_cfg_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
@@ -3069,15 +3069,15 @@ class EditorTab(QWidget):
         self.table.setCellWidget(row_num, constants.EditorCols.MONITORAPP_RUN_WAIT.value, self._create_checkbox_widget(game.get('monitorapp_run_wait', monitor_run_wait), row_num, constants.EditorCols.MONITORAPP_RUN_WAIT.value))
 
         # Profiles with propagation symbols
-        monitor_game_profile = get_path_display('monitor_game_profile', 'monitor_gaming_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.MONITOR_GAME_PROFILE.value, self._create_merged_path_widget(game.get('monitor_game_profile_enabled', True), monitor_game_profile, game.get('monitor_game_profile_overwrite', True), row_num, constants.EditorCols.MONITOR_GAME_PROFILE.value))
-        self.table.setItem(row_num, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('monitor_game_profile_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('monitor_game_profile_arguments', '')))
+        monitor_game_cfg = get_path_display('monitor_game_cfg', 'monitor_game_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.MONITOR_GAME_CFG.value, self._create_merged_path_widget(game.get('monitor_game_cfg_enabled', True), monitor_game_cfg, game.get('monitor_game_cfg_overwrite', True), row_num, constants.EditorCols.MONITOR_GAME_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS.value, QTableWidgetItem(game.get('monitor_game_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('monitor_game_cfg_arguments', '')))
         
-        monitor_desk_profile = get_path_display('monitor_desk_profile', 'monitor_desk_path')
-        self.table.setCellWidget(row_num, constants.EditorCols.MONITOR_DESK_PROFILE.value, self._create_merged_path_widget(game.get('monitor_desk_profile_enabled', True), monitor_desk_profile, game.get('monitor_desk_profile_overwrite', True), row_num, constants.EditorCols.MONITOR_DESK_PROFILE.value))
-        self.table.setItem(row_num, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS.value, QTableWidgetItem(game.get('monitor_desk_profile_options', '')))
-        self.table.setItem(row_num, constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS.value, QTableWidgetItem(game.get('monitor_desk_profile_arguments', '')))
+        monitor_desk_cfg = get_path_display('monitor_desk_cfg', 'monitor_desk_path')
+        self.table.setCellWidget(row_num, constants.EditorCols.MONITOR_DESK_CFG.value, self._create_merged_path_widget(game.get('monitor_desk_cfg_enabled', True), monitor_desk_cfg, game.get('monitor_desk_cfg_overwrite', True), row_num, constants.EditorCols.MONITOR_DESK_CFG.value))
+        self.table.setItem(row_num, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS.value, QTableWidgetItem(game.get('monitor_desk_cfg_options', '')))
+        self.table.setItem(row_num, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS.value, QTableWidgetItem(game.get('monitor_desk_cfg_arguments', '')))
         
         player1_profile = get_path_display('player1_profile', 'p1_profile_path')
         self.table.setCellWidget(row_num, constants.EditorCols.PLAYER1_PROFILE.value, self._create_merged_path_widget(game.get('player1_profile_enabled', True), player1_profile, game.get('player1_profile_overwrite', True), row_num, constants.EditorCols.PLAYER1_PROFILE.value))
@@ -3336,10 +3336,10 @@ class EditorTab(QWidget):
             ('Monitor-Config', 'monitorapp_path', [
                 constants.EditorCols.MONITORAPP_PATH, constants.EditorCols.MONITORAPP_OPTIONS,
                 constants.EditorCols.MONITORAPP_ARGUMENTS, constants.EditorCols.MONITORAPP_RUN_WAIT,
-                constants.EditorCols.MONITOR_GAME_PROFILE, constants.EditorCols.MONITOR_GAME_PROFILE_OPTIONS,
-                constants.EditorCols.MONITOR_GAME_PROFILE_ARGUMENTS,
-                constants.EditorCols.MONITOR_DESK_PROFILE, constants.EditorCols.MONITOR_DESK_PROFILE_OPTIONS,
-                constants.EditorCols.MONITOR_DESK_PROFILE_ARGUMENTS,
+                constants.EditorCols.MONITOR_GAME_CFG, constants.EditorCols.MONITOR_GAME_CFG_OPTIONS,
+                constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS,
+                constants.EditorCols.MONITOR_DESK_CFG, constants.EditorCols.MONITOR_DESK_CFG_OPTIONS,
+                constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS,
                 constants.EditorCols.PLAYER1_PROFILE, constants.EditorCols.PLAYER1_PROFILE_OPTIONS,
                 constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS,
                 constants.EditorCols.PLAYER2_PROFILE, constants.EditorCols.PLAYER2_PROFILE_OPTIONS,
@@ -3446,8 +3446,8 @@ class EditorTab(QWidget):
             ('player1_profile', 'player1_profile_enabled'),
             ('player2_profile', 'player2_profile_enabled'),
             ('desk_profile', 'desk_profile_enabled'),
-            ('monitor_game_profile', 'monitor_game_profile_enabled'),
-            ('monitor_desk_profile', 'monitor_desk_profile_enabled'),
+            ('monitor_game_cfg', 'monitor_game_cfg_enabled'),
+            ('monitor_desk_cfg', 'monitor_desk_cfg_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),
@@ -3725,16 +3725,26 @@ class EditorTab(QWidget):
         # [mapperprofiles] (with [Paths] fallback)
         game_data['player1_profile'] = config.get('mapperprofiles', 'player1profile', fallback=get_path('Paths', 'Player1Profile', 'Player1Profile'))
         game_data['player1_profile_enabled'] = bool(game_data['player1_profile'])
+        game_data['player1_profile_options'] = config.get('mapperprofiles', 'player1profileoptions', fallback='')
+        game_data['player1_profile_arguments'] = config.get('mapperprofiles', 'player1profilearguments', fallback='')
         game_data['player2_profile'] = config.get('mapperprofiles', 'player2profile', fallback=get_path('Paths', 'Player2Profile', 'Player2Profile'))
         game_data['player2_profile_enabled'] = bool(game_data['player2_profile'])
+        game_data['player2_profile_options'] = config.get('mapperprofiles', 'player2profileoptions', fallback='')
+        game_data['player2_profile_arguments'] = config.get('mapperprofiles', 'player2profilearguments', fallback='')
         game_data['desk_profile'] = config.get('mapperprofiles', 'deskprofile', fallback=get_path('Paths', 'DeskProfile', 'DeskProfile'))
         game_data['desk_profile_enabled'] = bool(game_data['desk_profile'])
+        game_data['desk_profile_options'] = config.get('mapperprofiles', 'deskprofileoptions', fallback='')
+        game_data['desk_profile_arguments'] = config.get('mapperprofiles', 'deskprofilearguments', fallback='')
         
-        # [monitorprofiles] (with [Paths] fallback)
-        game_data['monitor_game_profile'] = config.get('monitorprofiles', 'monitorgamingcfg', fallback=get_path('Paths', 'MonitorGamingConfig', 'MonitorGamingConfig'))
-        game_data['monitor_game_profile_enabled'] = bool(game_data['monitor_game_profile'])
-        game_data['monitor_desk_profile'] = config.get('monitorprofiles', 'monitordeskcfg', fallback=get_path('Paths', 'MonitorDesktopConfig', 'MonitorDesktopConfig'))
-        game_data['monitor_desk_profile_enabled'] = bool(game_data['monitor_desk_profile'])
+        # [MonitorLayouts] (with [Paths] fallback)
+        game_data['monitor_game_cfg'] = config.get('MonitorLayouts', 'monitorgamecfg', fallback=get_path('Paths', 'MonitorGameConfig', 'MonitorGameConfig'))
+        game_data['monitor_game_cfg_enabled'] = bool(game_data['monitor_game_cfg'])
+        game_data['monitor_game_cfg_options'] = config.get('MonitorLayouts', 'monitorgamecfgoptions', fallback='')
+        game_data['monitor_game_cfg_arguments'] = config.get('MonitorLayouts', 'monitorgamecfgarguments', fallback='')
+        game_data['monitor_desk_cfg'] = config.get('MonitorLayouts', 'monitordeskcfg', fallback=get_path('Paths', 'MonitorDesktopConfig', 'MonitorDesktopConfig'))
+        game_data['monitor_desk_cfg_enabled'] = bool(game_data['monitor_desk_cfg'])
+        game_data['monitor_desk_cfg_options'] = config.get('MonitorLayouts', 'monitordeskcfgoptions', fallback='')
+        game_data['monitor_desk_cfg_arguments'] = config.get('MonitorLayouts', 'monitordeskcfgarguments', fallback='')
         
         # [Monitor] (with [Paths] fallback)
         game_data['monitorapp_path'] = config.get('Monitor', 'monitorapppath', fallback=get_path('Paths', 'MonitorApp', 'MonitorApp'))
