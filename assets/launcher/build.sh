@@ -1,6 +1,8 @@
 #!/bin/sh
 set -eu
 
+cd "$(dirname "$0")"
+
 MODE="auto"
 
 if [ "${1:-}" = "--linux" ]; then

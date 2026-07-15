@@ -156,12 +156,14 @@ def check_gh_cli():
         return False, "not installed"
 
 
-DEFAULT_INI = "deploy_ui.ini"
-README_SET = Path("README.set")
-SITE_SET = Path("site") / "index.set"
-_OUT_README = Path("README.md")
-_OUT_INDEX = Path("site") / "index.html"
-_REPOS_SET = Path("assets") / "repos.set"
+_APPROOT = get_approot()
+
+DEFAULT_INI = _APPROOT / "deploy_ui.ini"
+README_SET = _APPROOT / "README.set"
+SITE_SET = _APPROOT / "site" / "index.set"
+_OUT_README = _APPROOT / "README.md"
+_OUT_INDEX = _APPROOT / "site" / "index.html"
+_REPOS_SET = _APPROOT / "assets" / "repos.set"
 
 
 _REPR_PATTERN = re.compile(r"<[A-Za-z0-9_.]+ object at 0x[0-9a-fA-F]+>")

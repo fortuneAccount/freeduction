@@ -145,7 +145,7 @@ class ConfigManager(QObject):
             "launchers_dir": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
-            "desk_profile_path": FalseTrue
+            "desk_profile_path": True,
         }
 
         # Set default deployment tab options

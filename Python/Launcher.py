@@ -67,6 +67,8 @@ class GameLauncher:
         # Initialize variables
         if getattr(sys, 'frozen', False):
             self.home = os.path.dirname(sys.executable)
+            if os.path.basename(self.home).lower() == 'bin':
+                self.home = os.path.dirname(self.home)
             # Attach to parent console to allow --help to print to stdout
             if platform.system() == 'Windows':
                 try:

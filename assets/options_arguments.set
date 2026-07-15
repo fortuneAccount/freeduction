@@ -1,34 +1,34 @@
 [multimonitortool]
-options =" /loadconfig "
-arguments = " >NUL 2&>1"
+options = " /loadconfig "
+arguments = ""
 
 [MONITOR_DESK_CFG]
-options = " /loadconfig "\"${monitordeskcfg}\""
-arguments = " >NUL 2&>1"
+options =" /loadconfig "
+arguments = "\"${monitorgamecfg}\""
 
 [MONITOR_GAME_CFG]
-options = " /loadconfig "\"${monitorgamecfg}\""
-arguments = " >NUL 2&>1"
+options = " /loadconfig "
+arguments = "\"${monitorgamecfg}\""
 
 [antimicrox]
 options = " --tray --hidden --profile-controller ${P#} --profile "
-arguments = " >NUL 2&>1"
+arguments = ""
 
 [Player1_Profile]
-options = " --tray --hidden --profile-controller 1 --profile \"${player1profile}\""
-arguments = " >NUL 2&>1"
+options = " --tray --hidden --profile-controller 1 --profile "
+arguments = "\"${player1profile}\"
 
 [Player2_Profile]
-options = " --tray --hidden --profile-controller 2 --profile \"${player2profile}\""
-arguments = " >NUL 2&>1"
+options = " --tray --hidden --profile-controller 2 --profile "
+arguments =  "\"${player2profile}\" 
 
 [Player${P#}_Profile]
-options = " --tray --hidden --profile-controller ${P#} --profile \"${player${P#}profile}\""
-arguments = " >NUL 2&>1"
+options = " --tray --hidden --profile-controller ${P#} --profile "
+arguments = "\"${player${P#}profile}\""
 
 [DESK_PROFILE]
-options = " --tray --hidden --profile-controller ${P#} --profile \"${deskprofile}\""
-arguments = " >NUL 2&>1"
+options = " --tray --hidden --profile-controller ${P#} --profile "
+arguments = "\"${deskprofile}\""
 
 [border_stripper]
 options = " "

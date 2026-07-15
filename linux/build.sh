@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
+cd "$(dirname "$0")"
+
 ENV_NAME="app-build"
 
 export PATH="$HOME/.pyenv/bin:$PATH"

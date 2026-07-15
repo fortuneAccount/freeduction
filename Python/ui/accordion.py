@@ -51,9 +51,6 @@ class AccordionSection(QWidget):
         # Breaks Fusion's optimisation that skips redrawing overlapping child
         # boundaries.
         self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
-        # Ensures that layout margin recalculations force a global window
-        # redraw step.
-        self.setAttribute(Qt.WidgetAttribute.WA_LayoutOnResize, True)
 
         self.toggle_button = QToolButton(text=title, checkable=True, checked=start_expanded)
         self.toggle_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextOnly)
@@ -72,7 +69,6 @@ class AccordionSection(QWidget):
         self._stack = QStackedWidget()
         self._stack.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, True)
         self._stack.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, False)
-        self._stack.setAttribute(Qt.WidgetAttribute.WA_LayoutOnResize, True)
 
         self._blank_page = _BlankPage()
         self._stack.addWidget(self._blank_page)   # index 0

@@ -887,7 +887,7 @@ class CreationController:
             # Create sections
             if save_locations or config_locations:
                 config.add_section('SYSTEM')
-         &       config.add_section('SAVE')
+                config.add_section('SAVE')
                 config.add_section('CONFIG')
             
             # Process each platform
