@@ -13,7 +13,6 @@ __pycache__/
 .venv/
 # Local configuration and logs
 *.ini
-*_*.py
 *.cfg
 *.config
 *.conf
@@ -50,8 +49,11 @@ Launchers/
 # Bin Includes
 /bin/
 !bin/Launcher.sh
-!bin/multimonitortool/*
-!bin/changescreenresolution/*
+!bin/multimonitortool/MultiMonitorTool.exe
+!bin/multimonitortool/MultiMonitorTool.chm
+!bin/multimonitortool/MultiMonitorTool.exe
+!bin/multimonitortool/readme.txt
+!bin/changescreenresolution/ChangeScreenResolution.exe
 !bin/Launcher.bat
 !bin/Launcher.exe
 !bin/Launcher.c.exe

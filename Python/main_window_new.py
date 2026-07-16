@@ -176,8 +176,6 @@ class MainWindow(QMainWindow):
             # Highlight unpopulated items in deployment tab with red color
             self.deployment_tab.highlight_unpopulated_items(self)
 
-        # Force all accordion layouts to resynchronise when tabs switch,
-        # so Fusion cannot carry stale paint-cache state across pages.
         self.tabs.currentChanged.connect(self._on_tab_switched)
 
         # Apply Qlementine-specific UI enhancements (nav bar, popover QSS).
@@ -188,28 +186,9 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage("Ready")
 
     def _on_tab_switched(self, index):
-        """Strict raster flush when the active tab changes.
-
-        Qt tells widgets they are unhidden on tab switch, but Fusion's
-        backing store often fails to clear the buffer before painting
-        them again.  This sequence forces a complete discard of cached
-        geometry, a style-metrics re-read, and a full window repaint."""
         widget = self.tabs.widget(index)
-        if widget is None:
-            return
-
-        # 1. Force the layout engine to completely discard cached geometry.
-        widget.hide()
-
-        # 2. Tell the style engine to re-read system style metrics.
-        widget.ensurePolished()
-
-        # 3. Show again -- forces an absolute window update mask creation.
-        widget.show()
-
-        # 4. Trigger a low-level repaint on the global window viewport.
-        if widget.window():
-            widget.window().repaint()
+        if widget is not None:
+            widget.ensurePolished()
 
     def apply_ui_capabilities(self) -> None:
         """Apply (or remove) Qlementine-specific UI enhancements based on the

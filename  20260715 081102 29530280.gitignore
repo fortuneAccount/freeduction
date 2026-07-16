@@ -1,0 +1,62 @@
+.gitignore
+# Build artifacts
+build/
+dist/
+*.spec
+
+# Archives
+portable.7z
+
+# Python cache
+__pycache__/
+*.py[cod]
+.venv/
+# Local configuration and logs
+*.ini
+*.cfg
+*.config
+*.conf
+*.xml
+*.yaml
+*.log
+*.amgp
+*.json
+*.code-workspace
+!steam.json
+
+# Index and cache files
+*.old
+steam_filtered.txt
+*.cache
+*.index
+*.bak
+*.obj
+index_backups/
+cache/
+# IDE specific
+.agent.md
+.devcontainer/
+.vscode/
+.idea/
+.kiro/
+.kilo/
+.copilot/
+
+# Running App Files
+Profiles/
+Launchers/
+
+# Bin Includes
+/bin/
+!bin/Launcher.sh
+!bin/multimonitortool/*
+!bin/changescreenresolution/*
+!bin/Launcher.bat
+!bin/Launcher.exe
+!bin/Launcher.c.exe
+!bin/Launcher.py.exe
+!bin/Shortcut.exe
+!bin/Shortcut.exe
+!bin/7z.exe
+/assets/launcher/launcher.exe
+/bin/antimicrox

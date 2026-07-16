@@ -1,3 +1,4 @@
+
 import configparser
 import os
 from pathlib import Path
@@ -997,10 +998,39 @@ class CreationController:
             if game_profile_dir:
                 full_path = Path(game_profile_dir) / os.path.basename(resolved_path)
                 # Ensure Windows-style backslashes
-                return str(os.path.abspath(full_path)).replace('/', '\\')
+                return str(os.path.abspath(full_path)).replace('/', '\\\\')
             return os.path.basename(resolved_path)
         
         # CEN (Centralized)
+        return resolved_path
+
+    def _get_cfg_path(self, cfg_key, game_data, game_profile_dir=None):
+        """Resolve MON *.cfg paths for Game.ini.
+
+        Mirrors _get_profile_path behavior:
+        - CEN (<): returns transformed absolute path.
+        - LC (>): returns resolved path anchored in the game_profile_dir.
+        """
+        # Map cfg_key to config_key used by deployment_path_modes
+        config_key_map = {
+            'monitor_game_cfg': 'monitor_game_path',
+            'monitor_desk_cfg': 'monitor_desk_path',
+        }
+        config_key = config_key_map.get(cfg_key, cfg_key)
+
+        path_with_mode = game_data.get(cfg_key, "")
+        original_path, mode = self._resolve_mode(path_with_mode, config_key)
+        if not original_path:
+            return ""
+
+        resolved_path = self._transform_path(original_path, game_data)
+
+        if mode == '>':
+            if game_profile_dir:
+                full_path = Path(game_profile_dir) / os.path.basename(resolved_path)
+                return str(os.path.abspath(full_path)).replace('/', '\\\\')
+            return os.path.basename(resolved_path)
+
         return resolved_path
 
     def _get_app_path_for_ini(self, key, game_data, target_dir):
@@ -1038,6 +1068,7 @@ class CreationController:
         else:
             # CEN mode
             return self._transform_path(clean_path, game_data)
+
 
     def _propagate_apps(self, game_data, target_dir):
         """

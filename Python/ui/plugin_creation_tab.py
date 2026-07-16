@@ -5,7 +5,6 @@ from PyQt6.QtWidgets import (
     QScrollArea, QMessageBox, QApplication
 )
 from PyQt6.QtCore import Qt, pyqtSignal
-from Python.ui.accordion import AccordionSection
 from Python import constants
 import os
 import sys
