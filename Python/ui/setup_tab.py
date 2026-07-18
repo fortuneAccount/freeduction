@@ -11,7 +11,8 @@ from PyQt6.QtWidgets import (
     QComboBox, QHBoxLayout, QCheckBox, QTabWidget, QSizePolicy,
     QFileDialog, QApplication, QSpinBox, QMessageBox, QMenu, QInputDialog,
     QDialog, QDialogButtonBox, QLineEdit, QProgressDialog, QGridLayout, QDoubleSpinBox,
-    QStyle, QFontComboBox, QStackedWidget, QScrollArea, QFrame  
+    QStyle, QFontComboBox, QStackedWidget, QScrollArea, QFrame, QRadioButton,
+    QButtonGroup
 )
 import re
 from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
@@ -21,6 +22,9 @@ from Python.ui.widgets import DragDropListWidget, PathConfigRow
 from Python.ui.accordion import AccordionSection
 from Python.ui.theme_manager import ThemeManager
 from Python.ui.display_wizard import DisplayWizard
+from Python.ui.config_preset_manager import (
+    ConfigPresetManager, LOCAL_PRESET_MARKER, DEFAULT_CONFIG_JSON,
+)
 from Python import constants
     
 class DownloadThread(QThread):
@@ -268,7 +272,7 @@ class SetupTab(QWidget):
         self._setup_ui()
 
     def _add_path_row(self, layout, label_text, config_key, row_widget):
-        formatted_text = f"{label_text}"
+        formatted_text = f"`^ {label_text}"
         label = QLabel(formatted_text)
         label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         label.setToolTip("Right-click to configure Options & Arguments")
@@ -282,108 +286,103 @@ class SetupTab(QWidget):
         main_layout = QVBoxLayout(self)
         main_layout.setContentsMargins(5, 5, 0, 5)
 
-        # --- Section 1: Sources & Indexing ---
+        # --- Section 1: Sources & Indexing (5-col × 3-row grid) ---
         source_config_widget = QWidget()
         source_config_layout = QGridLayout(source_config_widget)
         source_config_layout.setSpacing(10)
-        
-        # --- Sources Group (Top-Left) ---
-        sources_group_widget = QWidget()
-        sources_layout = QVBoxLayout(sources_group_widget)
-        sources_layout.setContentsMargins(0, 0, 0, 0)
 
+        # Row stretch: 12% header / 76% content / 12% footer
+        source_config_layout.setRowStretch(0, 12)
+        source_config_layout.setRowStretch(1, 76)
+        source_config_layout.setRowStretch(2, 12)
+
+        # Column stretch: A=3, B=3, C=1, D=2, E=2
+        source_config_layout.setColumnStretch(0, 3)
+        source_config_layout.setColumnStretch(1, 3)
+        source_config_layout.setColumnStretch(2, 1)
+        source_config_layout.setColumnStretch(3, 2)
+        source_config_layout.setColumnStretch(4, 2)
+
+        # ── a1 (row 0, col 0): Source Directories header ──
         source_label = QLabel("<b>Source Directories</b>")
         source_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        source_config_layout.addWidget(source_label, 0, 0)
 
-        source_buttons_widget = QWidget()
-        source_buttons_layout = QHBoxLayout(source_buttons_widget)
-        source_buttons_layout.setContentsMargins(0, 0, 0, 0)
-        add_source_button = QPushButton("+")
+        # ── b1 (row 0, col 1): Add/Remove buttons for Source Dirs ──
+        source_btn_widget = QWidget()
+        source_btn_layout = QHBoxLayout(source_btn_widget)
+        source_btn_layout.setContentsMargins(0, 0, 0, 0)
+        add_source_button = QPushButton()
         add_source_button.setToolTip("Add a directory to scan for games.")
         add_source_button.setFixedWidth(30)
         add_source_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
-        remove_source_button = QPushButton("-")
+        remove_source_button = QPushButton()
         remove_source_button.setToolTip("Remove the selected directory from scanning.")
         remove_source_button.setFixedWidth(30)
         remove_source_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton))
-        source_buttons_layout.addWidget(add_source_button)
-        source_buttons_layout.addWidget(remove_source_button)
-        source_buttons_layout.addStretch()
-
-        self.source_dirs_list = DragDropListWidget()
-        self.source_dirs_list.setMinimumHeight(40)
-        self.source_dirs_list.setMaximumHeight(200)
-
-        sources_layout.addWidget(source_label)
-        sources_layout.addWidget(source_buttons_widget)
-        sources_layout.addWidget(self.source_dirs_list)
+        source_btn_layout.addWidget(add_source_button)
+        source_btn_layout.addWidget(remove_source_button)
+        source_btn_layout.addStretch()
+        source_config_layout.addWidget(source_btn_widget, 0, 1, Qt.AlignmentFlag.AlignTop)
 
         self.add_source_dir_button = add_source_button
         self.remove_source_dir_button = remove_source_button
 
-        # --- Excluded Group (Bottom-Right) ---
-        excluded_group_widget = QWidget()
-        excluded_layout = QVBoxLayout(excluded_group_widget)
-        excluded_layout.setContentsMargins(0, 0, 0, 0)
+        # ── a2 (row 1, col 0): Source Directories listbox ──
+        self.source_dirs_list = DragDropListWidget()
+        source_config_layout.addWidget(self.source_dirs_list, 1, 0, Qt.AlignmentFlag.AlignTop)
 
-        excluded_label = QLabel("<b>Excluded Directories</b>")
+        # ── b2 (row 1, col 1): Exclude Directories header + listbox ──
+        excluded_col_widget = QWidget()
+        excluded_col_layout = QVBoxLayout(excluded_col_widget)
+        excluded_col_layout.setContentsMargins(0, 0, 0, 0)
+        excluded_col_layout.setSpacing(2)
+        excluded_col_layout.addStretch(4)  # push header 40% down
+        excluded_label = QLabel("<b>Exclude Directories</b>")
         excluded_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        excluded_col_layout.addWidget(excluded_label)
+        excluded_col_layout.addStretch(6)  # remaining 60% gap above listbox
+        self.excluded_dirs_list = DragDropListWidget()
+        excluded_col_layout.addWidget(self.excluded_dirs_list, 1)
+        source_config_layout.addWidget(excluded_col_widget, 1, 1, Qt.AlignmentFlag.AlignTop)
 
-        excluded_buttons_widget = QWidget()
-        excluded_buttons_layout = QHBoxLayout(excluded_buttons_widget)
-        excluded_buttons_layout.setContentsMargins(0, 1, 0, 1)
-        add_excluded_button = QPushButton("+")
+        # ── c2 (row 1, col 2): Add/Remove buttons for Excluded Dirs ──
+        excluded_btn_widget = QWidget()
+        excluded_btn_layout = QVBoxLayout(excluded_btn_widget)
+        excluded_btn_layout.setContentsMargins(0, 0, 0, 0)
+        add_excluded_button = QPushButton()
         add_excluded_button.setToolTip("Add a directory to exclude from scanning.")
         add_excluded_button.setFixedWidth(30)
         add_excluded_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_FileDialogNewFolder))
-        remove_excluded_button = QPushButton("-")
+        remove_excluded_button = QPushButton()
         remove_excluded_button.setToolTip("Remove the selected directory from exclusion.")
         remove_excluded_button.setFixedWidth(30)
         remove_excluded_button.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogDiscardButton))
-        excluded_buttons_layout.addStretch()
-        excluded_buttons_layout.addWidget(add_excluded_button)
-        excluded_buttons_layout.addWidget(remove_excluded_button)
-
-        self.excluded_dirs_list = DragDropListWidget()
-        self.excluded_dirs_list.setMaximumHeight(70)
-
-        excluded_layout.addWidget(excluded_label)
-        excluded_layout.addWidget(excluded_buttons_widget)
-        excluded_layout.addWidget(self.excluded_dirs_list)
+        excluded_btn_layout.addWidget(add_excluded_button)
+        excluded_btn_layout.addWidget(remove_excluded_button)
+        excluded_btn_layout.addStretch()
+        source_config_layout.addWidget(excluded_btn_widget, 1, 2, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
 
         self.add_excluded_dir_button = add_excluded_button
         self.remove_excluded_dir_button = remove_excluded_button
 
-        # --- Add groups to main grid layout ---
-        source_config_layout.addWidget(sources_group_widget, 0, 0, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        source_config_layout.addWidget(excluded_group_widget, 0, 1, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignRight)
+        # ── d1 (row 0, col 3): Config-file-history combobox ──
+        # (preset_combo created in _setup_config_presets_ui, placed here later)
 
-        # Game managers
+        # ── e1 (row 0, col 4): Config-file icon buttons ──
+        # (preset_load/save/remove/browse_btn created in _setup_config_presets_ui, placed here later)
+
+        # ── a3 (row 2, col 0): Exclude Manager checkbox ──
+        self.exclude_manager_checkbox = QCheckBox("Exclude Selected Manager's Games")
+        source_config_layout.addWidget(self.exclude_manager_checkbox, 2, 0, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft)
+
+        # ── b3 (row 2, col 1): Game Managers dropdown ──
         self.other_managers_combo = QComboBox()
         self.other_managers_combo.addItems(["None", "Steam", "Epic", "GOG", "Origin", "Ubisoft Connect", "Battle.net", "Xbox"])
-        self.exclude_manager_checkbox = QCheckBox("Exclude Selected Manager's Games")
-        game_managers_layout = QHBoxLayout()
-        game_managers_layout.addWidget(self.other_managers_combo)
-        game_managers_layout.addWidget(self.exclude_manager_checkbox)
-        game_managers_layout.addStretch(1)
-        
-        source_config_layout.addWidget(QLabel("Game Managers Present"), 2, 0)
-        source_config_layout.addLayout(game_managers_layout, 2, 1)
-        
-        # Set column stretch to allow lists to expand
-        source_config_layout.setColumnStretch(0, 1)
-        source_config_layout.setColumnStretch(1, 1)
+        source_config_layout.addWidget(self.other_managers_combo, 2, 1, Qt.AlignmentFlag.AlignBottom)
 
-        # Directories Group (moved from Core tab)
-        directories_group = QGroupBox("Directories")
-        directories_layout = QFormLayout(directories_group)
-        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
-        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"]) # No options/args for dirs
-        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
-        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"]) # No options/args for dirs
-        source_config_layout.addWidget(directories_group, 3, 0, 1, 2)
+        # Store reference for _setup_config_presets_ui to place combo + buttons
+        self._sources_grid = source_config_layout
 
         source_config_section = AccordionSection("SOURCES AND INDEXING", source_config_widget, start_expanded=True)
 
@@ -748,6 +747,21 @@ class SetupTab(QWidget):
         scripts_tab_layout.addStretch()
         self.paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
 
+        # ── Tab 10: DIRECTORIES ────────────────────────────────────────
+        directories_tab = QWidget()
+        directories_tab_layout = QVBoxLayout(directories_tab)
+        directories_group = QGroupBox("Directories")
+        directories_layout = QFormLayout(directories_group)
+        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
+        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"])
+        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
+        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"])
+        directories_tab_layout.addWidget(directories_group)
+        directories_tab_layout.addStretch()
+        self.paths_tabs.addTab(directories_tab, "DIRECTORIES")
+
         paths_section = AccordionSection("PATHS AND PROFILES", paths_widget, max_height=400)
 
         # --- Section 3: Execution Sequence ---
@@ -871,15 +885,23 @@ class SetupTab(QWidget):
 
         appearance_section = AccordionSection("APPEARANCE", appearance_widget)
 
+        # --- Section 6: Configuration Presets (rows within BEHAVIOR) ---
+        # The preset control widgets are built here and later injected into the
+        # BEHAVIOR section's form layout (see _setup_config_presets_ui).
+        self._setup_config_presets_ui(behavior_layout)
+
         main_layout.addWidget(source_config_section)
         main_layout.addWidget(paths_section, 1)
         main_layout.addWidget(sequences_section)
         main_layout.addWidget(behavior_section)
         main_layout.addWidget(appearance_section)
         self._connect_signals()
-        
+
         # Populate Launcher Executable Combobox
         self._populate_launcher_combo()
+
+        # Build the preset manager + populate the presets combobox
+        self._init_config_preset_manager()
 
     def _populate_launcher_combo(self):
         """Populate the launcher executable combobox with valid files from bin."""
@@ -938,6 +960,336 @@ class SetupTab(QWidget):
         # Set placeholder text for the combo's line edit
         if combo.lineEdit():
             combo.lineEdit().setPlaceholderText(default_launcher)
+
+    # ──────────────────────────────────────────────────────────────────
+    # Configuration Presets section
+    # ──────────────────────────────────────────────────────────────────
+    def _setup_config_presets_ui(self, behavior_layout: QFormLayout):
+        """Build the Configuration Presets UI.
+
+        The current-config combobox is placed in cell d1 (row 0, col 3) and
+        the action buttons in cell e1 (row 0, col 4) of the SOURCES AND
+        INDEXING grid.  The Ovr/Add radios, Index button and search-roots
+        field (plus a header) are added as rows to the BEHAVIOR form layout.
+        """
+        # ── d1 (row 0, col 3): Config-file-history combobox ──
+        self.preset_combo = QComboBox()
+        self.preset_combo.setEditable(True)
+        self.preset_combo.setToolTip("Currently loaded configuration file (or the LOCAL default preset)")
+        self.preset_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        if hasattr(self, "_sources_grid"):
+            self._sources_grid.addWidget(self.preset_combo, 0, 3, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+
+        # ── e1 (row 0, col 4): Config-file action buttons ──
+        preset_btn_widget = QWidget()
+        preset_btn_layout = QHBoxLayout(preset_btn_widget)
+        preset_btn_layout.setContentsMargins(0, 0, 0, 0)
+        preset_btn_layout.setSpacing(4)
+
+        # <Ld  - Load a json file's settings (adopting the current ${approot})
+        self.preset_load_btn = QPushButton()
+        self.preset_load_btn.setFixedWidth(36)
+        self.preset_load_btn.setToolTip("Load a json file's settings (adopting the current ${approot}).")
+        self.preset_load_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogOpenButton))
+        self.preset_load_btn.clicked.connect(self._on_preset_load)
+        preset_btn_layout.addWidget(self.preset_load_btn)
+
+        # As>  - Create a config using the current settings
+        self.preset_save_btn = QPushButton()
+        self.preset_save_btn.setFixedWidth(36)
+        self.preset_save_btn.setToolTip("Create a config using the current settings.")
+        self.preset_save_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DialogSaveButton))
+        self.preset_save_btn.clicked.connect(self._on_preset_save)
+        preset_btn_layout.addWidget(self.preset_save_btn)
+
+        # -x  - Remove the visible path from history (right-click resets history)
+        self.preset_remove_btn = QPushButton()
+        self.preset_remove_btn.setFixedWidth(36)
+        self.preset_remove_btn.setToolTip("Remove the file path currently visible in the combobox from the history.")
+        self.preset_remove_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_TrashIcon))
+        self.preset_remove_btn.clicked.connect(self._on_preset_remove)
+        self.preset_remove_menu = QMenu(self.preset_remove_btn)
+        self.preset_remove_menu.addAction(
+            "Reset history", self._on_preset_reset_history
+        )
+        self.preset_remove_btn.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.preset_remove_btn.customContextMenuRequested.connect(
+            lambda pos: self.preset_remove_menu.exec(self.preset_remove_btn.mapToGlobal(pos))
+        )
+        preset_btn_layout.addWidget(self.preset_remove_btn)
+
+        # ...  - Set the location/name of the current settings to load on startup
+        self.preset_browse_btn = QPushButton()
+        self.preset_browse_btn.setFixedWidth(36)
+        self.preset_browse_btn.setToolTip(
+            "Set the location and name for the current settings to load upon startup "
+            f"(defaults to {constants.APP_ROOT_DIR}/{DEFAULT_CONFIG_JSON})."
+        )
+        self.preset_browse_btn.setIcon(self.style().standardIcon(QStyle.StandardPixmap.SP_DirOpenIcon))
+        self.preset_browse_btn.clicked.connect(self._on_preset_browse)
+        preset_btn_layout.addWidget(self.preset_browse_btn)
+
+        if hasattr(self, "_sources_grid"):
+            self._sources_grid.addWidget(preset_btn_widget, 0, 4, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+
+        # ── BEHAVIOR section rows: radios + Index button + search roots ──
+        header = QLabel("<b>Configuration Presets</b>")
+        header.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        behavior_layout.addRow(header)
+
+        # Row 2: Ovr / Add radio pair + Index button + search roots
+        mid_row = QWidget()
+        mid_layout = QHBoxLayout(mid_row)
+        mid_layout.setContentsMargins(0, 0, 0, 0)
+        mid_layout.setSpacing(6)
+
+        self.preset_mode_group = QButtonGroup(self)
+        self.preset_overwrite_rb = QRadioButton("Ovr")
+        self.preset_overwrite_rb.setToolTip("Overwrite current values with those in the selected json-config file.")
+        self.preset_overwrite_rb.setChecked(True)
+        self.preset_append_rb = QRadioButton("Add")
+        self.preset_append_rb.setToolTip("Append values found in the selected json-config file.")
+        self.preset_mode_group.addButton(self.preset_overwrite_rb)
+        self.preset_mode_group.addButton(self.preset_append_rb)
+        mid_layout.addWidget(self.preset_overwrite_rb)
+        mid_layout.addWidget(self.preset_append_rb)
+
+        mid_layout.addSpacing(10)
+
+        # I  - Index the specified directories for json-config files
+        self.preset_index_btn = QPushButton("I")
+        self.preset_index_btn.setFixedWidth(30)
+        self.preset_index_btn.setToolTip("Index the specified directories for json-config files.")
+        self.preset_index_btn.clicked.connect(self._on_preset_index)
+        mid_layout.addWidget(self.preset_index_btn)
+
+        self.preset_search_roots_edit = QLineEdit()
+        self.preset_search_roots_edit.setPlaceholderText(
+            "Pipe-delimited search paths (e.g. C:/Games|K:/Profiles); "
+            f"{constants.APP_ROOT_DIR} and each path's parent are always included."
+        )
+        self.preset_search_roots_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        mid_layout.addWidget(self.preset_search_roots_edit, 1)
+
+        behavior_layout.addRow(mid_row)
+
+    def _init_config_preset_manager(self):
+        """Create the preset manager and populate the presets combobox."""
+        self.config_preset_manager = ConfigPresetManager(
+            self.main_window.config, self.main_window.config_manager.config_file
+        )
+
+        # Ensure app_directory is recorded in config.json.
+        raw = self._read_config_json()
+        if raw.get("app_directory") != self.config_preset_manager.app_directory:
+            raw["app_directory"] = self.config_preset_manager.app_directory
+            self._write_config_json(raw)
+
+        self._populate_preset_combo()
+        # Select the currently active settings path (or LOCAL if none).
+        current = self.config_preset_manager.current_settings_path()
+        idx = self.preset_combo.findData(current)
+        if idx >= 0:
+            self.preset_combo.setCurrentIndex(idx)
+        else:
+            idx = self.preset_combo.findText(os.path.normpath(current), Qt.MatchFlag.MatchExactly)
+            if idx >= 0:
+                self.preset_combo.setCurrentIndex(idx)
+            else:
+                # Fall back to the LOCAL preset (default element).
+                local_idx = self.preset_combo.findData(LOCAL_PRESET_MARKER)
+                if local_idx >= 0:
+                    self.preset_combo.setCurrentIndex(local_idx)
+
+    def _read_config_json(self) -> dict:
+        import json as _json
+        try:
+            with open(self.main_window.config_manager.config_file, "r", encoding="utf-8") as f:
+                return _json.load(f)
+        except Exception:
+            return {}
+
+    def _write_config_json(self, data: dict):
+        import json as _json
+        try:
+            with open(self.main_window.config_manager.config_file, "w", encoding="utf-8") as f:
+                _json.dump(data, f, indent=4)
+        except Exception as e:
+            logging.error(f"Failed to write config.json: {e}")
+
+    def _populate_preset_combo(self):
+        """Populate the preset combobox with LOCAL, history files and asset presets."""
+        self.preset_combo.blockSignals(True)
+        self.preset_combo.clear()
+
+        # LOCAL preset (default element, edit field shows its windows path).
+        python_root = os.path.join(self.config_preset_manager.app_directory, "Python")
+        self.preset_combo.addItem(f"LOCAL  ({python_root})", LOCAL_PRESET_MARKER)
+
+        # Recorded history + asset presets (de-duplicated).
+        recorded = list(self.config_preset_manager.get_history())
+        asset_presets = self.config_preset_manager.list_asset_presets()
+        all_paths = recorded + [p for p in asset_presets if os.path.normpath(p) not in
+                                {os.path.normpath(r) for r in recorded}]
+        for path in all_paths:
+            self.preset_combo.addItem(os.path.normpath(path), path)
+
+        self.preset_combo.blockSignals(False)
+
+    def _current_preset_selection(self):
+        """Return (display_text, data) for the current combobox selection."""
+        idx = self.preset_combo.currentIndex()
+        if idx < 0:
+            return "", None
+        return self.preset_combo.currentText(), self.preset_combo.itemData(idx)
+
+    def _on_preset_combo_edited(self, text: str):
+        """When the user types a path directly, record it as current_settings."""
+        if not hasattr(self, 'config_preset_manager'):
+            return
+        idx = self.preset_combo.currentIndex()
+        if idx >= 0 and self.preset_combo.itemData(idx) == LOCAL_PRESET_MARKER:
+            return
+        path = text.strip()
+        if path and os.path.isfile(path):
+            self.main_window.config.current_settings = path
+            self.config_changed.emit()
+
+    def _on_preset_load(self):
+        """Load the selected json-config (or LOCAL preset) into the running config."""
+        text, data = self._current_preset_selection()
+        mode = "append" if self.preset_append_rb.isChecked() else "overwrite"
+
+        if data == LOCAL_PRESET_MARKER:
+            local = self.config_preset_manager.build_local_preset()
+            if mode == "append":
+                for k, v in local.items():
+                    cur = getattr(self.main_window.config, k, None)
+                    if cur in (None, "", [], {}):
+                        setattr(self.main_window.config, k, v)
+            else:
+                for k, v in local.items():
+                    setattr(self.main_window.config, k, v)
+            self.main_window.config.current_settings = os.path.join(
+                self.config_preset_manager.app_directory, "Python", DEFAULT_CONFIG_JSON
+            )
+            self.status_message("Loaded LOCAL default preset.")
+        else:
+            path = data or text
+            if not path or not os.path.isfile(path):
+                QMessageBox.warning(self, "Load Config", f"Config file not found:\n{path}")
+                return
+            try:
+                self.config_preset_manager.load_json_config(path, mode=mode)
+            except Exception as e:
+                QMessageBox.critical(self, "Load Config", f"Failed to load {path}:\n{e}")
+                return
+            # Adopt the current ${approot} for any app-relative paths.
+            self.config_preset_manager.set_current_settings(path)
+            self.status_message(f"Loaded settings from {path}.")
+
+        self.main_window.sync_ui_from_config()
+        self.config_changed.emit()
+        self._populate_preset_combo()
+
+    def _on_preset_save(self):
+        """Create a json-config file using the current settings."""
+        text, data = self._current_preset_selection()
+        # Determine the target path.
+        if data == LOCAL_PRESET_MARKER:
+            default_name = os.path.join(
+                self.config_preset_manager.app_directory, "Python", DEFAULT_CONFIG_JSON
+            )
+        else:
+            default_name = data or text or self.config_preset_manager.default_settings_path
+
+        path, _ = QFileDialog.getSaveFileName(
+            self, "Create Config Using Current Settings",
+            default_name, "JSON Config Files (*.json)"
+        )
+        if not path:
+            return
+        if not path.lower().endswith(".json"):
+            path += ".json"
+        try:
+            self.config_preset_manager.create_config_from_current(path)
+        except Exception as e:
+            QMessageBox.critical(self, "Create Config", f"Failed to write {path}:\n{e}")
+            return
+        self.config_preset_manager.set_current_settings(path)
+        self.status_message(f"Created config at {path}.")
+        self._populate_preset_combo()
+        # Select the newly created file.
+        idx = self.preset_combo.findData(path)
+        if idx >= 0:
+            self.preset_combo.setCurrentIndex(idx)
+
+    def _on_preset_remove(self):
+        """Remove the visible path from the history (LOCAL is never removed)."""
+        text, data = self._current_preset_selection()
+        if data == LOCAL_PRESET_MARKER:
+            self.status_message("The LOCAL preset cannot be removed from history.")
+            return
+        path = data or text
+        if not path:
+            return
+        self.config_preset_manager.remove_from_history(path)
+        self._populate_preset_combo()
+        self.status_message(f"Removed {path} from history.")
+
+    def _on_preset_reset_history(self):
+        """Reset (clear) the recorded config-file history."""
+        reply = QMessageBox.question(
+            self, "Reset History",
+            "Remove all recorded config files from the history? "
+            "The LOCAL preset will remain available.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        self.config_preset_manager.reset_history()
+        self._populate_preset_combo()
+        self.status_message("Config history reset.")
+
+    def _on_preset_browse(self):
+        """Choose the location/name of the current settings to load on startup."""
+        current = self.config_preset_manager.current_settings_path()
+        path, _ = QFileDialog.getOpenFileName(
+            self, "Select Current Settings File",
+            current, "JSON Config Files (*.json)"
+        )
+        if not path:
+            return
+        self.config_preset_manager.set_current_settings(path)
+        self._populate_preset_combo()
+        idx = self.preset_combo.findData(path)
+        if idx >= 0:
+            self.preset_combo.setCurrentIndex(idx)
+        self.status_message(f"Startup settings set to {path}.")
+
+    def _on_preset_index(self):
+        """Index the specified directories (and ${approot}) for json-config files."""
+        roots = self.config_preset_manager.resolve_search_roots(
+            self.preset_search_roots_edit.text()
+        )
+        found = self.config_preset_manager.index_json_configs(roots)
+        if not found:
+            self.status_message("No json-config files found in the search paths.")
+            return
+        for p in found:
+            self.config_preset_manager.add_to_history(p)
+        self._populate_preset_combo()
+        self.status_message(f"Indexed {len(found)} json-config file(s).")
+
+    def status_message(self, msg: str):
+        """Show a transient message in the main window status bar if available."""
+        mw = self.main_window
+        if hasattr(mw, "statusBar"):
+            try:
+                mw.statusBar().showMessage(msg, 4000)
+            except Exception:
+                pass
 
     def _show_options_args_dialog(self, pos, config_key, label_text):
         """Show a modal dialog to edit options and arguments for the selected app."""
@@ -1088,6 +1440,7 @@ class SetupTab(QWidget):
 
         # Appearance: theme selector
         self.theme_selector.currentIndexChanged.connect(self._on_theme_changed)
+        self.preset_combo.currentTextChanged.connect(self._on_preset_combo_edited)
         self.font_selector.currentFontChanged.connect(self._on_font_changed)
         self.font_size_spin.valueChanged.connect(self._on_font_size_changed)
         self.editor_font_selector.currentFontChanged.connect(self._on_editor_font_changed)
@@ -2306,6 +2659,19 @@ exit 1
         # Update initial state of sub-tab widgets
         self._update_cloud_backup_state()
 
+        # Configuration Presets: reflect the active settings path in the combobox.
+        if hasattr(self, 'config_preset_manager'):
+            self._populate_preset_combo()
+            current = self.config_preset_manager.current_settings_path()
+            idx = self.preset_combo.findData(current)
+            if idx >= 0:
+                self.preset_combo.setCurrentIndex(idx)
+            else:
+                # Fall back to the LOCAL preset (default element).
+                local_idx = self.preset_combo.findData(LOCAL_PRESET_MARKER)
+                if local_idx >= 0:
+                    self.preset_combo.setCurrentIndex(local_idx)
+
         # Auto-populate Monitor-Config Game/Desk paths from root .cfg files
         _root_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
         _auto_populate_pairs = [
@@ -2411,6 +2777,18 @@ exit 1
         # Save State Configuration
         config.savestate_backup_path = self.savestate_backup_path_row.path if cloud_enabled else ""
         config.savestate_auto_backup = self.savestate_auto_backup_cb.isChecked() if cloud_enabled else False
+
+        # Configuration Presets: persist the active settings path (LOCAL -> Python/config.json)
+        text, data = self._current_preset_selection()
+        if data == LOCAL_PRESET_MARKER:
+            config.current_settings = os.path.join(
+                self.config_preset_manager.app_directory, "Python", DEFAULT_CONFIG_JSON
+            )
+        elif data:
+            config.current_settings = data
+        elif text:
+            config.current_settings = text
+        config.app_directory = self.config_preset_manager.app_directory
 
     def _on_theme_changed(self, index: int):
         """Apply the selected theme immediately and persist it to config."""

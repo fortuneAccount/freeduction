@@ -11,9 +11,9 @@ cloudscraper
 pystray
 pillow
 
-#setuptools
-#qdarkstyle
-#screeninfo
-#PyQt6-Fluent-Widgets[full]
-#pyqtdarktheme
-#PyQt6-Qlementine
+setuptools
+qdarkstyle
+screeninfo
+PyQt6-Fluent-Widgets[full]
+pyqtdarktheme
+PyQt6-Qlementine

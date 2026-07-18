@@ -204,7 +204,7 @@ class DeploymentTab(QWidget):
         options_layout.addWidget(meta_group)
 
         # Overwrite checkboxes for all items in a grid
-        overwrite_group = QGroupBox("File Overwrite Options ▼")
+        overwrite_group = QGroupBox("`^ File Overwrite Options ▼")
         overwrite_group.setToolTip("Right-click for bulk options")
         overwrite_group.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         overwrite_group.customContextMenuRequested.connect(self.on_overwrite_options_context_menu)

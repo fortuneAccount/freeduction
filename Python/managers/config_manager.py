@@ -49,6 +49,10 @@ class ConfigManager(QObject):
             for key, value in config_data.items():
                 setattr(config, key, value)
 
+            # Always record the application root as app_directory.
+            if not getattr(config, 'app_directory', ''):
+                config.app_directory = constants.APP_ROOT_DIR
+
             self.status_updated.emit("Configuration loaded.", 3000)
             return config
         except Exception as e:
@@ -62,6 +66,23 @@ class ConfigManager(QObject):
         try:
             # Use a dictionary representation of the AppConfig model
             config_data = {key: getattr(config, key) for key in dir(config) if not key.startswith('__') and not callable(getattr(config, key))}
+
+            # Preserve the history section (config-file records) which is managed
+            # by the Configuration Presets UI and is not a model attribute.
+            try:
+                with open(self.config_file, 'r', encoding='utf-8') as f:
+                    existing = json.load(f)
+                if isinstance(existing, dict) and 'history' in existing:
+                    config_data['history'] = existing['history']
+                if isinstance(existing, dict) and 'app_directory' in existing and not config_data.get('app_directory'):
+                    config_data['app_directory'] = existing['app_directory']
+            except Exception:
+                pass
+
+            # Always record the application root as app_directory.
+            if not config_data.get('app_directory'):
+                config_data['app_directory'] = constants.APP_ROOT_DIR
+
             with open(self.config_file, 'w', encoding='utf-8') as f:
                 json.dump(config_data, f, indent=4)
             self.status_updated.emit("Configuration saved.", 3000)

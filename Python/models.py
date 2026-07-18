@@ -245,6 +245,7 @@ class AppConfig:
 
         # Other settings not directly on UI
         self.app_directory = ""
+        self.current_settings = ""
 
         # Default enabled states for various features
         self.defaults = {}
