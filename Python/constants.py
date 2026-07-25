@@ -26,6 +26,38 @@ STEAM_JSON_FILE = os.path.join(APP_ROOT_DIR, "steam.json")
 STEAM_FILTERED_TXT = "steam_filtered.txt"
 NORMALIZED_INDEX_CACHE = "normalized_steam_games.cache"
 
+# --- Options/Arguments Section Mapping ---
+# Maps section names in options_arguments.set to internal config attribute keys.
+SECTION_TO_CONFIG_KEY = {
+    'controllermapperoptions': 'controller_mapper_path',
+    'player1profileoptions': 'p1_profile_path',
+    'player2profileoptions': 'p2_profile_path',
+    'deskprofileoptions': 'desk_profile_path',
+    'monitorappoptions': 'monitorapp_path',
+    'monitorgamecfgoptions': 'monitor_game_path',
+    'monitordeskcfgoptions': 'monitor_desk_path',
+    'borderlessgamingoptions': 'borderless_gaming_path',
+    'unbordercfgoptions': 'unborder_cfg',
+    'rebordercfgoptions': 'reborder_cfg',
+    'discmountoptions': 'disc_mount_path',
+    'discmountcfgoptions': 'disc_mount_cfg',
+    'discunmountcfgoptions': 'disc_unmount_cfg',
+    'localbackupoptions': 'local_backup_path',
+    'cloudsyncoptions': 'cloud_sync_path',
+    'audiotooloptions': 'audio_tool_path',
+    'gameaudiooptions': 'audio_game_cfg',
+    'deskaudiooptions': 'audio_desk_cfg',
+    'pre1options': 'pre1_path',
+    'pre2options': 'pre2_path',
+    'pre3options': 'pre3_path',
+    'post1options': 'post1_path',
+    'post2options': 'post2_path',
+    'post3options': 'post3_path',
+    'justafterlaunchoptions': 'just_after_launch_path',
+    'justbeforeexitoptions': 'just_before_exit_path',
+    'launcherexecutableoptions': 'launcher_executable',
+}
+
 # --- Editor Column Indices ---
 class EditorCols(Enum):
     INCLUDE = 0

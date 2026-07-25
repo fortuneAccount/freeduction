@@ -1,88 +1,135 @@
-[multimonitortool]
-options = " /loadconfig "
-arguments = ""
+; ==============================================================================
+; Options & Arguments Defaults
+; ==============================================================================
+; Section names correspond to internal config variables.
+; Pipe-delimited values populate comboboxes in the right-click modal.
+; The parser also maps these to config_keys via SECTION_TO_CONFIG_KEY.
+; ==============================================================================
 
-[MONITOR_DESK_CFG]
-options =" /loadconfig "
-arguments = "\"${monitorgamecfg}\""
+; ── Controller Mapper ────────────────────────────────────────────────────────
 
-[MONITOR_GAME_CFG]
-options = " /loadconfig "
-arguments = "\"${monitorgamecfg}\""
+[controllermapperoptions]
+options = --tray --hidden
+arguments =
 
-[antimicrox]
-options = " --tray --hidden --profile-controller ${P#} --profile "
-arguments = ""
+; ── Profiles ─────────────────────────────────────────────────────────────────
 
-[Player1_Profile]
-options = " --tray --hidden --profile-controller 1 --profile "
-arguments = "\"${player1profile}\"
+[player1profileoptions]
+options = --tray --hidden --profile-controller 1 --profile
+arguments =
 
-[Player2_Profile]
-options = " --tray --hidden --profile-controller 2 --profile "
-arguments =  "\"${player2profile}\" 
+[player2profileoptions]
+options = --tray --hidden --profile-controller 2 --profile
+arguments =
 
-[Player${P#}_Profile]
-options = " --tray --hidden --profile-controller ${P#} --profile "
-arguments = "\"${player${P#}profile}\""
+[deskprofileoptions]
+options = --tray --hidden --profile-controller 0 --profile
+arguments =
 
-[DESK_PROFILE]
-options = " --tray --hidden --profile-controller ${P#} --profile "
-arguments = "\"${deskprofile}\""
+; ── Display ──────────────────────────────────────────────────────────────────
 
-[border_stripper]
-options = " "
-arguments = ""
+[monitorappoptions]
+options = /loadconfig
+arguments =
 
-[borderlessgaming]
-options = " "
-arguments = ""
+[monitorgamecfgoptions]
+options = /loadconfig
+arguments =
 
-[displaychanger]
-options = " -configure="
-arguments = ""
+[monitordeskcfgoptions]
+options = /loadconfig
+arguments =
 
-[ds4windows]
-options = " "
-arguments = ""
+; ── Windowing ────────────────────────────────────────────────────────────────
 
-[ds4windowscmd]
-options = " "
-arguments = ""
+[borderlessgamingoptions]
+options =
+arguments =
 
-[fullscreenizer]
-options = " "
-arguments = ""
+[unbordercfgoptions]
+options =
+arguments =
 
-[keysticks]
-options = " "
-arguments = ""
+[rebordercfgoptions]
+options =
+arguments =
 
-[ludusavi]
-options = " "
-arguments = ""
+; ── Disc-Mount ───────────────────────────────────────────────────────────────
 
+[discmountoptions]
+options =
+arguments =
 
-[opencloudsave]
-options = " "
-arguments = ""
+[discmountcfgoptions]
+options =
+arguments =
 
-[rclone]
-options = " "
-arguments = ""
+[discunmountcfgoptions]
+options =
+arguments =
 
-[setsounddevice]
-options = " "
-arguments = ""
+; ── Backup ───────────────────────────────────────────────────────────────────
 
-[soundvolumeview]
-options = " "
-arguments = ""
+[localbackupoptions]
+options =
+arguments =
 
-[swre]
-options = " "
-arguments = ""
+; ── Cloud Sync ───────────────────────────────────────────────────────────────
 
-[syncthing]
-options = " "
-arguments = ""
+[cloudsyncoptions]
+options =
+arguments =
+
+; ── Audio ────────────────────────────────────────────────────────────────────
+
+[audiotooloptions]
+options =
+arguments =
+
+[gameaudiooptions]
+options =
+arguments =
+
+[deskaudiooptions]
+options =
+arguments =
+
+; ── Pre/Post Launch ──────────────────────────────────────────────────────────
+
+[pre1options]
+options =
+arguments =
+
+[pre2options]
+options =
+arguments =
+
+[pre3options]
+options =
+arguments =
+
+[post1options]
+options =
+arguments =
+
+[post2options]
+options =
+arguments =
+
+[post3options]
+options =
+arguments =
+
+[justafterlaunchoptions]
+options =
+arguments =
+
+[justbeforeexitoptions]
+options =
+arguments =
+
+; ── Launcher ─────────────────────────────────────────────────────────────────
+
+[launcherexecutableoptions]
+options =
+arguments =

@@ -466,7 +466,11 @@ class ConfigManager(QObject):
             for section in parser.sections():
                 options = parser.get(section, 'options', fallback='')
                 arguments = parser.get(section, 'arguments', fallback='')
-                mapping[section.lower()] = (options, arguments)
+                key = section.lower()
+                mapping[key] = (options, arguments)
+                config_key = constants.SECTION_TO_CONFIG_KEY.get(key)
+                if config_key:
+                    mapping[config_key] = (options, arguments)
             
             logging.debug(f"Loaded options/arguments for {len(mapping)} tools")
         except Exception as e:
@@ -494,8 +498,8 @@ class ConfigManager(QObject):
             'p1_profile_path': ('p1_profile_path_options', 'p1_profile_path_arguments'),
             'p2_profile_path': ('p2_profile_path_options', 'p2_profile_path_arguments'),
             'desk_profile_path': ('desk_profile_path_options', 'desk_profile_path_arguments'),
-            'monitor_game_path': ('monitor_game_cfg_options', 'monitor_game_arguments'),
-            'monitor_desk_path': ('monitor_desk_cfg_options', 'monitor_desk_arguments'),
+            'monitor_game_path': ('monitor_game_cfg_options', 'monitor_game_cfg_arguments'),
+            'monitor_desk_path': ('monitor_desk_cfg_options', 'monitor_desk_cfg_arguments'),
         }
         
         if config_attr not in attr_mapping:
@@ -508,11 +512,14 @@ class ConfigManager(QObject):
         exe_no_ext = os.path.splitext(exe_name)[0]
         
         # Check if we have defaults for this tool
+        # Lookup order: exe basename, then exe without extension, then config_attr
         defaults = None
         if exe_name in options_args_map:
             defaults = options_args_map[exe_name]
         elif exe_no_ext in options_args_map:
             defaults = options_args_map[exe_no_ext]
+        elif config_attr in options_args_map:
+            defaults = options_args_map[config_attr]
         
         if defaults:
             options, arguments = defaults

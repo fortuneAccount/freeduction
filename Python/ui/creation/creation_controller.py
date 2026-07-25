@@ -1,4 +1,5 @@
 
+import base64
 import configparser
 import os
 from pathlib import Path
@@ -367,7 +368,10 @@ class CreationController:
         ps_cmd += "$s.Save()"
 
         try:
-            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-Command", ps_cmd], 
+            # Encode as UTF-16LE and Base64 for PowerShell -EncodedCommand to avoid
+            # Windows command-line encoding issues with non-ASCII characters.
+            ps_b64 = base64.b64encode(ps_cmd.encode("utf-16-le")).decode("ascii")
+            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", ps_b64], 
                            check=True, capture_output=True)
             return True
         except Exception as e:
@@ -639,18 +643,21 @@ class CreationController:
         # --- [mapperprofiles] Section ---
         config.add_section('mapperprofiles')
         
+        config.set('mapperprofiles', 'enableplayer1profile', str(game_data.get('player1_profile_enabled', True)))
         if game_data.get('player1_profile_enabled', True):
             val = self._get_profile_path('player1_profile', game_data, game_profile_dir)
             config.set('mapperprofiles', 'player1profile', val)
         else:
             config.set('mapperprofiles', 'player1profile', "")
         
+        config.set('mapperprofiles', 'enableplayer2profile', str(game_data.get('player2_profile_enabled', True)))
         if game_data.get('player2_profile_enabled', True):
             val = self._get_profile_path('player2_profile', game_data, game_profile_dir)
             config.set('mapperprofiles', 'player2profile', val)
         else:
             config.set('mapperprofiles', 'player2profile', "")
         
+        config.set('mapperprofiles', 'enabledeskprofile', str(game_data.get('desk_profile_enabled', True)))
         if game_data.get('desk_profile_enabled', True):
             val = self._get_profile_path('desk_profile', game_data, game_profile_dir)
             config.set('mapperprofiles', 'deskprofile', val)
@@ -667,22 +674,24 @@ class CreationController:
         # --- [MonitorLayouts] Section ---
         config.add_section('MonitorLayouts')
         
+        config.set('MonitorLayouts', 'enablemonitorgamecfg', str(game_data.get('monitor_game_cfg_enabled', True)))
         if game_data.get('monitor_game_cfg_enabled', True):
             val = self._get_cfg_path('monitor_game_cfg', game_data, game_profile_dir)
             config.set('MonitorLayouts', 'monitorgamecfg', val)
         else:
             config.set('MonitorLayouts', 'monitorgamecfg', "")
         
+        config.set('MonitorLayouts', 'enablemonitordeskcfg', str(game_data.get('monitor_desk_cfg_enabled', True)))
         if game_data.get('monitor_desk_cfg_enabled', True):
             val = self._get_cfg_path('monitor_desk_cfg', game_data, game_profile_dir)
             config.set('MonitorLayouts', 'monitordeskcfg', val)
         else:
             config.set('MonitorLayouts', 'monitordeskcfg', "")
         
-        config.set('MonitorLayouts', 'monitorgamecfgoptions', game_data.get('monitor_game_cfg_options', ''))
-        config.set('MonitorLayouts', 'monitorgamecfgarguments', game_data.get('monitor_game_cfg_arguments', ''))
-        config.set('MonitorLayouts', 'monitordeskcfgoptions', game_data.get('monitor_desk_cfg_options', ''))
-        config.set('MonitorLayouts', 'monitordeskcfgarguments', game_data.get('monitor_desk_cfg_arguments', ''))
+        config.set('MonitorLayouts', 'monitorgamecfgoptions', game_data.get('monitor_game_cfg_options', app_config.monitor_game_cfg_options))
+        config.set('MonitorLayouts', 'monitorgamecfgarguments', game_data.get('monitor_game_cfg_arguments', app_config.monitor_game_cfg_arguments))
+        config.set('MonitorLayouts', 'monitordeskcfgoptions', game_data.get('monitor_desk_cfg_options', app_config.monitor_desk_cfg_options))
+        config.set('MonitorLayouts', 'monitordeskcfgarguments', game_data.get('monitor_desk_cfg_arguments', app_config.monitor_desk_cfg_arguments))
 
         # --- [DiscMount] Section ---
         config.add_section('DiscMount')

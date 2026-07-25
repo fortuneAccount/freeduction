@@ -102,6 +102,7 @@ class PathConfigRow(QWidget):
             self.combo.lineEdit().editingFinished.connect(self._on_editing_finished)
             self.combo.lineEdit().textChanged.connect(self._check_styling)
             self.combo.currentIndexChanged.connect(self.valueChanged.emit)
+            self.combo.setToolTip("Select or type a path")
             layout.addWidget(self.combo)
             self.line_edit = None
         else:
@@ -132,13 +133,16 @@ class PathConfigRow(QWidget):
         # Browse Button
         self.browse_btn = QPushButton(". . .")
         self.browse_btn.setFixedWidth(40)
+        self.browse_btn.setToolTip("Browse for file")
         self.browse_btn.clicked.connect(self._on_browse)
         layout.addWidget(self.browse_btn)
 
         # CEN/LC Radio Buttons
         if add_cen_lc:
             self.cen_radio = QRadioButton("CEN")
+            self.cen_radio.setToolTip("Centralized storage")
             self.lc_radio = QRadioButton("LC")
+            self.lc_radio.setToolTip("Local storage")
             self.cen_radio.setChecked(True)
             if qlementine_toggles:
                 self.cen_radio.setObjectName("qlementineToggle")
@@ -209,6 +213,7 @@ class PathConfigRow(QWidget):
         # Run Wait Checkbox
         if self.add_run_wait:
             self.run_wait_cb = QCheckBox("Wait")
+            self.run_wait_cb.setToolTip("Wait for application to exit before proceeding")
             if qlementine_toggles:
                 self.run_wait_cb.setObjectName("qlementineToggle")
             self.run_wait_cb.stateChanged.connect(self.valueChanged.emit)
@@ -238,6 +243,21 @@ class PathConfigRow(QWidget):
             if idx >= 0:
                 self.combo.removeItem(idx)
         self.valueChanged.emit()
+
+    def _on_lc_toggled(self, checked):
+        """When LC is selected, disable the browse button and set the path
+        to the game install directory placeholder. When CEN is selected,
+        re-enable the browse button."""
+        if checked:
+            self.path = "$Game_Install_Dir"
+            self.browse_btn.setEnabled(False)
+        else:
+            self.browse_btn.setEnabled(True)
+            if self.path == "$Game_Install_Dir":
+                if self.use_combobox:
+                    self.combo.setCurrentText("")
+                else:
+                    self.line_edit.setText("")
 
     def _check_styling(self):
         """Apply styling if LC is enabled and file > 10MB."""

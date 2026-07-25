@@ -348,6 +348,7 @@ def run_gui(ini_path: Path) -> None:
             self.log_lines: List[str] = []
             self.proc = None
             self.cancelled = False
+            self._publishing = False
 
             central = QWidget()
             self.setCentralWidget(central)
@@ -484,6 +485,16 @@ def run_gui(ini_path: Path) -> None:
             self.cancel_btn.setEnabled(False)
             self.cancel_btn.clicked.connect(self._cancel)
             btn_layout.addWidget(self.cancel_btn)
+            btn_layout.addSpacing(40)
+            self.publish_btn = QPushButton("PUBLISH")
+            self.publish_btn.setMinimumHeight(48)
+            self.publish_btn.setMinimumWidth(120)
+            publish_font = QFont("Segoe UI", self.font().pointSize() + 2)
+            publish_font.setBold(True)
+            self.publish_btn.setFont(publish_font)
+            self.publish_btn.setToolTip("Compile, Deploy, Apply, and Release in sequence")
+            self.publish_btn.clicked.connect(self._run_publish)
+            btn_layout.addWidget(self.publish_btn)
             build_layout.addLayout(btn_layout, row, 0, 1, 3)
 
             row += 1
@@ -1047,11 +1058,16 @@ def run_gui(ini_path: Path) -> None:
             apply_replacements(tag_vals)
             apply_repos_replacements(tag_vals)
 
-            QMessageBox.information(
-                self, "Apply",
-                f"Fields updated.\nSHA1: {sha1_hash}\nSize: {size_mb:.2f} MB\n"
-                f"Version incremented to {new_ver}\nREADME.md, index.html, and repos.set written.",
+            self.log_signal.emit(
+                f"Apply: Fields updated. SHA1: {sha1_hash}, Size: {size_mb:.2f} MB, "
+                f"Version incremented to {new_ver}.\n"
             )
+            if not self._publishing:
+                QMessageBox.information(
+                    self, "Apply",
+                    f"Fields updated.\nSHA1: {sha1_hash}\nSize: {size_mb:.2f} MB\n"
+                    f"Version incremented to {new_ver}\nREADME.md, index.html, and repos.set written.",
+                )
 
         # ------------------------------------------------------------------ #
         #  DEPLOY                                                             #
@@ -1278,6 +1294,64 @@ def run_gui(ini_path: Path) -> None:
                 self.proc = None
 
             threading.Thread(target=worker, daemon=True).start()
+
+        # ------------------------------------------------------------------ #
+        #  PUBLISH (Compile → Deploy → Apply → Release)                      #
+        # ------------------------------------------------------------------ #
+        def _run_publish(self):
+            import threading
+
+            self._publishing = True
+            self._save_all()
+            self._reset_log()
+            self._open_log("Publish Log")
+            self.publish_btn.setEnabled(False)
+            self._publish_steps = [
+                ("Compile", self._run_compile),
+                ("Deploy", self._run_deploy),
+                ("Apply", self._run_apply),
+                ("Release", self._run_release),
+            ]
+            self._publish_step_index = 0
+            self._publish_error = [False]
+
+            def on_step_done(busy):
+                if busy:
+                    return
+                if self._publish_error[0]:
+                    self._finish_publish()
+                    return
+                self._publish_step_index += 1
+                if self._publish_step_index >= len(self._publish_steps):
+                    self._finish_publish()
+                    return
+                step_name, step_fn = self._publish_steps[self._publish_step_index]
+                self.log_signal.emit(f"\n>>> Starting {step_name} ({self._publish_step_index + 1}/{len(self._publish_steps)}) <<<\n")
+                if step_name == "Apply":
+                    try:
+                        step_fn()
+                    except Exception as e:
+                        self.log_signal.emit(f"Apply failed: {e}\n")
+                        self._publish_error[0] = True
+                    on_step_done(False)
+                else:
+                    step_fn()
+
+            self._publish_on_step_done = on_step_done
+            self.set_busy_signal.connect(on_step_done)
+            first_name, first_fn = self._publish_steps[0]
+            self.log_signal.emit(f"\n>>> Starting Publish: {first_name} (1/{len(self._publish_steps)}) <<<\n")
+            first_fn()
+
+        def _finish_publish(self):
+            try:
+                self.set_busy_signal.disconnect(self._publish_on_step_done)
+            except (TypeError, RuntimeError):
+                pass
+            self._publishing = False
+            self.log_signal.emit("\n>>> Publish sequence complete <<<\n")
+            self.set_busy_signal.emit(False)
+            self.publish_btn.setEnabled(True)
 
         # ---------- close ----------
 

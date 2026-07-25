@@ -271,11 +271,12 @@ class SetupTab(QWidget):
         
         self._setup_ui()
 
-    def _add_path_row(self, layout, label_text, config_key, row_widget):
+    def _add_path_row(self, layout, label_text, config_key, row_widget, tooltip_prefix=None):
         formatted_text = f"`^ {label_text}"
         label = QLabel(formatted_text)
         label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        label.setToolTip("Right-click to configure Options & Arguments")
+        base_tip = "Right-click to configure Options & Arguments"
+        label.setToolTip(f"{tooltip_prefix} — {base_tip}" if tooltip_prefix else base_tip)
         label.customContextMenuRequested.connect(
             lambda pos: self._show_options_args_dialog(pos, config_key, label_text)
         )
@@ -291,10 +292,11 @@ class SetupTab(QWidget):
         source_config_layout = QGridLayout(source_config_widget)
         source_config_layout.setSpacing(10)
 
-        # Row stretch: 12% header / 76% content / 12% footer
-        source_config_layout.setRowStretch(0, 12)
-        source_config_layout.setRowStretch(1, 76)
-        source_config_layout.setRowStretch(2, 12)
+        # Row stretch: 10% header / 55% content / 10% footer / 25% directories
+        source_config_layout.setRowStretch(0, 10)
+        source_config_layout.setRowStretch(1, 55)
+        source_config_layout.setRowStretch(2, 10)
+        source_config_layout.setRowStretch(3, 25)
 
         # Column stretch: A=3, B=3, C=1, D=2, E=2
         source_config_layout.setColumnStretch(0, 3)
@@ -341,9 +343,8 @@ class SetupTab(QWidget):
         excluded_label = QLabel("<b>Exclude Directories</b>")
         excluded_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         excluded_col_layout.addWidget(excluded_label)
-        excluded_col_layout.addStretch(6)  # remaining 60% gap above listbox
         self.excluded_dirs_list = DragDropListWidget()
-        excluded_col_layout.addWidget(self.excluded_dirs_list, 1)
+        excluded_col_layout.addWidget(self.excluded_dirs_list)
         source_config_layout.addWidget(excluded_col_widget, 1, 1, Qt.AlignmentFlag.AlignTop)
 
         # ── c2 (row 1, col 2): Add/Remove buttons for Excluded Dirs ──
@@ -374,15 +375,34 @@ class SetupTab(QWidget):
 
         # ── a3 (row 2, col 0): Exclude Manager checkbox ──
         self.exclude_manager_checkbox = QCheckBox("Exclude Selected Manager's Games")
+        self.exclude_manager_checkbox.setToolTip("Exclude games belonging to the selected game manager from the source directory scan.")
         source_config_layout.addWidget(self.exclude_manager_checkbox, 2, 0, Qt.AlignmentFlag.AlignBottom | Qt.AlignmentFlag.AlignLeft)
 
         # ── b3 (row 2, col 1): Game Managers dropdown ──
         self.other_managers_combo = QComboBox()
         self.other_managers_combo.addItems(["None", "Steam", "Epic", "GOG", "Origin", "Ubisoft Connect", "Battle.net", "Xbox"])
+        self.other_managers_combo.setToolTip("Select which game manager is installed. Games managed by this platform will be excluded when the checkbox is enabled.")
         source_config_layout.addWidget(self.other_managers_combo, 2, 1, Qt.AlignmentFlag.AlignBottom)
 
         # Store reference for _setup_config_presets_ui to place combo + buttons
         self._sources_grid = source_config_layout
+
+        # ── row 3 (spanning all cols): Directories ──
+        directories_group = QGroupBox("Directories")
+        directories_layout = QFormLayout(directories_group)
+        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
+        self.path_rows["profiles_dir"].cen_radio.setToolTip("Creates a centralized location for Profiles")
+        self.path_rows["profiles_dir"].lc_radio.setToolTip("Creates Profiles in the Game Directory folder")
+        self.path_rows["profiles_dir"].lc_radio.toggled.connect(self.path_rows["profiles_dir"]._on_lc_toggled)
+        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"])
+        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
+        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
+        self.path_rows["launchers_dir"].cen_radio.setToolTip("Creates a centralized location for Launchers")
+        self.path_rows["launchers_dir"].lc_radio.setToolTip("Creates Launchers in the Game Directory folder")
+        self.path_rows["launchers_dir"].lc_radio.toggled.connect(self.path_rows["launchers_dir"]._on_lc_toggled)
+        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"])
+        source_config_layout.addWidget(directories_group, 3, 0, 1, 5)
 
         source_config_section = AccordionSection("SOURCES AND INDEXING", source_config_widget, start_expanded=True)
 
@@ -402,9 +422,13 @@ class SetupTab(QWidget):
 
         # Shared checkboxes
         self.run_as_admin_checkbox = QCheckBox("Run As Admin")
+        self.run_as_admin_checkbox.setToolTip("Run the launcher with administrator privileges")
         self.use_kill_list_checkbox = QCheckBox("Use Kill List")
+        self.use_kill_list_checkbox.setToolTip("Kill specific processes before launching")
         self.hide_taskbar_checkbox = QCheckBox("Hide Taskbar")
+        self.hide_taskbar_checkbox.setToolTip("Hide the taskbar while the game is running")
         self.terminate_bw_on_exit_checkbox = QCheckBox("Terminate Borderless on Exit")
+        self.terminate_bw_on_exit_checkbox.setToolTip("Terminate Borderless Gaming when game exits")
 
         # ── Tab 1: LAUNCHER ──────────────────────────────────────────────────
         launcher_tab = QWidget()
@@ -414,7 +438,7 @@ class SetupTab(QWidget):
         self.path_rows["launcher_executable"] = PathConfigRow(
             "launcher_executable", is_directory=False, add_enabled=False, add_cen_lc=True, use_combobox=True)
         self._add_path_row(launcher_layout, "Launcher Executable:", "launcher_executable",
-                           self.path_rows["launcher_executable"])
+                           self.path_rows["launcher_executable"], tooltip_prefix="Set the path to the game's launcher executable")
         cb_container = QWidget()
         cb_layout = QGridLayout(cb_container)
         cb_layout.setContentsMargins(0, 0, 0, 0)
@@ -436,13 +460,16 @@ class SetupTab(QWidget):
             "controller_mapper_path", add_run_wait=True, repo_items=self.repos.get("MAPPERS"))
         self.path_rows["controller_mapper_path"].enabled_cb.setToolTip("Enable Controller Mapper")
         self._add_path_row(mapper_layout, "Controller Mapper:", "controller_mapper_path",
-                           self.path_rows["controller_mapper_path"])
+                           self.path_rows["controller_mapper_path"], tooltip_prefix="Set the path to the controller mapper tool")
         self.path_rows["p1_profile_path"] = PathConfigRow("p1_profile_path", add_enabled=True)
-        self._add_path_row(mapper_layout, "    Player 1 Profile:", "p1_profile_path", self.path_rows["p1_profile_path"])
+        self._add_path_row(mapper_layout, "    Player 1 Profile:", "p1_profile_path", self.path_rows["p1_profile_path"],
+                           tooltip_prefix="Set the path to Player 1's controller profile")
         self.path_rows["p2_profile_path"] = PathConfigRow("p2_profile_path", add_enabled=True)
-        self._add_path_row(mapper_layout, "    Player 2 Profile:", "p2_profile_path", self.path_rows["p2_profile_path"])
+        self._add_path_row(mapper_layout, "    Player 2 Profile:", "p2_profile_path", self.path_rows["p2_profile_path"],
+                           tooltip_prefix="Set the path to Player 2's controller profile")
         self.path_rows["desk_profile_path"] = PathConfigRow("desk_profile_path", add_enabled=True)
-        self._add_path_row(mapper_layout, "    Desk Profile:", "desk_profile_path", self.path_rows["desk_profile_path"])
+        self._add_path_row(mapper_layout, "    Desk Profile:", "desk_profile_path", self.path_rows["desk_profile_path"],
+                           tooltip_prefix="Set the path to the desktop controller profile")
         mapping_tab_layout.addWidget(mapper_group)
         mapping_tab_layout.addStretch()
         self.paths_tabs.addTab(mapping_tab, "MAPPING")
@@ -488,11 +515,13 @@ class SetupTab(QWidget):
         display_layout.addRow(display_note)
 
         self._add_path_row(display_layout, "Monitor-Config App:", "monitorapp_path",
-                           self.path_rows["monitorapp_path"])
+                           self.path_rows["monitorapp_path"], tooltip_prefix="Set the path to the monitor configuration tool")
         self.path_rows["monitor_game_path"] = PathConfigRow("monitor_game_path", add_enabled=True)
-        self._add_path_row(display_layout, "    Monitor Game Config:", "monitor_game_path", self.path_rows["monitor_game_path"])
+        self._add_path_row(display_layout, "    Monitor Game Config:", "monitor_game_path", self.path_rows["monitor_game_path"],
+                           tooltip_prefix="Set the path to the game's monitor configuration")
         self.path_rows["monitor_desk_path"] = PathConfigRow("monitor_desk_path", add_enabled=True)
-        self._add_path_row(display_layout, "    Monitor Desk Config:", "monitor_desk_path", self.path_rows["monitor_desk_path"])
+        self._add_path_row(display_layout, "    Monitor Desk Config:", "monitor_desk_path", self.path_rows["monitor_desk_path"],
+                           tooltip_prefix="Set the path to the desktop monitor configuration")
         display_tab_layout.addWidget(display_group)
         display_tab_layout.addStretch()
         self.paths_tabs.addTab(display_tab, "DISPLAY")
@@ -506,17 +535,17 @@ class SetupTab(QWidget):
             "borderless_gaming_path", add_run_wait=True, repo_items=self.repos.get("WINDOWING"))
         self.path_rows["borderless_gaming_path"].enabled_cb.setToolTip("Enable Borderless Windowing")
         self._add_path_row(windowing_layout, "Borderless Windowing:", "borderless_gaming_path",
-                           self.path_rows["borderless_gaming_path"])
+                           self.path_rows["borderless_gaming_path"], tooltip_prefix="Set the path to the borderless windowing tool")
         self.path_rows["unborder_cfg"] = PathConfigRow(
             "unborder_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["unborder_cfg"].enabled_cb.setToolTip("Enable UnBorder Config")
         self._add_path_row(windowing_layout, "UnBorder Config:", "unborder_cfg",
-                           self.path_rows["unborder_cfg"])
+                           self.path_rows["unborder_cfg"], tooltip_prefix="Set the path to the unborder configuration file")
         self.path_rows["reborder_cfg"] = PathConfigRow(
             "reborder_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["reborder_cfg"].enabled_cb.setToolTip("Enable ReBorder Config")
         self._add_path_row(windowing_layout, "ReBorder Config:", "reborder_cfg",
-                           self.path_rows["reborder_cfg"])
+                           self.path_rows["reborder_cfg"], tooltip_prefix="Set the path to the reborder configuration file")
         windowing_tab_layout.addWidget(windowing_group)
         windowing_tab_layout.addStretch()
         self.paths_tabs.addTab(windowing_tab, "WINDOWING")
@@ -529,17 +558,18 @@ class SetupTab(QWidget):
         self.path_rows["disc_mount_path"] = PathConfigRow(
             "disc_mount_path", add_run_wait=True, repo_items=self.mounting_tools, add_cen_lc=True, add_enabled=True)
         self.path_rows["disc_mount_path"].enabled_cb.setToolTip("Overwrite Mounting")
-        self._add_path_row(disc_layout, "Disc-Mount:", "disc_mount_path", self.path_rows["disc_mount_path"])
+        self._add_path_row(disc_layout, "Disc-Mount:", "disc_mount_path", self.path_rows["disc_mount_path"],
+                           tooltip_prefix="Set the path to the disc mounting tool")
         self.path_rows["disc_mount_cfg"] = PathConfigRow(
             "disc_mount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["disc_mount_cfg"].enabled_cb.setToolTip("Enable Disc Mount Config File")
         self._add_path_row(disc_layout, "    Mount Config:", "disc_mount_cfg",
-                           self.path_rows["disc_mount_cfg"])
+                           self.path_rows["disc_mount_cfg"], tooltip_prefix="Set the path to the mount configuration file")
         self.path_rows["disc_unmount_cfg"] = PathConfigRow(
             "disc_unmount_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["disc_unmount_cfg"].enabled_cb.setToolTip("Enable Disc Unmount Config File")
         self._add_path_row(disc_layout, "    Unmount Config:", "disc_unmount_cfg",
-                           self.path_rows["disc_unmount_cfg"])
+                           self.path_rows["disc_unmount_cfg"], tooltip_prefix="Set the path to the unmount configuration file")
         disc_tab_layout.addWidget(disc_group)
         disc_tab_layout.addStretch()
         self.paths_tabs.addTab(disc_tab, "DISC-MOUNTING")
@@ -557,7 +587,7 @@ class SetupTab(QWidget):
             repo_items=local_backup_tools)
         self.path_rows["local_backup_path"].enabled_cb.setToolTip("Enable Local Backup")
         self._add_path_row(local_backup_form, "Local Backup:", "local_backup_path",
-                           self.path_rows["local_backup_path"])
+                           self.path_rows["local_backup_path"], tooltip_prefix="Set the path to the local backup tool")
 
         # Tool-specific settings via QStackedWidget
         self.local_backup_tool_combo = QComboBox()
@@ -573,6 +603,7 @@ class SetupTab(QWidget):
         savestate_layout.addRow("Backup Directory:", self.savestate_backup_path_row)
         self.savestate_auto_backup_cb = QCheckBox("Auto Backup")
         self.savestate_auto_backup_cb.setChecked(True)
+        self.savestate_auto_backup_cb.setToolTip("Automatically backup save states when the game exits")
         savestate_layout.addRow("", self.savestate_auto_backup_cb)
         self.local_backup_stack.addWidget(savestate_page)
 
@@ -583,6 +614,7 @@ class SetupTab(QWidget):
         gsm_layout.addRow("Backup Directory:", self.gsm_backup_path_row)
         self.gsm_backup_on_exit_cb = QCheckBox("Backup on Exit")
         self.gsm_backup_on_exit_cb.setChecked(True)
+        self.gsm_backup_on_exit_cb.setToolTip("Backup game saves when the game exits")
         gsm_layout.addRow("", self.gsm_backup_on_exit_cb)
         self.local_backup_stack.addWidget(gsm_page)
 
@@ -593,6 +625,7 @@ class SetupTab(QWidget):
         gbm_layout.addRow("Backup Directory:", self.gbm_backup_path_row)
         self.gbm_monitor_on_launch_cb = QCheckBox("Monitor on Launch")
         self.gbm_monitor_on_launch_cb.setChecked(True)
+        self.gbm_monitor_on_launch_cb.setToolTip("Start monitoring for save changes when the game launches")
         gbm_layout.addRow("", self.gbm_monitor_on_launch_cb)
         self.local_backup_stack.addWidget(gbm_page)
 
@@ -615,7 +648,7 @@ class SetupTab(QWidget):
             repo_items=cloud_sync_tools)
         self.path_rows["cloud_sync_path"].enabled_cb.setToolTip("Enable Cloud Sync/Backup")
         self._add_path_row(cloud_sync_form, "Cloud Sync:", "cloud_sync_path",
-                           self.path_rows["cloud_sync_path"])
+                           self.path_rows["cloud_sync_path"], tooltip_prefix="Set the path to the cloud sync tool")
 
         # Tool-specific settings via QStackedWidget
         self.cloud_sync_tool_combo = QComboBox()
@@ -640,9 +673,11 @@ class SetupTab(QWidget):
         self.rclone_sync_mode_combo.setToolTip("sync=bidirectional, copy=upload only, copyto=download only")
         rclone_layout.addRow("Sync Mode:", self.rclone_sync_mode_combo)
         self.rclone_backup_on_launch_cb = QCheckBox("Backup on Launch (download saves)")
+        self.rclone_backup_on_launch_cb.setToolTip("Download saves from cloud when the game launches")
         rclone_layout.addRow("", self.rclone_backup_on_launch_cb)
         self.rclone_backup_on_exit_cb = QCheckBox("Backup on Exit (upload saves)")
         self.rclone_backup_on_exit_cb.setChecked(True)
+        self.rclone_backup_on_exit_cb.setToolTip("Upload saves to cloud when the game exits")
         rclone_layout.addRow("", self.rclone_backup_on_exit_cb)
         self.cloud_sync_stack.addWidget(rclone_page)
 
@@ -655,9 +690,11 @@ class SetupTab(QWidget):
         self.ludusavi_game_name_edit.setPlaceholderText("Leave empty for auto-detection")
         ludusavi_layout.addRow("Game Name:", self.ludusavi_game_name_edit)
         self.ludusavi_backup_on_launch_cb = QCheckBox("Restore on Launch")
+        self.ludusavi_backup_on_launch_cb.setToolTip("Restore game saves from backup when the game launches")
         ludusavi_layout.addRow("", self.ludusavi_backup_on_launch_cb)
         self.ludusavi_backup_on_exit_cb = QCheckBox("Backup on Exit")
         self.ludusavi_backup_on_exit_cb.setChecked(True)
+        self.ludusavi_backup_on_exit_cb.setToolTip("Backup game saves when the game exits")
         ludusavi_layout.addRow("", self.ludusavi_backup_on_exit_cb)
         self.cloud_sync_stack.addWidget(ludusavi_page)
 
@@ -668,6 +705,7 @@ class SetupTab(QWidget):
         syncthing_layout.addRow("Sync Folder:", self.syncthing_sync_folder_row)
         self.syncthing_auto_start_cb = QCheckBox("Auto Start with Game")
         self.syncthing_auto_start_cb.setChecked(True)
+        self.syncthing_auto_start_cb.setToolTip("Automatically start Syncthing when the game launches")
         syncthing_layout.addRow("", self.syncthing_auto_start_cb)
         self.cloud_sync_stack.addWidget(syncthing_page)
 
@@ -678,9 +716,11 @@ class SetupTab(QWidget):
         emusync_layout.addRow("Emulator Directory:", self.emusync_emulator_path_row)
         self.emusync_sync_on_launch_cb = QCheckBox("Sync on Launch")
         self.emusync_sync_on_launch_cb.setChecked(True)
+        self.emusync_sync_on_launch_cb.setToolTip("Sync emulator saves when the game launches")
         emusync_layout.addRow("", self.emusync_sync_on_launch_cb)
         self.emusync_sync_on_exit_cb = QCheckBox("Sync on Exit")
         self.emusync_sync_on_exit_cb.setChecked(True)
+        self.emusync_sync_on_exit_cb.setToolTip("Sync emulator saves when the game exits")
         emusync_layout.addRow("", self.emusync_sync_on_exit_cb)
         self.cloud_sync_stack.addWidget(emusync_page)
 
@@ -703,17 +743,17 @@ class SetupTab(QWidget):
             repo_items=audio_tools if audio_tools else None)
         self.path_rows["audio_tool_path"].enabled_cb.setToolTip("Enable Audio Tool")
         self._add_path_row(audio_layout, "Audio Tool:", "audio_tool_path",
-                           self.path_rows["audio_tool_path"])
+                           self.path_rows["audio_tool_path"], tooltip_prefix="Set the path to the audio configuration tool")
         self.path_rows["audio_game_cfg"] = PathConfigRow(
             "audio_game_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["audio_game_cfg"].enabled_cb.setToolTip("Enable Game Audio Config")
         self._add_path_row(audio_layout, "    Game-Audio:", "audio_game_cfg",
-                           self.path_rows["audio_game_cfg"])
+                           self.path_rows["audio_game_cfg"], tooltip_prefix="Set the path to the game's audio configuration")
         self.path_rows["audio_desk_cfg"] = PathConfigRow(
             "audio_desk_cfg", add_enabled=True, add_cen_lc=True, use_combobox=True)
         self.path_rows["audio_desk_cfg"].enabled_cb.setToolTip("Enable Desk Audio Config")
         self._add_path_row(audio_layout, "    Desk/OS-Audio:", "audio_desk_cfg",
-                           self.path_rows["audio_desk_cfg"])
+                           self.path_rows["audio_desk_cfg"], tooltip_prefix="Set the path to the desktop audio configuration")
         audio_tab_layout.addWidget(audio_group)
         audio_tab_layout.addStretch()
         self.paths_tabs.addTab(audio_tab, "AUDIO")
@@ -727,40 +767,27 @@ class SetupTab(QWidget):
             key = f"pre{i}_path"
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)
             self.path_rows[key].enabled_cb.setToolTip(f"Enable Pre-Launch App {i}")
-            self._add_path_row(scripts_layout, f"Pre-Launch App {i}:", key, self.path_rows[key])
+            self._add_path_row(scripts_layout, f"Pre-Launch App {i}:", key, self.path_rows[key],
+                               tooltip_prefix=f"Set the path to pre-launch application {i}")
         self.path_rows["just_after_launch_path"] = PathConfigRow(
             "just_after_launch_path", add_run_wait=True, repo_items=all_tools)
         self.path_rows["just_after_launch_path"].enabled_cb.setToolTip("Enable Just After Launch App")
         self._add_path_row(scripts_layout, "    Just After Launch:", "just_after_launch_path",
-                           self.path_rows["just_after_launch_path"])
+                           self.path_rows["just_after_launch_path"], tooltip_prefix="Set the path to the application that runs just after launch")
         self.path_rows["just_before_exit_path"] = PathConfigRow(
             "just_before_exit_path", add_run_wait=True, repo_items=all_tools)
         self.path_rows["just_before_exit_path"].enabled_cb.setToolTip("Enable Just Before Exit App")
         self._add_path_row(scripts_layout, "    Just Before Exit:", "just_before_exit_path",
-                           self.path_rows["just_before_exit_path"])
+                           self.path_rows["just_before_exit_path"], tooltip_prefix="Set the path to the application that runs just before exit")
         for i in range(1, 4):
             key = f"post{i}_path"
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)
             self.path_rows[key].enabled_cb.setToolTip(f"Enable Post-Launch App {i}")
-            self._add_path_row(scripts_layout, f"Post-Launch App {i}:", key, self.path_rows[key])
+            self._add_path_row(scripts_layout, f"Post-Launch App {i}:", key, self.path_rows[key],
+                               tooltip_prefix=f"Set the path to post-launch application {i}")
         scripts_tab_layout.addWidget(scripts_group)
         scripts_tab_layout.addStretch()
         self.paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
-
-        # ── Tab 10: DIRECTORIES ────────────────────────────────────────
-        directories_tab = QWidget()
-        directories_tab_layout = QVBoxLayout(directories_tab)
-        directories_group = QGroupBox("Directories")
-        directories_layout = QFormLayout(directories_group)
-        self.path_rows["profiles_dir"] = PathConfigRow("profiles_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["profiles_dir"].enabled_cb.setToolTip("Create Profile Folders")
-        directories_layout.addRow("Profiles Directory:", self.path_rows["profiles_dir"])
-        self.path_rows["launchers_dir"] = PathConfigRow("launchers_dir", is_directory=True, add_enabled=True, add_cen_lc=True, use_combobox=False)
-        self.path_rows["launchers_dir"].enabled_cb.setToolTip("Create Launcher")
-        directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"])
-        directories_tab_layout.addWidget(directories_group)
-        directories_tab_layout.addStretch()
-        self.paths_tabs.addTab(directories_tab, "DIRECTORIES")
 
         paths_section = AccordionSection("PATHS AND PROFILES", paths_widget, max_height=400)
 
@@ -1124,7 +1151,7 @@ class SetupTab(QWidget):
 
         # LOCAL preset (default element, edit field shows its windows path).
         python_root = os.path.join(self.config_preset_manager.app_directory, "Python")
-        self.preset_combo.addItem(f"LOCAL  ({python_root})", LOCAL_PRESET_MARKER)
+        self.preset_combo.addItem("LOCAL", LOCAL_PRESET_MARKER)
 
         # Recorded history + asset presets (de-duplicated).
         recorded = list(self.config_preset_manager.get_history())
@@ -1297,7 +1324,7 @@ class SetupTab(QWidget):
         dialog.setWindowTitle(f"Options & Arguments - {label_text.strip(':')}")
         layout = QFormLayout(dialog)
         
-        # Determine defaults based on the current executable path
+        # Determine defaults based on the current executable path or config key
         current_path = getattr(self.main_window.config, config_key, "")
         exe_name = os.path.basename(current_path).lower() if current_path else ""
         
@@ -1308,17 +1335,37 @@ class SetupTab(QWidget):
             'has_defaults': False
         }
         
+        # Lookup order: exe basename first, then config_key for profiles/configs
         if exe_name in self.options_args_map:
             defaults_state['opts'], defaults_state['args'] = self.options_args_map[exe_name]
             defaults_state['has_defaults'] = True
+        elif config_key in self.options_args_map:
+            defaults_state['opts'], defaults_state['args'] = self.options_args_map[config_key]
+            defaults_state['has_defaults'] = True
 
-        options_edit = QLineEdit()
-        options_edit.setText(getattr(self.main_window.config, f"{config_key}_options", ""))
-        layout.addRow("Options:", options_edit)
+        def _populate_combo(combo, pipe_delimited_str, current_value):
+            """Fill a QComboBox from a pipe-delimited string and select current_value."""
+            choices = [c for c in pipe_delimited_str.split('|')] if pipe_delimited_str else ['']
+            for choice in choices:
+                combo.addItem(choice)
+            idx = combo.findText(current_value)
+            if idx >= 0:
+                combo.setCurrentIndex(idx)
+            elif current_value:
+                combo.insertItem(0, current_value)
+                combo.setCurrentIndex(0)
+
+        options_combo = QComboBox()
+        options_combo.setEditable(True)
+        _populate_combo(options_combo, defaults_state['opts'],
+                        getattr(self.main_window.config, f"{config_key}_options", ""))
+        layout.addRow("Options:", options_combo)
         
-        args_edit = QLineEdit()
-        args_edit.setText(getattr(self.main_window.config, f"{config_key}_arguments", ""))
-        layout.addRow("Arguments:", args_edit)
+        args_combo = QComboBox()
+        args_combo.setEditable(True)
+        _populate_combo(args_combo, defaults_state['args'],
+                        getattr(self.main_window.config, f"{config_key}_arguments", ""))
+        layout.addRow("Arguments:", args_combo)
         
         # Visual indicator for defaults match
         status_label = QLabel()
@@ -1329,16 +1376,16 @@ class SetupTab(QWidget):
                 status_label.setText("")
                 return
             
-            is_match = (options_edit.text() == defaults_state['opts'] and 
-                        args_edit.text() == defaults_state['args'])
+            is_match = (options_combo.currentText() == defaults_state['opts'] and 
+                        args_combo.currentText() == defaults_state['args'])
             
             if is_match:
                 status_label.setText("✓ Matches defaults")
             else:
                 status_label.setText("⚠ Custom values")
 
-        options_edit.textChanged.connect(check_defaults)
-        args_edit.textChanged.connect(check_defaults)
+        options_combo.currentTextChanged.connect(check_defaults)
+        args_combo.currentTextChanged.connect(check_defaults)
         
         # Initial check
         check_defaults()
@@ -1351,8 +1398,10 @@ class SetupTab(QWidget):
         
         def reset_values():
             if defaults_state['has_defaults']:
-                options_edit.setText(defaults_state['opts'])
-                args_edit.setText(defaults_state['args'])
+                idx = options_combo.findText(defaults_state['opts'])
+                options_combo.setCurrentIndex(idx if idx >= 0 else 0)
+                idx = args_combo.findText(defaults_state['args'])
+                args_combo.setCurrentIndex(idx if idx >= 0 else 0)
         reset_btn.clicked.connect(reset_values)
 
         # Function to update defaults if path changes while dialog is open
@@ -1364,8 +1413,12 @@ class SetupTab(QWidget):
             
             curr_exe = os.path.basename(curr_path).lower() if curr_path else ""
             
+            # Lookup order: exe basename first, then config_key
             if curr_exe in self.options_args_map:
                 defaults_state['opts'], defaults_state['args'] = self.options_args_map[curr_exe]
+                defaults_state['has_defaults'] = True
+            elif config_key in self.options_args_map:
+                defaults_state['opts'], defaults_state['args'] = self.options_args_map[config_key]
                 defaults_state['has_defaults'] = True
             else:
                 defaults_state['opts'], defaults_state['args'] = "", ""
@@ -1383,8 +1436,8 @@ class SetupTab(QWidget):
         
         try:
             if dialog.exec():
-                setattr(self.main_window.config, f"{config_key}_options", options_edit.text())
-                setattr(self.main_window.config, f"{config_key}_arguments", args_edit.text())
+                setattr(self.main_window.config, f"{config_key}_options", options_combo.currentText())
+                setattr(self.main_window.config, f"{config_key}_arguments", args_combo.currentText())
                 self.config_changed.emit()
         finally:
             self._current_dialog_key = None
@@ -1575,7 +1628,11 @@ class SetupTab(QWidget):
             for section in config.sections():
                 options = config.get(section, 'options', fallback="").strip()
                 arguments = config.get(section, 'arguments', fallback="").strip()
-                mapping[section.lower()] = (options, arguments)
+                key = section.lower()
+                mapping[key] = (options, arguments)
+                config_key = constants.SECTION_TO_CONFIG_KEY.get(key)
+                if config_key:
+                    mapping[config_key] = (options, arguments)
         except Exception as e:
             logging.error(f"Error parsing options_arguments.set: {e}")
         return mapping
@@ -2566,6 +2623,8 @@ exit 1
                         self.last_detected_tools[attr_name] = exe_name
                     elif exe_no_ext in self.options_args_map:
                         self.last_detected_tools[attr_name] = exe_no_ext
+                    elif attr_name in self.options_args_map:
+                        self.last_detected_tools[attr_name] = attr_name
                     else:
                         self.last_detected_tools[attr_name] = exe_name
 

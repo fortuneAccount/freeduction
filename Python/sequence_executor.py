@@ -192,8 +192,13 @@ class SequenceExecutor:
         """Apply a monitor configuration using the multi-monitor tool."""
         tool = getattr(self.launcher, 'monitorapp', '')
         config = getattr(self.launcher, config_attr, '')
-        options = getattr(self.launcher, 'monitorapp_options', '')
-        args = getattr(self.launcher, 'monitorapp_arguments', '')
+
+        if config_attr == 'monitor_game_cfg':
+            options = getattr(self.launcher, 'monitor_game_config_options', '') or getattr(self.launcher, 'monitorapp_options', '')
+            args = getattr(self.launcher, 'monitor_game_config_arguments', '') or getattr(self.launcher, 'monitorapp_arguments', '')
+        else:
+            options = getattr(self.launcher, 'monitor_desk_config_options', '') or getattr(self.launcher, 'monitorapp_options', '')
+            args = getattr(self.launcher, 'monitor_desk_config_arguments', '') or getattr(self.launcher, 'monitorapp_arguments', '')
 
         if tool and config and os.path.exists(self.launcher.resolve_path(tool)) and os.path.exists(config):
             logging.info(f"Applying Monitor Config: {config}")
