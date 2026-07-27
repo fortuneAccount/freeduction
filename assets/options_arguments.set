@@ -9,35 +9,35 @@
 ; ── Controller Mapper ────────────────────────────────────────────────────────
 
 [controllermapperoptions]
-options = --tray --hidden
+options = --tray --hidden --profile-controller ${P#} --profile
 arguments =
 
 ; ── Profiles ─────────────────────────────────────────────────────────────────
 
 [player1profileoptions]
-options = --tray --hidden --profile-controller 1 --profile
+options = |--tray --hidden --profile-controller 1 --profile|
 arguments =
 
 [player2profileoptions]
-options = --tray --hidden --profile-controller 2 --profile
+options = |--tray --hidden --profile-controller 2 --profile|
 arguments =
 
 [deskprofileoptions]
-options = --tray --hidden --profile-controller 0 --profile
+options = |--tray --hidden --profile-controller 1 --profile|
 arguments =
 
 ; ── Display ──────────────────────────────────────────────────────────────────
 
 [monitorappoptions]
-options = /loadconfig
+options = /loadconfig|/internal|/extend|/clone|/external|/SetMonitors "Name=\\.\$MONITOR${M#}_NAME Primary=1 BitsPerPixel=32 Width=$MONITOR${M#}_RESX Height=$MONITOR${M#}_RESY DisplayFrequency=$MONITOR${M#}_FREQ DisplayOrientation=$MONITOR${M#}_ORIENT PositionX=$MONITOR${M#}_POSX PositionY=$MONITOR${M#}_POSY" "Name=\\.\$MONITOR(${M#}+1)_NAME BitsPerPixel=$MONITOR(${M#}+1)_DEPTH Width=$MONITOR(${M#}+1)_RESX Height=$MONITOR(${M#}+1)_RESY DisplayFrequency=$MONITOR(${M#}+1)_FREQ DisplayOrientation=$MONITOR(${M#}+1)_ORIENT PositionX=$MONITOR(${M#}+1)_POSX PositionY=$MONITOR(${M#}+1)_POSY"|-width=$MONITOR${M#}_RESX -height=$MONITOR${M#}_RESY -depth=$MONITOR${M#}_DEPTH =refresh=$MONITOR${M#}_FREQ -lx=$MONITOR${M#}_POSX -ty=$MONITOR${M#}_POSY -primary -monitor="$MONITOR${M#}_NAME"
 arguments =
 
 [monitorgamecfgoptions]
-options = /loadconfig
+options = |/loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
 [monitordeskcfgoptions]
-options = /loadconfig
+options = |/loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
 ; ── Windowing ────────────────────────────────────────────────────────────────

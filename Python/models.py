@@ -197,6 +197,8 @@ class AppConfig:
         self.overwrite_artwork = False
         self.download_pcgw_metadata = True
         self.overwrite_pcgw_metadata = False
+        self.overwrite_game_ini = True
+        self.recreate_game_ini = True
         self.hide_taskbar = False
         self.run_as_admin = False
         self.enable_name_matching = True

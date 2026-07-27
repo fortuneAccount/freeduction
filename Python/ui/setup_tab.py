@@ -1322,6 +1322,7 @@ class SetupTab(QWidget):
         """Show a modal dialog to edit options and arguments for the selected app."""
         dialog = QDialog(self)
         dialog.setWindowTitle(f"Options & Arguments - {label_text.strip(':')}")
+        dialog.setMaximumSize(665, 460)
         layout = QFormLayout(dialog)
         
         # Determine defaults based on the current executable path or config key
@@ -1345,7 +1346,7 @@ class SetupTab(QWidget):
 
         def _populate_combo(combo, pipe_delimited_str, current_value):
             """Fill a QComboBox from a pipe-delimited string and select current_value."""
-            choices = [c for c in pipe_delimited_str.split('|')] if pipe_delimited_str else ['']
+            choices = list(dict.fromkeys(pipe_delimited_str.split('|'))) if pipe_delimited_str else ['']
             for choice in choices:
                 combo.addItem(choice)
             idx = combo.findText(current_value)
@@ -1436,9 +1437,13 @@ class SetupTab(QWidget):
         
         try:
             if dialog.exec():
-                setattr(self.main_window.config, f"{config_key}_options", options_combo.currentText())
-                setattr(self.main_window.config, f"{config_key}_arguments", args_combo.currentText())
+                opts = options_combo.currentText()
+                args = args_combo.currentText()
+                setattr(self.main_window.config, f"{config_key}_options", opts)
+                setattr(self.main_window.config, f"{config_key}_arguments", args)
                 self.config_changed.emit()
+                if opts or args:
+                    self.main_window.editor_tab.propagate_config_options(config_key, opts, args)
         finally:
             self._current_dialog_key = None
             self._current_dialog_updater = None

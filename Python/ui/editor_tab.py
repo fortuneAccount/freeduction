@@ -13,7 +13,7 @@ import collections
 import re
 import difflib
 import datetime
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QItemSelectionModel
 from PyQt6.QtGui import QColor, QBrush, QFont
 from Python import constants
 from Python.managers.index_manager import backup_index
@@ -158,6 +158,35 @@ class EditorTab(QWidget):
     clear_view_requested = pyqtSignal()
     data_changed = pyqtSignal()
 
+    # Maps setup_tab config_key → (game_data_options_key, game_data_arguments_key)
+    CONFIG_KEY_TO_GAME_DATA = {
+        'controller_mapper_path': ('controller_mapper_options', 'controller_mapper_arguments'),
+        'borderless_gaming_path': ('borderless_windowing_options', 'borderless_windowing_arguments'),
+        'monitorapp_path': ('monitorapp_options', 'monitorapp_arguments'),
+        'just_after_launch_path': ('just_after_launch_options', 'just_after_launch_arguments'),
+        'just_before_exit_path': ('just_before_exit_options', 'just_before_exit_arguments'),
+        'pre1_path': ('pre1_options', 'pre1_arguments'),
+        'pre2_path': ('pre2_options', 'pre2_arguments'),
+        'pre3_path': ('pre3_options', 'pre3_arguments'),
+        'post1_path': ('post1_options', 'post1_arguments'),
+        'post2_path': ('post2_options', 'post2_arguments'),
+        'post3_path': ('post3_options', 'post3_arguments'),
+        'p1_profile_path': ('player1_profile_options', 'player1_profile_arguments'),
+        'p2_profile_path': ('player2_profile_options', 'player2_profile_arguments'),
+        'desk_profile_path': ('desk_profile_options', 'desk_profile_arguments'),
+        'monitor_game_path': ('monitor_game_cfg_options', 'monitor_game_cfg_arguments'),
+        'monitor_desk_path': ('monitor_desk_cfg_options', 'monitor_desk_cfg_arguments'),
+        'launcher_executable': ('launcher_executable_options', 'launcher_executable_arguments'),
+        'disc_mount_path': ('disc_mount_options', 'disc_mount_arguments'),
+        'disc_mount_cfg': ('disc_mount_cfg_options', 'disc_mount_cfg_arguments'),
+        'disc_unmount_cfg': ('disc_unmount_cfg_options', 'disc_unmount_cfg_arguments'),
+        'audio_tool_path': ('audio_app_options', 'audio_app_arguments'),
+        'audio_game_cfg': ('audio_game_cfg_options', 'audio_game_cfg_arguments'),
+        'audio_desk_cfg': ('audio_desk_cfg_options', 'audio_desk_cfg_arguments'),
+        'unborder_cfg': ('unborder_cfg_options', 'unborder_cfg_arguments'),
+        'reborder_cfg': ('reborder_cfg_options', 'reborder_cfg_arguments'),
+    }
+
     def __init__(self, main_window, parent=None):
         super().__init__(parent)
         self.main_window = main_window
@@ -268,6 +297,7 @@ class EditorTab(QWidget):
         headers = [
             "Create", "Name", "Dir", "SteamID",
             "NameOverride", "opts", "args", "AsAdmin",
+            "Overwrite", "Recreate",
             "Launcher Exe",
             "opts", "args",
             "Monitor-App", "opts", "args", "wait",
@@ -310,6 +340,8 @@ class EditorTab(QWidget):
             "Additional command-line options for the game executable",
             "Command-line arguments for the game executable",
             "Run game as administrator",
+            "Overwrite Game.ini with all GUI values (including blanks)",
+            "Recreate Game.ini from scratch, replacing any existing file",
             "Custom launcher executable path (can differ from the game executable)",
             "Options passed to the custom launcher executable",
             "Arguments passed to the custom launcher executable",
@@ -790,6 +822,19 @@ class EditorTab(QWidget):
             self.page_size_spin.blockSignals(False)
         self.refresh_view()
 
+    def propagate_config_options(self, config_key, options, arguments):
+        """Propagate non-blank config options/arguments to all game entries in original_data."""
+        mapping = self.CONFIG_KEY_TO_GAME_DATA.get(config_key)
+        if not mapping:
+            return
+        game_opts_key, game_args_key = mapping
+        for game in self.original_data:
+            if options:
+                game[game_opts_key] = options
+            if arguments:
+                game[game_args_key] = arguments
+        self.refresh_view()
+
     def prev_page(self):
         if self.current_page > 0:
             self.current_page -= 1
@@ -990,6 +1035,8 @@ class EditorTab(QWidget):
             # Populate from config
             'run_as_admin': config.run_as_admin,
             'hide_taskbar': config.hide_taskbar,
+            'overwrite_game_ini': config.overwrite_game_ini,
+            'recreate_game_ini': config.recreate_game_ini,
             'kill_list_enabled': config.use_kill_list,
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'controller_mapper_enabled': config.defaults.get('controller_mapper_path_enabled', True),
@@ -1139,6 +1186,13 @@ class EditorTab(QWidget):
         if row < 0 or col < 0:
             return
 
+        # Ensure the right-clicked row is part of the selection so that
+        # propagation and other selection-based actions have a target.
+        sel_model = self.table.selectionModel()
+        idx = self.table.model().index(row, 0)
+        if not sel_model.isSelected(idx):
+            sel_model.select(idx, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+
         menu = QMenu(self)
         
         # Toggle Create Action
@@ -1249,9 +1303,17 @@ class EditorTab(QWidget):
         menu.addSeparator()
         
         # Check column range for "Apply to Selected"
-        if constants.EditorCols.ARGUMENTS.value < col < constants.EditorCols.KILL_LIST.value:
-            apply_action = menu.addAction("Propagate selection to column")
+        # Include all settings columns from RUN_AS_ADMIN through HIDE_TASKBAR, excluding KILL_LIST
+        if (constants.EditorCols.ARGUMENTS.value < col <= constants.EditorCols.HIDE_TASKBAR.value
+                and col != constants.EditorCols.KILL_LIST.value):
+            apply_action = menu.addAction("Propagate to column")
             apply_action.triggered.connect(lambda: self.apply_cell_value_to_selection(row, col))
+
+        # "Propagate to selected" — copy ALL values from the source row to other selected rows
+        num_selected = len(self.table.selectionModel().selectedRows())  # type: ignore[union-attr]
+        if num_selected > 1:
+            propagate_row_action = menu.addAction(f"Propagate to selected ({num_selected} rows)")
+            propagate_row_action.triggered.connect(lambda: self.propagate_row_to_selection(row))
             
         if not menu.isEmpty():
             menu.exec(self.table.viewport().mapToGlobal(position))
@@ -2419,6 +2481,10 @@ class EditorTab(QWidget):
             game['arguments'] = item.text() if item else ""
         elif col == constants.EditorCols.RUN_AS_ADMIN.value:
             game['run_as_admin'] = self._get_checkbox_value(row, col)
+        elif col == constants.EditorCols.OVERWRITE_INI.value:
+            game['overwrite_game_ini'] = self._get_checkbox_value(row, col)
+        elif col == constants.EditorCols.RECREATE_INI.value:
+            game['recreate_game_ini'] = self._get_checkbox_value(row, col)
         elif col == constants.EditorCols.CM_PATH.value:
             en, path, ov = self._get_merged_path_data(row, col)
             game['controller_mapper_enabled'] = en
@@ -3040,6 +3106,12 @@ class EditorTab(QWidget):
         # RunAsAdmin (CheckBox) - col RUN_AS_ADMIN
         self.table.setCellWidget(row_num, constants.EditorCols.RUN_AS_ADMIN.value, self._create_checkbox_widget(game.get('run_as_admin', False), row_num, constants.EditorCols.RUN_AS_ADMIN.value))
 
+        # Overwrite Game.ini (CheckBox) - col OVERWRITE_INI
+        self.table.setCellWidget(row_num, constants.EditorCols.OVERWRITE_INI.value, self._create_checkbox_widget(game.get('overwrite_game_ini', True), row_num, constants.EditorCols.OVERWRITE_INI.value))
+
+        # Recreate Game.ini (CheckBox) - col RECREATE_INI
+        self.table.setCellWidget(row_num, constants.EditorCols.RECREATE_INI.value, self._create_checkbox_widget(game.get('recreate_game_ini', True), row_num, constants.EditorCols.RECREATE_INI.value))
+
         # Controller Mapper (CheckBox, Path with symbol, RunWait)
         # Merged widget for Path column
         cm_symbol, cm_run_wait = self._get_propagation_symbol_and_run_wait('controller_mapper_path')
@@ -3505,6 +3577,35 @@ class EditorTab(QWidget):
         # Notify change
         self.main_window._on_editor_table_edited(None)
 
+    def propagate_row_to_selection(self, src_row):
+        """Copy ALL column values from the source row to every other selected row."""
+        self.push_undo()
+
+        # Collect target rows from the current selection
+        rows = set()
+        for range_ in self.table.selectedRanges():
+            for r in range(range_.topRow(), range_.bottomRow() + 1):
+                rows.add(r)
+        if not rows:
+            for index in self.table.selectedIndexes():
+                rows.add(index.row())
+
+        if not rows:
+            return
+
+        # Iterate every column and propagate the cell state
+        for col_idx in range(self.table.columnCount()):
+            state = self._get_cell_state(src_row, col_idx)
+            if state is None:
+                continue
+            for r in rows:
+                if r == src_row:
+                    continue
+                self._set_cell_state(r, col_idx, state)
+                self._sync_cell_to_data(r, col_idx)
+
+        self.main_window._on_editor_table_edited(None)
+
     def _get_cell_state(self, row, col):
         widget = self.table.cellWidget(row, col)  # type: ignore[union-attr]
         if widget:
@@ -3554,6 +3655,15 @@ class EditorTab(QWidget):
                 item = QTableWidgetItem()
                 self.table.setItem(row, col, item)
             item.setText(state['text'])
+            item.setCheckState(Qt.CheckState.Checked if state.get('checked') else Qt.CheckState.Unchecked)
+
+        elif state['type'] == 'text':
+            item = self.table.item(row, col)
+            if not item:
+                item = QTableWidgetItem()
+                self.table.setItem(row, col, item)
+            item.setText(state['text'])
+
     def _create_iso_path_widget(self, path_text, row, col):
         """Create a widget with line edit and browse button for ISO path."""
         widget = QWidget()

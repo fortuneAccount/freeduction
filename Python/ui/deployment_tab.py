@@ -216,6 +216,8 @@ class DeploymentTab(QWidget):
         self.overwrite_game_json_checkbox = QCheckBox("Overwrite Game.json")
         self.overwrite_pcgw_checkbox = QCheckBox("Overwrite PcGamingWiki")
         self.overwrite_artwork_checkbox = QCheckBox("Overwrite Artwork")
+        self.overwrite_game_ini_checkbox = QCheckBox("Overwrite Game.ini")
+        self.recreate_game_ini_checkbox = QCheckBox("Recreate Game.ini")
 
         for i, key in enumerate(PATH_KEYS):
             label = PATH_LABELS.get(key, f"Overwrite {key}")
@@ -233,6 +235,8 @@ class DeploymentTab(QWidget):
         overwrite_layout.addWidget(self.overwrite_game_json_checkbox, (len(PATH_KEYS) + 1) // 2, 0)
         overwrite_layout.addWidget(self.overwrite_pcgw_checkbox, (len(PATH_KEYS) + 1) // 2, 1)
         overwrite_layout.addWidget(self.overwrite_artwork_checkbox, (len(PATH_KEYS) + 3) // 2, 0)
+        overwrite_layout.addWidget(self.overwrite_game_ini_checkbox, (len(PATH_KEYS) + 3) // 2, 1)
+        overwrite_layout.addWidget(self.recreate_game_ini_checkbox, (len(PATH_KEYS) + 5) // 2, 0)
 
         options_layout.addWidget(overwrite_group)
         options_layout.addStretch()
@@ -276,6 +280,8 @@ class DeploymentTab(QWidget):
         self.overwrite_pcgw_checkbox.stateChanged.connect(self.config_changed.emit)
         self.download_artwork_checkbox.stateChanged.connect(self.config_changed.emit)
         self.overwrite_artwork_checkbox.stateChanged.connect(self.config_changed.emit)
+        self.overwrite_game_ini_checkbox.stateChanged.connect(self.config_changed.emit)
+        self.recreate_game_ini_checkbox.stateChanged.connect(self.config_changed.emit)
 
         self.create_button.clicked.connect(self.create_selected_requested.emit)
         
@@ -319,11 +325,15 @@ class DeploymentTab(QWidget):
         """Check or uncheck all overwrite checkboxes."""
         for cb in self.overwrite_checkboxes.values():
             cb.setChecked(checked)
+        self.overwrite_game_ini_checkbox.setChecked(checked)
+        self.recreate_game_ini_checkbox.setChecked(checked)
 
     def _toggle_all_overwrite_checkboxes(self):
         """Toggle the state of all overwrite checkboxes."""
         for cb in self.overwrite_checkboxes.values():
             cb.setChecked(not cb.isChecked())
+        self.overwrite_game_ini_checkbox.setChecked(not self.overwrite_game_ini_checkbox.isChecked())
+        self.recreate_game_ini_checkbox.setChecked(not self.recreate_game_ini_checkbox.isChecked())
 
     def _set_overwrite_for_active_options(self, enable_for_active):
         """Enable or disable overwrite checkboxes based on whether their corresponding option in the Setup tab is active."""
@@ -503,6 +513,8 @@ class DeploymentTab(QWidget):
         self.overwrite_pcgw_checkbox.setChecked(config.overwrite_pcgw_metadata)
         self.download_artwork_checkbox.setChecked(config.download_artwork)
         self.overwrite_artwork_checkbox.setChecked(config.overwrite_artwork)
+        self.overwrite_game_ini_checkbox.setChecked(config.overwrite_game_ini)
+        self.recreate_game_ini_checkbox.setChecked(config.recreate_game_ini)
         
         # Sync overwrite checkboxes with proper defaults
         for key, cb in self.overwrite_checkboxes.items():
@@ -530,6 +542,8 @@ class DeploymentTab(QWidget):
         config.overwrite_pcgw_metadata = self.overwrite_pcgw_checkbox.isChecked()
         config.download_artwork = self.download_artwork_checkbox.isChecked()
         config.overwrite_artwork = self.overwrite_artwork_checkbox.isChecked()
+        config.overwrite_game_ini = self.overwrite_game_ini_checkbox.isChecked()
+        config.recreate_game_ini = self.recreate_game_ini_checkbox.isChecked()
         
         # Sync overwrite states
         for key, cb in self.overwrite_checkboxes.items():

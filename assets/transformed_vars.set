@@ -2,6 +2,7 @@
 $GAME_TITLE = $SAFE_GAME_NAME
 $PLAYER_P# = $PLAYER_{$PLAYER_NUMBER}
 $PLAYER# = ${P#}
+$MONITOR# = ${M#}
 $APP_DIR = $APP_ROOT_DIR
 $GAME_PROFILE = $PROFILEDIRECTORY
 $INSTALL_DIR = $GAME_DIRECTORY
@@ -32,3 +33,12 @@ $HKEY_MULTIARCH = HKEY_LOCAL_MACHINE\SOFTWARE\WOW6432Node | /etc (multiarch path
 $TEMP_DIR = %LOCALAPPDATA%\temp | var/tmp | $TMPDIR | getCacheDir()
 $TEMP = %LOCALAPPDATA%\temp | var/tmp | $TMPDIR | getCacheDir()
 $TMP = %LOCALAPPDATA%\temp | var/tmp | $TMPDIR | getCacheDir()
+
+$MONITOR${M#}_NAME = "\\.\DISPLAY${M#}"
+$MONITOR${M#}_RESXx$MONITOR${M#}_RESY = $MONITOR${M#}_NAME_{$resolution}
+$MONITOR${M#}_FREQ = $MONITOR${M#}_NAME_{$frequency}
+$MONITOR${M#}_DEPTH = $MONITOR${M#}_NAME_{$bitdepth}
+$MONITOR${M#}_POSX = $MONITOR${M#}_NAME_{$position_x}
+$MONITOR${M#}_POSY = $MONITOR${M#}_NAME_{$position_y}
+$MONITOR${M#}_ORIENT = $MONITOR${M#}_NAME_{$orientation}
+$MONITOR${M#}_PRIMARY = $MONITOR${M#}_NAME_{$primary}

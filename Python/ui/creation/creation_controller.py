@@ -962,9 +962,42 @@ class CreationController:
                         expanded_delimited = '|'.join(expanded_paths)
                         config.set('CONFIG', platform_key, expanded_delimited)
 
-        # Write the INI file
-        with open(ini_path, 'w', encoding='utf-8') as configfile:
-            config.write(configfile)
+        # Determine Game.ini write mode
+        # Deployment tab global settings act as master switches:
+        # both the global flag AND the per-game flag must be True for the operation to proceed.
+        # This ensures the deployment tab overwrite/recreate checkboxes are respected.
+        do_recreate = app_config.recreate_game_ini and game_data.get('recreate_game_ini', True)
+        do_overwrite = app_config.overwrite_game_ini and game_data.get('overwrite_game_ini', True)
+
+        if do_recreate:
+            # Recreate mode: write a completely fresh file, discarding any existing content
+            logging.info(f"Game.ini recreate mode: writing fresh file for {game_data.get('name_override', '')}")
+            with open(ini_path, 'w', encoding='utf-8') as configfile:
+                config.write(configfile)
+        elif do_overwrite:
+            # Overwrite mode: all GUI values overwrite existing, including blanks
+            logging.info(f"Game.ini overwrite mode: overwriting all values for {game_data.get('name_override', '')}")
+            with open(ini_path, 'w', encoding='utf-8') as configfile:
+                config.write(configfile)
+        else:
+            # Default merge mode: only add new sections/keys, fill in blanks, preserve existing values
+            if ini_path.exists():
+                logging.info(f"Game.ini merge mode: merging with existing file for {game_data.get('name_override', '')}")
+                existing = configparser.ConfigParser(interpolation=None)
+                existing.read(str(ini_path), encoding='utf-8')
+                for section in config.sections():
+                    if not existing.has_section(section):
+                        existing.add_section(section)
+                    for key, value in config.items(section):
+                        existing_val = existing.get(section, key, fallback=None)
+                        if existing_val is None or existing_val == '':
+                            existing.set(section, key, value)
+                with open(ini_path, 'w', encoding='utf-8') as configfile:
+                    existing.write(configfile)
+            else:
+                logging.info(f"Game.ini merge mode: no existing file, writing new for {game_data.get('name_override', '')}")
+                with open(ini_path, 'w', encoding='utf-8') as configfile:
+                    config.write(configfile)
 
     def _get_profile_path(self, profile_key, game_data, game_profile_dir=None):
         """

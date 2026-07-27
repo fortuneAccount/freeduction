@@ -637,6 +637,28 @@ class GameLauncher:
                     "Backup",
                 ]
         
+        # Launcher options/arguments fallback: if an application's options/arguments
+        # are empty, use the corresponding profile section as fallback source.
+        # Mapping: application section → profile section with fallback options/arguments
+        launcher_fallbacks = [
+            ('controller_mapper_options', 'controller_mapper_arguments', 'player1_profile_options', 'player1_profile_arguments'),
+            ('monitorapp_options', 'monitorapp_arguments', 'monitor_game_cfg_options', 'monitor_game_cfg_arguments'),
+            ('disc_mount_options', 'disc_mount_arguments', 'disc_mount_cfg_options', 'disc_mount_cfg_arguments'),
+            ('audio_app_options', 'audio_app_arguments', 'audio_game_cfg_options', 'audio_game_cfg_arguments'),
+            ('borderless_options', 'borderless_arguments', 'unborder_cfg_options', 'unborder_cfg_arguments'),
+        ]
+        for app_opts_key, app_args_key, profile_opts_key, profile_args_key in launcher_fallbacks:
+            if not getattr(self, app_opts_key, ''):
+                fallback_opts = getattr(self, profile_opts_key, '')
+                if fallback_opts:
+                    setattr(self, app_opts_key, fallback_opts)
+                    logging.info(f"Fallback: {app_opts_key} empty, using {profile_opts_key}")
+            if not getattr(self, app_args_key, ''):
+                fallback_args = getattr(self, profile_args_key, '')
+                if fallback_args:
+                    setattr(self, app_args_key, fallback_args)
+                    logging.info(f"Fallback: {app_args_key} empty, using {profile_args_key}")
+
         # Run path discovery if needed (discover save/config files from PCGW templates)
         try:
             from Python.utils.path_discovery import discover_and_update_paths

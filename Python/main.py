@@ -1,5 +1,5 @@
-import sys
 import os
+import sys
 import logging
 import argparse
 from importlib import import_module

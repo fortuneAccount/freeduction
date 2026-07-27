@@ -491,6 +491,8 @@ class MainWindow(QMainWindow):
 
     def on_create_button_clicked(self):
         """Handle the Create button click"""
+        # Ensure config reflects current UI state before creation
+        self._sync_config_from_ui_and_save()
         # Get all game data and filter for items marked 'create'
         all_games = self.editor_tab.get_all_game_data()
         games_to_process = [g for g in all_games if g.get('create')]

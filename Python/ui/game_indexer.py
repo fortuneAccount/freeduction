@@ -163,6 +163,8 @@ def _process_executable(
             'arguments': '',
             'run_as_admin': config.run_as_admin,
             'hide_taskbar': config.hide_taskbar,
+            'overwrite_game_ini': config.overwrite_game_ini,
+            'recreate_game_ini': config.recreate_game_ini,
             'kill_list_enabled': config.use_kill_list,
             'kill_list': ",".join(kill_list),
 
