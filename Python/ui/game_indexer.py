@@ -184,6 +184,44 @@ def _process_executable(
             'disc_mount_path': config.disc_mount_path if config.defaults.get('disc_mount_path_enabled', True) else "",
             'launcher_executable': config.launcher_executable if config.defaults.get('launcher_executable_enabled', True) else "",
 
+            # Options and arguments from config
+            'controller_mapper_options': getattr(config, 'controller_mapper_path_options', ''),
+            'controller_mapper_arguments': getattr(config, 'controller_mapper_path_arguments', ''),
+            'borderless_windowing_options': getattr(config, 'borderless_gaming_path_options', ''),
+            'borderless_windowing_arguments': getattr(config, 'borderless_gaming_path_arguments', ''),
+            'monitorapp_options': getattr(config, 'monitorapp_options', ''),
+            'monitorapp_arguments': getattr(config, 'monitorapp_arguments', ''),
+            'player1_profile_options': getattr(config, 'p1_profile_path_options', ''),
+            'player1_profile_arguments': getattr(config, 'p1_profile_path_arguments', ''),
+            'player2_profile_options': getattr(config, 'p2_profile_path_options', ''),
+            'player2_profile_arguments': getattr(config, 'p2_profile_path_arguments', ''),
+            'desk_profile_options': getattr(config, 'desk_profile_path_options', ''),
+            'desk_profile_arguments': getattr(config, 'desk_profile_path_arguments', ''),
+            'monitor_game_cfg_options': getattr(config, 'monitor_game_cfg_options', ''),
+            'monitor_game_cfg_arguments': getattr(config, 'monitor_game_cfg_arguments', ''),
+            'monitor_desk_cfg_options': getattr(config, 'monitor_desk_cfg_options', ''),
+            'monitor_desk_cfg_arguments': getattr(config, 'monitor_desk_cfg_arguments', ''),
+            'just_after_launch_options': getattr(config, 'just_after_launch_path_options', ''),
+            'just_after_launch_arguments': getattr(config, 'just_after_launch_path_arguments', ''),
+            'just_before_exit_options': getattr(config, 'just_before_exit_path_options', ''),
+            'just_before_exit_arguments': getattr(config, 'just_before_exit_path_arguments', ''),
+            'pre1_options': getattr(config, 'pre1_path_options', ''),
+            'pre1_arguments': getattr(config, 'pre1_path_arguments', ''),
+            'pre2_options': getattr(config, 'pre2_path_options', ''),
+            'pre2_arguments': getattr(config, 'pre2_path_arguments', ''),
+            'pre3_options': getattr(config, 'pre3_path_options', ''),
+            'pre3_arguments': getattr(config, 'pre3_path_arguments', ''),
+            'post1_options': getattr(config, 'post1_path_options', ''),
+            'post1_arguments': getattr(config, 'post1_path_arguments', ''),
+            'post2_options': getattr(config, 'post2_path_options', ''),
+            'post2_arguments': getattr(config, 'post2_path_arguments', ''),
+            'post3_options': getattr(config, 'post3_path_options', ''),
+            'post3_arguments': getattr(config, 'post3_path_arguments', ''),
+            'disc_mount_options': getattr(config, 'disc_mount_path_options', ''),
+            'disc_mount_arguments': getattr(config, 'disc_mount_path_arguments', ''),
+            'launcher_executable_options': getattr(config, 'launcher_executable_options', ''),
+            'launcher_executable_arguments': getattr(config, 'launcher_executable_arguments', ''),
+
             # Enabled states from setup tab (defaults)
             'controller_mapper_enabled': config.defaults.get('controller_mapper_path_enabled', True),
             'borderless_windowing_enabled': config.defaults.get('borderless_gaming_path_enabled', True),
@@ -228,91 +266,18 @@ def _process_executable(
             'monitorapp_run_wait': config.run_wait_states.get('monitorapp_path_run_wait', False),
             'just_after_launch_run_wait': config.run_wait_states.get('just_after_launch_path_run_wait', False),
             'just_before_exit_run_wait': config.run_wait_states.get('just_before_exit_path_run_wait', False),
-            'pre_1_run_wait': config.run_wait_states.get('pre1_path_run_wait', False), 'pre_2_run_wait': config.run_wait_states.get('pre2_path_run_wait', False), 'pre_3_run_wait': config.run_wait_states.get('pre3_path_run_wait', False),
-            'post_1_run_wait': config.run_wait_states.get('post1_path_run_wait', False), 'post_2_run_wait': config.run_wait_states.get('post2_path_run_wait', False), 'post_3_run_wait': config.run_wait_states.get('post3_path_run_wait', False),
+            'pre1_run_wait': config.run_wait_states.get('pre1_path_run_wait', False),
+            'pre2_run_wait': config.run_wait_states.get('pre2_path_run_wait', False),
+            'pre3_run_wait': config.run_wait_states.get('pre3_path_run_wait', False),
+            'post1_run_wait': config.run_wait_states.get('post1_path_run_wait', False),
+            'post2_run_wait': config.run_wait_states.get('post2_path_run_wait', False),
+            'post3_run_wait': config.run_wait_states.get('post3_path_run_wait', False),
             'disc_mount_run_wait': config.run_wait_states.get('disc_mount_path_run_wait', False),
-
-            'disc_mount_cfg': getattr(config, 'disc_mount_cfg', ''), 'disc_mount_cfg_enabled': config.defaults.get('disc_mount_cfg_enabled', True), 'disc_mount_cfg_overwrite': config.overwrite_states.get('disc_mount_cfg', True),
-            'disc_mount_cfg_options': getattr(config, 'disc_mount_cfg_options', ''), 'disc_mount_cfg_arguments': getattr(config, 'disc_mount_cfg_arguments', ''),
-            'disc_unmount_cfg': getattr(config, 'disc_unmount_cfg', ''), 'disc_unmount_cfg_enabled': config.defaults.get('disc_unmount_cfg_enabled', True), 'disc_unmount_cfg_overwrite': config.overwrite_states.get('disc_unmount_cfg', True),
-            'disc_unmount_cfg_options': getattr(config, 'disc_unmount_cfg_options', ''), 'disc_unmount_cfg_arguments': getattr(config, 'disc_unmount_cfg_arguments', ''),
-            'audio_app_path': getattr(config, 'audio_tool_path', ''), 'audio_app_enabled': config.defaults.get('audio_tool_path_enabled', True), 'audio_app_overwrite': config.overwrite_states.get('audio_tool_path', True),
-            'audio_app_options': getattr(config, 'audio_app_options', ''), 'audio_app_arguments': getattr(config, 'audio_app_arguments', ''), 'audio_app_run_wait': getattr(config, 'audio_app_run_wait', False),
-            'audio_game_cfg': getattr(config, 'audio_game_cfg', ''), 'audio_game_cfg_enabled': config.defaults.get('audio_game_cfg_enabled', True), 'audio_game_cfg_overwrite': config.overwrite_states.get('audio_game_cfg', True),
-            'audio_game_cfg_options': getattr(config, 'audio_game_cfg_options', ''), 'audio_game_cfg_arguments': getattr(config, 'audio_game_cfg_arguments', ''),
-            'audio_desk_cfg': getattr(config, 'audio_desk_cfg', ''), 'audio_desk_cfg_enabled': config.defaults.get('audio_desk_cfg_enabled', True), 'audio_desk_cfg_overwrite': config.overwrite_states.get('audio_desk_cfg', True),
-            'audio_desk_cfg_options': getattr(config, 'audio_desk_cfg_options', ''), 'audio_desk_cfg_arguments': getattr(config, 'audio_desk_cfg_arguments', ''),
-            'unborder_cfg': getattr(config, 'unborder_cfg', ''), 'unborder_cfg_enabled': config.defaults.get('unborder_cfg_enabled', True), 'unborder_cfg_overwrite': config.overwrite_states.get('unborder_cfg', True),
-            'unborder_cfg_options': getattr(config, 'unborder_cfg_options', ''), 'unborder_cfg_arguments': getattr(config, 'unborder_cfg_arguments', ''),
-            'reborder_cfg': getattr(config, 'reborder_cfg', ''), 'reborder_cfg_enabled': config.defaults.get('reborder_cfg_enabled', True), 'reborder_cfg_overwrite': config.overwrite_states.get('reborder_cfg', True),
-            'reborder_cfg_options': getattr(config, 'reborder_cfg_options', ''), 'reborder_cfg_arguments': getattr(config, 'reborder_cfg_arguments', ''),
+            'launcher_executable_run_wait': config.run_wait_states.get('launcher_executable_run_wait', False),
         }
+
+
         return game_data
-    except PermissionError:
-        logging.warning(f"Permission denied for: {exec_full_path}")
-    except Exception as e:
-        logging.error(f"Error processing file {exec_full_path}: {e}", exc_info=True)
-    return None
+    except Exception:
+        return None
 
-
-def index_games(main_window, progress_callback=None) -> list:
-    """
-    Indexes games from source directories and returns a list of game data dictionaries.
-    This function is decoupled from the UI and returns data, not a count.
-    """
-    config = main_window.config
-    found_executables = []
-
-    # Instantiate NameProcessor once for efficiency
-    name_processor = NameProcessor(
-        release_groups_set=main_window.release_groups_set,
-        exclude_exe_set=main_window.exclude_exe_set
-    )
-
-    # Handle exclusion of games from other managers
-    if config.exclude_selected_manager_games and config.game_managers_present != "None":
-        main_window._locate_and_exclude_manager_config()
-
-    for source_dir in config.source_dirs:
-        if not os.path.exists(source_dir):
-            logging.warning(f"Source directory not found, skipping: {source_dir}")
-            continue
-
-        for root, _, files in os.walk(source_dir):
-            if progress_callback:
-                progress_callback(root)
-
-            if getattr(main_window, 'indexing_cancelled', False):
-                logging.info("Indexing cancelled by user.")
-                return found_executables
-
-            # Check if this directory is excluded or is a subdirectory of an excluded directory
-            root_normalized = os.path.normpath(root).lower()
-            is_excluded = any(
-                root_normalized == os.path.normpath(excluded).lower() or
-                root_normalized.startswith(os.path.normpath(excluded).lower() + os.sep)
-                for excluded in config.excluded_dirs
-            )
-            if is_excluded:
-                # Skip this directory and all its subdirectories
-                dirs[:] = []  # Clear dirs list to prevent os.walk from descending
-                continue
-
-            for filename in files:
-                if not filename.lower().endswith('.exe'):
-                    continue
-
-                exec_full_path = os.path.join(root, filename)
-                exec_full_path_lower = exec_full_path.lower()
-                if exec_full_path_lower in main_window.processed_paths:
-                    continue
-                main_window.processed_paths.add(exec_full_path_lower)
-
-                game_data = _process_executable(
-                    exec_full_path, main_window, name_processor
-                )
-
-                if game_data:
-                    found_executables.append(game_data)
-
-    return found_executables

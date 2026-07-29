@@ -777,7 +777,7 @@ void action_run_controller_mapper(int is_exit) {
     
     if (is_exit) {
         action_kill_controller_mapper();
-        if (!G_CONFIG.desk_profile_enabled || strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.desk_profile) == 0) {
+        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.desk_profile) == 0) {
             show_message("  - Controller Mapper or Desk Profile not configured/found.");
             return;
         }
@@ -794,7 +794,7 @@ void action_run_controller_mapper(int is_exit) {
         profile1 = G_CONFIG.desk_profile;
         profile2 = G_CONFIG.desk_profile;
     } else {
-        if (!G_CONFIG.player1_profile_enabled || strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.player1_profile) == 0) {
+        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.player1_profile) == 0) {
             show_message("  - Controller Mapper or P1 Profile not configured/found.");
             return;
         }
@@ -809,7 +809,7 @@ void action_run_controller_mapper(int is_exit) {
             return;
         }
         profile1 = G_CONFIG.player1_profile;
-        profile2 = (G_CONFIG.player2_profile_enabled && strlen(G_CONFIG.player2_profile) > 0) ? G_CONFIG.player2_profile : NULL;
+        profile2 = strlen(G_CONFIG.player2_profile) > 0 ? G_CONFIG.player2_profile : NULL;
     }
 
     if (is_exit) {
