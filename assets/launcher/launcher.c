@@ -516,47 +516,6 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("AudioPresets", "audiodeskcfgpatharguments")) {
         SET_STR(audio_desk_cfg_arguments);
     }
-    // Backward compatibility: old DiscMountCfg/DiscUnmountCfg sections
-    else if (MATCH("DiscMountCfg", "enablediscmountcfg")) {
-        SET_BOOL(disc_mount_cfg_enabled);
-    } else if (MATCH("DiscMountCfg", "discmountcfgpath")) {
-        SET_STR(disc_mount_cfg);
-    } else if (MATCH("DiscMountCfg", "discmountcfgpathoptions")) {
-        SET_STR(disc_mount_cfg_options);
-    } else if (MATCH("DiscMountCfg", "discmountcfgpatharguments")) {
-        SET_STR(disc_mount_cfg_arguments);
-    } else if (MATCH("DiscUnmountCfg", "enablediscunmountcfg")) {
-        SET_BOOL(disc_unmount_cfg_enabled);
-    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpath")) {
-        SET_STR(disc_unmount_cfg);
-    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpathoptions")) {
-        SET_STR(disc_unmount_cfg_options);
-    } else if (MATCH("DiscUnmountCfg", "discunmountcfgpatharguments")) {
-        SET_STR(disc_unmount_cfg_arguments);
-    // Backward compatibility: old AudioGameCfg/AudioDeskCfg sections
-    } else if (MATCH("AudioDeskCfg", "enableaudiodeskcfg")) {
-        SET_BOOL(audio_desk_cfg_enabled);
-    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpath")) {
-        SET_STR(audio_desk_cfg);
-    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpathoptions")) {
-        SET_STR(audio_desk_cfg_options);
-    } else if (MATCH("AudioDeskCfg", "audiodeskcfgpatharguments")) {
-        SET_STR(audio_desk_cfg_arguments);
-    }
-    // [Launcher] section (for compatibility with Python-created Game.ini)
-    else if (MATCH("Launcher", "runasadmin")) {
-        SET_BOOL(run_as_admin);
-    } else if (MATCH("Launcher", "hidetaskbar")) {
-        SET_BOOL(hide_taskbar);
-    } else if (MATCH("Launcher", "borderless")) {
-        strncpy(pConfig->borderless, value, sizeof(pConfig->borderless) - 1);
-    } else if (MATCH("Launcher", "usekilllist")) {
-        SET_BOOL(use_kill_list);
-    } else if (MATCH("Launcher", "killlist")) {
-        SET_STR(kill_list);
-    } else if (MATCH("Launcher", "terminateborderlessonexit")) {
-        SET_BOOL(terminate_borderless_on_exit);
-    }
     // [Options] section
     else if (MATCH("Options", "RunAsAdmin")) {
         SET_BOOL(run_as_admin);
@@ -601,32 +560,6 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("PreLaunch", "App3Wait")) {
         SET_BOOL(pre_launch_app_3_wait);
     }
-    // [Pre1], [Pre2], [Pre3] sections (for compatibility with Python-created Game.ini)
-    else if (MATCH("Pre1", "pre1path")) {
-        SET_STR(pre_launch_app_1);
-    } else if (MATCH("Pre1", "pre1pathoptions")) {
-        SET_STR(pre_launch_app_1_options);
-    } else if (MATCH("Pre1", "pre1patharguments")) {
-        SET_STR(pre_launch_app_1_arguments);
-    } else if (MATCH("Pre1", "pre1pathrunwait")) {
-        SET_BOOL(pre_launch_app_1_wait);
-    } else if (MATCH("Pre2", "pre2path")) {
-        SET_STR(pre_launch_app_2);
-    } else if (MATCH("Pre2", "pre2pathoptions")) {
-        SET_STR(pre_launch_app_2_options);
-    } else if (MATCH("Pre2", "pre2patharguments")) {
-        SET_STR(pre_launch_app_2_arguments);
-    } else if (MATCH("Pre2", "pre2pathrunwait")) {
-        SET_BOOL(pre_launch_app_2_wait);
-    } else if (MATCH("Pre3", "pre3path")) {
-        SET_STR(pre_launch_app_3);
-    } else if (MATCH("Pre3", "pre3pathoptions")) {
-        SET_STR(pre_launch_app_3_options);
-    } else if (MATCH("Pre3", "pre3patharguments")) {
-        SET_STR(pre_launch_app_3_arguments);
-    } else if (MATCH("Pre3", "pre3pathrunwait")) {
-        SET_BOOL(pre_launch_app_3_wait);
-    }
     // [PostLaunch] section
     else if (MATCH("PostLaunch", "App1")) {
         SET_STR(post_launch_app_1);
@@ -667,48 +600,6 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("PostLaunch", "JustBeforeExitArguments")) {
         SET_STR(just_before_exit_arguments);
     } else if (MATCH("PostLaunch", "JustBeforeExitWait")) {
-        SET_BOOL(just_before_exit_wait);
-    }
-    // [Post1], [Post2], [Post3], [JustAfterLaunch], [JustBeforeExit] sections (for compatibility with Python-created Game.ini)
-    else if (MATCH("Post1", "post1path")) {
-        SET_STR(post_launch_app_1);
-    } else if (MATCH("Post1", "post1pathoptions")) {
-        SET_STR(post_launch_app_1_options);
-    } else if (MATCH("Post1", "post1patharguments")) {
-        SET_STR(post_launch_app_1_arguments);
-    } else if (MATCH("Post1", "post1pathrunwait")) {
-        SET_BOOL(post_launch_app_1_wait);
-    } else if (MATCH("Post2", "post2path")) {
-        SET_STR(post_launch_app_2);
-    } else if (MATCH("Post2", "post2pathoptions")) {
-        SET_STR(post_launch_app_2_options);
-    } else if (MATCH("Post2", "post2patharguments")) {
-        SET_STR(post_launch_app_2_arguments);
-    } else if (MATCH("Post2", "post2pathrunwait")) {
-        SET_BOOL(post_launch_app_2_wait);
-    } else if (MATCH("Post3", "post3path")) {
-        SET_STR(post_launch_app_3);
-    } else if (MATCH("Post3", "post3pathoptions")) {
-        SET_STR(post_launch_app_3_options);
-    } else if (MATCH("Post3", "post3patharguments")) {
-        SET_STR(post_launch_app_3_arguments);
-    } else if (MATCH("Post3", "post3pathrunwait")) {
-        SET_BOOL(post_launch_app_3_wait);
-    } else if (MATCH("JustAfterLaunch", "path")) {
-        SET_STR(just_after_launch_app);
-    } else if (MATCH("JustAfterLaunch", "pathoptions")) {
-        SET_STR(just_after_launch_options);
-    } else if (MATCH("JustAfterLaunch", "patharguments")) {
-        SET_STR(just_after_launch_arguments);
-    } else if (MATCH("JustAfterLaunch", "pathrunwait")) {
-        SET_BOOL(just_after_launch_wait);
-    } else if (MATCH("JustBeforeExit", "path")) {
-        SET_STR(just_before_exit_app);
-    } else if (MATCH("JustBeforeExit", "pathoptions")) {
-        SET_STR(just_before_exit_options);
-    } else if (MATCH("JustBeforeExit", "patharguments")) {
-        SET_STR(just_before_exit_arguments);
-    } else if (MATCH("JustBeforeExit", "pathrunwait")) {
         SET_BOOL(just_before_exit_wait);
     }
     // [Sequences] section

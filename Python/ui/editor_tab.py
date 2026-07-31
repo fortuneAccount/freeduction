@@ -1194,7 +1194,7 @@ class EditorTab(QWidget):
         sel_model = self.table.selectionModel()
         idx = self.table.model().index(row, 0)
         if not sel_model.isSelected(idx):
-            sel_model.select(idx, QItemSelectionModel.Select | QItemSelectionModel.Rows)
+            sel_model.select(idx, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
 
         menu = QMenu(self)
         

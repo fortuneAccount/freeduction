@@ -385,15 +385,16 @@ class GameLauncher:
             self.game_name = config.get(sec, 'name', fallback=self.game_name)
             self.iso_path = config.get(sec, 'isopath', fallback='')
 
-        # Load Launcher section
-        sec = s('Launcher')
+        # Load Options section
+        sec = s('Options')
         if sec:
-            self.run_as_admin = config.getboolean(sec, 'runasadmin', fallback=False)
-            self.hide_taskbar = config.getboolean(sec, 'hidetaskbar', fallback=False)
-            self.borderless = config.get(sec, 'borderless', fallback='0')
-            self.use_kill_list = config.getboolean(sec, 'usekilllist', fallback=False)
-            self.kill_list_str = config.get(sec, 'killlist', fallback='')
+            self.run_as_admin = config.getboolean(sec, 'RunAsAdmin', fallback=False)
+            self.hide_taskbar = config.getboolean(sec, 'HideTaskbar', fallback=False)
+            self.borderless = config.get(sec, 'Borderless', fallback='0')
+            self.use_kill_list = config.getboolean(sec, 'UseKillList', fallback=False)
+            self.kill_list_str = config.get(sec, 'KillList', fallback='')
             self.kill_list = [x.strip() for x in self.kill_list_str.split(',') if x.strip()]
+            self.terminate_borderless_on_exit = config.getboolean(sec, 'TerminateBorderlessOnExit', fallback=True)
 
         # Load mapperprofiles section
         sec = s('mapperprofiles')
@@ -523,65 +524,51 @@ class GameLauncher:
         else:
             self.backup_enabled = False
 
-        # Load Pre1, Pre2, Pre3 sections
-        sec = s('Pre1')
+        # Load PreLaunch section
+        sec = s('PreLaunch')
         if sec:
-            self.pre_launch_app_1 = config.get(sec, 'pre1path', fallback='')
-            self.pre_launch_app_1_options = config.get(sec, 'pre1pathoptions', fallback='')
-            self.pre_launch_app_1_arguments = config.get(sec, 'pre1patharguments', fallback='')
-            self.pre_launch_app_1_wait = config.getboolean(sec, 'pre1pathrunwait', fallback=False)
+            self.pre_launch_app_1 = config.get(sec, 'App1', fallback='')
+            self.pre_launch_app_1_options = config.get(sec, 'App1Options', fallback='')
+            self.pre_launch_app_1_arguments = config.get(sec, 'App1Arguments', fallback='')
+            self.pre_launch_app_1_wait = config.getboolean(sec, 'App1Wait', fallback=False)
 
-        sec = s('Pre2')
-        if sec:
-            self.pre_launch_app_2 = config.get(sec, 'pre2path', fallback='')
-            self.pre_launch_app_2_options = config.get(sec, 'pre2pathoptions', fallback='')
-            self.pre_launch_app_2_arguments = config.get(sec, 'pre2patharguments', fallback='')
-            self.pre_launch_app_2_wait = config.getboolean(sec, 'pre2pathrunwait', fallback=False)
+            self.pre_launch_app_2 = config.get(sec, 'App2', fallback='')
+            self.pre_launch_app_2_options = config.get(sec, 'App2Options', fallback='')
+            self.pre_launch_app_2_arguments = config.get(sec, 'App2Arguments', fallback='')
+            self.pre_launch_app_2_wait = config.getboolean(sec, 'App2Wait', fallback=False)
 
-        sec = s('Pre3')
-        if sec:
-            self.pre_launch_app_3 = config.get(sec, 'pre3path', fallback='')
-            self.pre_launch_app_3_options = config.get(sec, 'pre3pathoptions', fallback='')
-            self.pre_launch_app_3_arguments = config.get(sec, 'pre3patharguments', fallback='')
-            self.pre_launch_app_3_wait = config.getboolean(sec, 'pre3pathrunwait', fallback=False)
+            self.pre_launch_app_3 = config.get(sec, 'App3', fallback='')
+            self.pre_launch_app_3_options = config.get(sec, 'App3Options', fallback='')
+            self.pre_launch_app_3_arguments = config.get(sec, 'App3Arguments', fallback='')
+            self.pre_launch_app_3_wait = config.getboolean(sec, 'App3Wait', fallback=False)
 
-        # Load Post1, Post2, Post3 sections
-        sec = s('Post1')
+        # Load PostLaunch section
+        sec = s('PostLaunch')
         if sec:
-            self.post_launch_app_1 = config.get(sec, 'post1path', fallback='')
-            self.post_launch_app_1_options = config.get(sec, 'post1pathoptions', fallback='')
-            self.post_launch_app_1_arguments = config.get(sec, 'post1patharguments', fallback='')
-            self.post_launch_app_1_wait = config.getboolean(sec, 'post1pathrunwait', fallback=False)
+            self.post_launch_app_1 = config.get(sec, 'App1', fallback='')
+            self.post_launch_app_1_options = config.get(sec, 'App1Options', fallback='')
+            self.post_launch_app_1_arguments = config.get(sec, 'App1Arguments', fallback='')
+            self.post_launch_app_1_wait = config.getboolean(sec, 'App1Wait', fallback=False)
 
-        sec = s('Post2')
-        if sec:
-            self.post_launch_app_2 = config.get(sec, 'post2path', fallback='')
-            self.post_launch_app_2_options = config.get(sec, 'post2pathoptions', fallback='')
-            self.post_launch_app_2_arguments = config.get(sec, 'post2patharguments', fallback='')
-            self.post_launch_app_2_wait = config.getboolean(sec, 'post2pathrunwait', fallback=False)
+            self.post_launch_app_2 = config.get(sec, 'App2', fallback='')
+            self.post_launch_app_2_options = config.get(sec, 'App2Options', fallback='')
+            self.post_launch_app_2_arguments = config.get(sec, 'App2Arguments', fallback='')
+            self.post_launch_app_2_wait = config.getboolean(sec, 'App2Wait', fallback=False)
 
-        sec = s('Post3')
-        if sec:
-            self.post_launch_app_3 = config.get(sec, 'post3path', fallback='')
-            self.post_launch_app_3_options = config.get(sec, 'post3pathoptions', fallback='')
-            self.post_launch_app_3_arguments = config.get(sec, 'post3patharguments', fallback='')
-            self.post_launch_app_3_wait = config.getboolean(sec, 'post3pathrunwait', fallback=False)
+            self.post_launch_app_3 = config.get(sec, 'App3', fallback='')
+            self.post_launch_app_3_options = config.get(sec, 'App3Options', fallback='')
+            self.post_launch_app_3_arguments = config.get(sec, 'App3Arguments', fallback='')
+            self.post_launch_app_3_wait = config.getboolean(sec, 'App3Wait', fallback=False)
 
-        # Load JustAfterLaunch section
-        sec = s('JustAfterLaunch')
-        if sec:
-            self.just_after_launch_app = config.get(sec, 'path', fallback='')
-            self.just_after_launch_options = config.get(sec, 'pathoptions', fallback='')
-            self.just_after_launch_arguments = config.get(sec, 'patharguments', fallback='')
-            self.just_after_launch_wait = config.getboolean(sec, 'pathrunwait', fallback=False)
+            self.just_after_launch_app = config.get(sec, 'JustAfterLaunchApp', fallback='')
+            self.just_after_launch_options = config.get(sec, 'JustAfterLaunchOptions', fallback='')
+            self.just_after_launch_arguments = config.get(sec, 'JustAfterLaunchArguments', fallback='')
+            self.just_after_launch_wait = config.getboolean(sec, 'JustAfterLaunchWait', fallback=False)
 
-        # Load JustBeforeExit section
-        sec = s('JustBeforeExit')
-        if sec:
-            self.just_before_exit_app = config.get(sec, 'path', fallback='')
-            self.just_before_exit_options = config.get(sec, 'pathoptions', fallback='')
-            self.just_before_exit_arguments = config.get(sec, 'patharguments', fallback='')
-            self.just_before_exit_wait = config.getboolean(sec, 'pathrunwait', fallback=False)
+            self.just_before_exit_app = config.get(sec, 'JustBeforeExitApp', fallback='')
+            self.just_before_exit_options = config.get(sec, 'JustBeforeExitOptions', fallback='')
+            self.just_before_exit_arguments = config.get(sec, 'JustBeforeExitArguments', fallback='')
+            self.just_before_exit_wait = config.getboolean(sec, 'JustBeforeExitWait', fallback=False)
 
         # Load sequences
         sec = s('Sequences')

@@ -4,7 +4,7 @@ class AppConfig:
         # Setup Tab: Main Settings
         self.source_dirs = []
         self.excluded_dirs = []
-        self.logging_verbosity = "Low"
+        self.logging_verbosity = "Debug"
         self.ui_theme: str = "Universal"
         self.plugin_creation_mode: bool = False
         self.game_managers_present = "None"
