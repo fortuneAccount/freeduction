@@ -172,8 +172,8 @@ def _process_executable(
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'borderless_windowing_path': config.borderless_gaming_path if config.defaults.get('borderless_gaming_path_enabled', True) else "",
             'monitorapp_path': config.monitorapp_path if config.defaults.get('monitorapp_path_enabled', True) else "",
-            'monitor_game_profile': config.monitor_gaming_path if config.defaults.get('monitor_gaming_path_enabled', False) else "",
-            'monitor_desk_profile': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "",
+            'monitor_game_cfg': config.monitor_game_path if config.defaults.get('monitor_game_path_enabled', False) else "",
+            'monitor_desk_cfg': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "",
             'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "",
             'player2_profile': config.p2_profile_path if config.defaults.get('p2_profile_path_enabled', True) else "",
             'desk_profile': config.desk_profile_path if config.defaults.get('desk_profile_path_enabled', True) else "",
@@ -237,8 +237,8 @@ def _process_executable(
             'player1_profile_enabled': config.defaults.get('p1_profile_path_enabled', True),
             'player2_profile_enabled': config.defaults.get('p2_profile_path_enabled', True),
             'desk_profile_enabled': config.defaults.get('desk_profile_path_enabled', True),
-            'monitor_game_profile_enabled': config.defaults.get('monitor_gaming_path_enabled', False),
-            'monitor_desk_profile_enabled': config.defaults.get('monitor_desk_path_enabled', False),
+            'monitor_game_cfg_enabled': config.defaults.get('monitor_game_path_enabled', False),
+            'monitor_desk_cfg_enabled': config.defaults.get('monitor_desk_path_enabled', False),
 
             # Overwrite states (default to global config)
             'controller_mapper_overwrite': config.overwrite_states.get('controller_mapper_path', True),
@@ -256,8 +256,8 @@ def _process_executable(
             'player1_profile_overwrite': config.overwrite_states.get('p1_profile_path', True),
             'player2_profile_overwrite': config.overwrite_states.get('p2_profile_path', True),
             'desk_profile_overwrite': config.overwrite_states.get('desk_profile_path', True),
-            'monitor_game_profile_overwrite': config.overwrite_states.get('monitor_gaming_path', True),
-            'monitor_desk_profile_overwrite': config.overwrite_states.get('monitor_desk_path', True),
+            'monitor_game_cfg_overwrite': config.overwrite_states.get('monitor_game_path', True),
+            'monitor_desk_cfg_overwrite': config.overwrite_states.get('monitor_desk_path', True),
             'launcher_executable_overwrite': config.overwrite_states.get('launcher_executable', True),
 
             # Run-wait states from setup tab

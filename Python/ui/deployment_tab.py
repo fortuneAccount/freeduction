@@ -18,7 +18,7 @@ PATH_KEYS = [
     "controller_mapper_path", "monitorapp_path",
     "just_after_launch_path", "just_before_exit_path",
     "p1_profile_path", "p2_profile_path", "desk_profile_path",
-    "monitor_gaming_path", "monitor_desk_path",
+    "monitor_game_path", "monitor_desk_path",
     "pre1_path", "post1_path", "pre2_path", "post2_path", "pre3_path", 
     "post3_path",
 ]
@@ -34,7 +34,7 @@ PATH_LABELS = {
     "p1_profile_path": "Overwrite Player 1 Profile",
     "p2_profile_path": "Overwrite Player 2 Profile",
     "desk_profile_path": "Overwrite Desk Profile",
-    "monitor_gaming_path": "Overwrite Mon Gaming Config",
+    "monitor_game_path": "Overwrite Mon Gaming Config",
     "monitor_desk_path": "Overwrite Mon Desk Config",
     "pre1_path": "Overwrite Pre-Launch App 1",
     "post1_path": "Overwrite Post-Launch App 1",

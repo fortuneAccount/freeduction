@@ -628,6 +628,7 @@ class CreationController:
         config.set('Game', 'name', game_data.get('name_override', ''))
         config.set('Game', 'isopath', game_data.get('iso_path', ''))
         config.set('Game', 'steamid', str(game_data.get('steam_id', '')))
+        config.set('Game', 'logging_verbosity', app_config.logging_verbosity)
 
         # --- [Launcher] Section ---
         config.add_section('Launcher')

@@ -204,7 +204,7 @@ class DataManager(QObject):
         """Sanitize game data by clearing paths for disabled items."""
         import copy
         sanitized_data = copy.deepcopy(games_data)
-        
+
         # Define path fields and their corresponding enabled flags
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
@@ -221,8 +221,8 @@ class DataManager(QObject):
             ('player1_profile', 'player1_profile_enabled'),
             ('player2_profile', 'player2_profile_enabled'),
             ('desk_profile', 'desk_profile_enabled'),
-            ('monitor_game_profile', 'monitor_game_profile_enabled'),
-            ('monitor_desk_profile', 'monitor_desk_profile_enabled'),
+            ('monitor_game_cfg', 'monitor_game_cfg_enabled'),
+            ('monitor_desk_cfg', 'monitor_desk_cfg_enabled'),
             ('launcher_executable', 'launcher_executable_enabled'),
             ('disc_mount_path', 'disc_mount_enabled'),
             ('audio_app_path', 'audio_app_enabled'),

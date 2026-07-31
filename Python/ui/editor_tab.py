@@ -1122,6 +1122,21 @@ class EditorTab(QWidget):
 
 
             'monitor_desk_cfg': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "", 'monitor_desk_cfg_enabled': config.defaults.get('monitor_desk_path_enabled', False), 'monitor_desk_cfg_overwrite': config.overwrite_states.get('monitor_desk_path', True),
+            'monitor_desk_cfg_options': config.monitor_desk_cfg_options, 'monitor_desk_cfg_arguments': config.monitor_desk_cfg_arguments,
+
+            # Monitor Game Config
+            'monitor_game_cfg': config.monitor_game_path if config.defaults.get('monitor_game_path_enabled', False) else "", 'monitor_game_cfg_enabled': config.defaults.get('monitor_game_path_enabled', False), 'monitor_game_cfg_overwrite': config.overwrite_states.get('monitor_game_path', True),
+            'monitor_game_cfg_options': config.monitor_game_cfg_options, 'monitor_game_cfg_arguments': config.monitor_game_cfg_arguments,
+
+            # Profiles
+            'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "", 'player1_profile_enabled': config.defaults.get('p1_profile_path_enabled', True), 'player1_profile_overwrite': config.overwrite_states.get('p1_profile_path', True),
+            'player1_profile_options': config.p1_profile_path_options, 'player1_profile_arguments': config.p1_profile_path_arguments,
+
+            'player2_profile': config.p2_profile_path if config.defaults.get('p2_profile_path_enabled', True) else "", 'player2_profile_enabled': config.defaults.get('p2_profile_path_enabled', True), 'player2_profile_overwrite': config.overwrite_states.get('p2_profile_path', True),
+            'player2_profile_options': config.p2_profile_path_options, 'player2_profile_arguments': config.p2_profile_path_arguments,
+
+            'desk_profile': config.desk_profile_path if config.defaults.get('desk_profile_path_enabled', True) else "", 'desk_profile_enabled': config.defaults.get('desk_profile_path_enabled', True), 'desk_profile_overwrite': config.overwrite_states.get('desk_profile_path', True),
+            'desk_profile_options': config.desk_profile_path_options, 'desk_profile_arguments': config.desk_profile_path_arguments,
 
             # Launcher Executable
             'launcher_executable': (config.launcher_executable if config.launcher_executable else constants.LAUNCHER_EXECUTABLE) if config.defaults.get('launcher_executable_enabled', True) else "", 'launcher_executable_enabled': config.defaults.get('launcher_executable_enabled', True), 'launcher_executable_overwrite': config.overwrite_states.get('launcher_executable', True),
@@ -1140,14 +1155,6 @@ class EditorTab(QWidget):
             'audio_app_options': '', 'audio_app_arguments': '', 'audio_app_run_wait': False,
             'unborder_cfg': '', 'unborder_cfg_enabled': True, 'unborder_cfg_overwrite': True,
             'reborder_cfg': '', 'reborder_cfg_enabled': True, 'reborder_cfg_overwrite': True,
-
-            # Monitor Config App
-            'monitorapp_path': config.monitorapp_path if config.defaults.get('monitorapp_path_enabled', True) else "",
-            'monitorapp_enabled': config.defaults.get('monitorapp_path_enabled', True),
-            'monitorapp_overwrite': config.overwrite_states.get('monitorapp_path', True),
-            'monitorapp_options': config.monitorapp_options,
-            'monitorapp_arguments': config.monitorapp_arguments,
-            'monitorapp_run_wait': config.run_wait_states.get('monitorapp_path_run_wait', False),
         }
         
         self.original_data.append(copy.deepcopy(game_data))

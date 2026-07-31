@@ -242,6 +242,35 @@ def build_ludusavi_command(ludusavi_path, backup_path, game_name,
     return cmd
 
 
+def _get_section(config, name):
+    """Case-insensitive section lookup."""
+    for section in config.sections():
+        if section.lower() == name.lower():
+            return section
+    return None
+
+
+def _has_option(config, section, option):
+    """Case-insensitive option lookup within a section."""
+    sec = _get_section(config, section)
+    if not sec:
+        return False
+    for opt in config.options(sec):
+        if opt.lower() == option.lower():
+            return True
+    return False
+
+
+def _config_get(config, section, option, **kwargs):
+    """Case-insensitive config.get()."""
+    sec = _get_section(config, section)
+    if sec:
+        for opt in config.options(sec):
+            if opt.lower() == option.lower():
+                return config.get(sec, opt, **kwargs)
+    return kwargs.get('fallback', '')
+
+
 def parse_save_paths_from_gameini(config, section='SAVE', platform='windows'):
     """
     Parse save paths from Game.ini [SAVE] section.
@@ -254,13 +283,14 @@ def parse_save_paths_from_gameini(config, section='SAVE', platform='windows'):
     Returns:
         List of save paths
     """
-    if not config.has_section(section):
+    sec = _get_section(config, section)
+    if not sec:
         return []
     
-    if not config.has_option(section, platform):
+    if not _has_option(config, sec, platform):
         return []
     
-    paths_str = config.get(section, platform)
+    paths_str = _config_get(config, sec, platform)
     if not paths_str:
         return []
     

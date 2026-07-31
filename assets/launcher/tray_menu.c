@@ -17,8 +17,10 @@
 // External references from launcher.c
 extern GameConfiguration G_CONFIG;
 extern PROCESS_INFORMATION G_GAME_PROCESS_INFO;
+extern char G_GAME_EXE_NAME[];
 extern int G_VERBOSE_LEVEL;
 extern void terminate_process_tree(DWORD pid);
+extern void kill_process_by_name(const char* process_name);
 extern void execute_sequence(const char* sequence_str, int is_exit_sequence);
 extern void ensure_cleanup();
 extern void action_kill_process_list();
@@ -251,6 +253,10 @@ void tray_stop_game() {
         CloseHandle(G_GAME_PROCESS_INFO.hThread);
         ZeroMemory(&G_GAME_PROCESS_INFO, sizeof(PROCESS_INFORMATION));
         log_message("INFO", "Game process terminated");
+    } else if (strlen(G_GAME_EXE_NAME) > 0) {
+        // Fallback for ShellExecute-launched games
+        log_message("INFO", "Stopping game by executable name");
+        kill_process_by_name(G_GAME_EXE_NAME);
     }
 }
 
@@ -267,6 +273,10 @@ void tray_kill_all() {
         CloseHandle(G_GAME_PROCESS_INFO.hThread);
         ZeroMemory(&G_GAME_PROCESS_INFO, sizeof(PROCESS_INFORMATION));
         log_message("INFO", "Game process killed");
+    } else if (strlen(G_GAME_EXE_NAME) > 0) {
+        // Fallback for ShellExecute-launched games
+        log_message("INFO", "Killing game by executable name");
+        kill_process_by_name(G_GAME_EXE_NAME);
     }
     
     // Kill processes in kill list

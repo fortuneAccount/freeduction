@@ -552,7 +552,7 @@ class MainWindow(QMainWindow):
             "controller_mapper_path", "borderless_gaming_path", "monitorapp_path",
             "just_after_launch_path", "just_before_exit_path",
             "p1_profile_path", "p2_profile_path", "desk_profile_path",
-            "monitor_gaming_path", "monitor_desk_path",
+            "monitor_game_path", "monitor_desk_path",
             "pre1_path", "post1_path", "pre2_path", "post2_path", "pre3_path", "post3_path"
         ]
         

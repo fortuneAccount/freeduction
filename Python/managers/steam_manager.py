@@ -45,10 +45,6 @@ class SteamManager(QObject):
         )
         self.download_thread.start()
 
-    def download_steam_json(self, version=2):
-        """Backward-compatible wrapper for the update workflow."""
-        self.update_steam_json(version)
-
     def _update_steam_json_with_progress(self, version: int):
         """Download a temporary copy, compare it to the current file, and refresh caches when needed."""
         self.is_downloading = True

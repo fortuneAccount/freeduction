@@ -24,6 +24,7 @@ typedef struct {
     char directory[MAX_PATH_LEN];
     char name[MAX_NAME_LEN];
     char iso_path[MAX_PATH_LEN];
+    char logging_verbosity[32];
 
     // [Paths]
     int controller_mapper_enabled;

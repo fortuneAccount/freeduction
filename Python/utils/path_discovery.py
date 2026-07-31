@@ -11,6 +11,45 @@ import logging
 import configparser
 
 
+def _get_section(config, name):
+    """Case-insensitive section lookup."""
+    for section in config.sections():
+        if section.lower() == name.lower():
+            return section
+    return None
+
+
+def _has_option(config, section, option):
+    """Case-insensitive option lookup within a section."""
+    sec = _get_section(config, section)
+    if not sec:
+        return False
+    for opt in config.options(sec):
+        if opt.lower() == option.lower():
+            return True
+    return False
+
+
+def _config_get(config, section, option, **kwargs):
+    """Case-insensitive config.get()."""
+    sec = _get_section(config, section)
+    if sec:
+        for opt in config.options(sec):
+            if opt.lower() == option.lower():
+                return config.get(sec, opt, **kwargs)
+    return kwargs.get('fallback', '')
+
+
+def _config_getboolean(config, section, option, **kwargs):
+    """Case-insensitive config.getboolean()."""
+    sec = _get_section(config, section)
+    if sec:
+        for opt in config.options(sec):
+            if opt.lower() == option.lower():
+                return config.getboolean(sec, opt, **kwargs)
+    return kwargs.get('fallback', False)
+
+
 class PathDiscovery:
     """Discovers and resolves save/config file paths from templates."""
     
@@ -26,8 +65,8 @@ class PathDiscovery:
         self.config.read(game_ini_path, encoding='utf-8')
         
         # Get game directory for template expansion
-        self.game_directory = self.config.get('Game', 'Directory', fallback='')
-        self.game_name = self.config.get('Game', 'Name', fallback='')
+        self.game_directory = _config_get(self.config, 'Game', 'Directory', fallback='')
+        self.game_name = _config_get(self.config, 'Game', 'Name', fallback='')
 
         # Cache for expensive lookups
         self._steam_path_cache = None
@@ -41,17 +80,18 @@ class PathDiscovery:
         - [SYSTEM] section exists with queryable paths
         - [SAVE] or [CONFIG] sections are empty or have missing keys
         """
-        if not self.config.has_section('SYSTEM'):
+        system_sec = _get_section(self.config, 'SYSTEM')
+        if not system_sec:
             return False
         
         # Check if we have any SYSTEM keys
-        system_keys = self.config.options('SYSTEM')
+        system_keys = self.config.options(system_sec)
         if not system_keys:
             return False
         
         # Check if SAVE/CONFIG sections are incomplete
-        has_save_section = self.config.has_section('SAVE')
-        has_config_section = self.config.has_section('CONFIG')
+        has_save_section = _get_section(self.config, 'SAVE') is not None
+        has_config_section = _get_section(self.config, 'CONFIG') is not None
         
         # Extract platforms from SYSTEM keys
         platforms = set()
@@ -62,9 +102,9 @@ class PathDiscovery:
         
         # Check if any platform is missing from SAVE/CONFIG sections
         for platform in platforms:
-            if not has_save_section or not self.config.has_option('SAVE', platform):
+            if not has_save_section or not _has_option(self.config, 'SAVE', platform):
                 return True
-            if not has_config_section or not self.config.has_option('CONFIG', platform):
+            if not has_config_section or not _has_option(self.config, 'CONFIG', platform):
                 return True
         
         return False
@@ -181,11 +221,12 @@ class PathDiscovery:
             'config': {}
         }
         
-        if not self.config.has_section('SYSTEM'):
+        system_sec = _get_section(self.config, 'SYSTEM')
+        if not system_sec:
             return discovered
         
         # Process each SYSTEM key
-        for key in self.config.options('SYSTEM'):
+        for key in self.config.options(system_sec):
             if not (key.endswith('_save') or key.endswith('_config')):
                 continue
             
@@ -204,7 +245,7 @@ class PathDiscovery:
                 continue
             
             # Get template paths
-            template_value = self.config.get('SYSTEM', key)
+            template_value = self.config.get(system_sec, key)
             template_paths = template_value.split('|')
             
             # Discover actual paths
@@ -250,30 +291,34 @@ class PathDiscovery:
         updated = False
         
         # Ensure sections exist
-        if not self.config.has_section('SAVE'):
+        save_sec = _get_section(self.config, 'SAVE')
+        if not save_sec:
             self.config.add_section('SAVE')
-        if not self.config.has_section('CONFIG'):
+            save_sec = 'SAVE'
+        config_sec = _get_section(self.config, 'CONFIG')
+        if not config_sec:
             self.config.add_section('CONFIG')
+            config_sec = 'CONFIG'
         
         # Update SAVE section
         for platform, paths in discovered_paths.get('save', {}).items():
             if paths:
                 # Only update if key doesn't exist or is empty
-                if not self.config.has_option('SAVE', platform) or not self.config.get('SAVE', platform):
+                if not _has_option(self.config, save_sec, platform) or not _config_get(self.config, save_sec, platform):
                     pipe_delimited = '|'.join(paths)
-                    self.config.set('SAVE', platform, pipe_delimited)
+                    self.config.set(save_sec, platform, pipe_delimited)
                     updated = True
-                    logging.info(f"Updated [SAVE] {platform} with {len(paths)} paths")
+                    logging.info(f"Updated [{save_sec}] {platform} with {len(paths)} paths")
         
         # Update CONFIG section
         for platform, paths in discovered_paths.get('config', {}).items():
             if paths:
                 # Only update if key doesn't exist or is empty
-                if not self.config.has_option('CONFIG', platform) or not self.config.get('CONFIG', platform):
+                if not _has_option(self.config, config_sec, platform) or not _config_get(self.config, config_sec, platform):
                     pipe_delimited = '|'.join(paths)
-                    self.config.set('CONFIG', platform, pipe_delimited)
+                    self.config.set(config_sec, platform, pipe_delimited)
                     updated = True
-                    logging.info(f"Updated [CONFIG] {platform} with {len(paths)} paths")
+                    logging.info(f"Updated [{config_sec}] {platform} with {len(paths)} paths")
         
         # Write back to file if updated
         if updated:

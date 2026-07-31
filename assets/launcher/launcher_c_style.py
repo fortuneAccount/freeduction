@@ -156,13 +156,23 @@ def kill_process_by_name(process_name: str, timeout: int = 3):
         if proc.info['name'].lower() == process_name.lower():
             terminate_process_tree(proc, timeout=timeout)
 
+def _find_game_ini(directory: Path) -> Optional[Path]:
+    """Find Game.ini in directory with case-insensitive matching."""
+    if not directory.is_dir():
+        return None
+    for entry in directory.iterdir():
+        if entry.is_file() and entry.name.lower() == 'game.ini':
+            return entry
+    return None
+
+
 def load_configuration(plink_path: str):
     """Loads configuration into the global CONFIG dictionary."""
     scpath = Path(plink_path).parent
-    game_ini_path = scpath / "Game.ini"
+    game_ini_path = _find_game_ini(scpath)
 
-    if not game_ini_path.exists():
-        show_message(f"Configuration file not found at {game_ini_path}")
+    if not game_ini_path:
+        show_message(f"Configuration file not found (Game.ini) in {scpath}")
         return False
 
     parser = configparser.ConfigParser()

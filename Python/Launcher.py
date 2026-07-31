@@ -45,11 +45,11 @@ if sys.platform == 'win32':
     except ImportError:
         pass
 
-# Import the new sequence executor
+# Import the sequence executor
 try:
-    from Python.sequence_executor_v2 import SequenceExecutorV2
+    from Python.sequence_executor import SequenceExecutor
 except ImportError:
-    from sequence_executor_v2 import SequenceExecutorV2
+    from sequence_executor import SequenceExecutor
 
 class DynamicSplash:
     """Stubbed splash screen for minimal build."""
@@ -170,7 +170,7 @@ class GameLauncher:
                 except ImportError:
                     logging.debug("Plugin manager not available")
         
-        self.executor = SequenceExecutorV2(self)
+        self.executor = SequenceExecutor(self)
         
         # Initialize tray menu or hotkey handler (optional for minimal build)
         self.hotkey_handler = None
@@ -233,14 +233,15 @@ class GameLauncher:
         # Reconstruct target path if it contained spaces and wasn't quoted in the shortcut.
         # This is required because Shortcut.exe crashes (0xC0000005) if parameters are double-quoted.
         if args.target and unknown:
-            pos_args = [args.target]
-            # Attempt to build the longest possible valid path from positional arguments
+            # Collect all positional tokens
+            pos_tokens = [args.target]
             for item in unknown:
                 if item.startswith('-'):
                     break
-                pos_args.append(item)
-                
-                reconstructed = " ".join(pos_args)
+                pos_tokens.append(item)
+            # Try progressive joins from longest to shortest
+            for t in range(len(pos_tokens), 0, -1):
+                reconstructed = " ".join(pos_tokens[:t])
                 if os.path.exists(reconstructed) or reconstructed.lower().endswith('.lnk'):
                     args.target = reconstructed
                     break
@@ -360,47 +361,52 @@ class GameLauncher:
     def load_config(self):
         """Load configuration from Game.ini"""
         # First check if there's a Game.ini in the same directory as the shortcut
-        game_ini = os.path.join(self.scpath, "Game.ini")
-        
-        if not os.path.exists(game_ini):
+        game_ini = self._find_game_ini(self.scpath)
+
+        if not game_ini:
             # Fall back to config.ini in the home directory
             game_ini = os.path.join(self.home, "config.ini")
-        
+
         if not os.path.exists(game_ini):
             self.show_message("No configuration file found")
             return
         self.ini_path = game_ini
-        
+
         config = configparser.ConfigParser()
         config.read(game_ini)
-        
+
+        s = lambda name: self._get_section(config, name)
+
         # Load game information
-        if 'Game' in config:
-            self.game_path = config.get('Game', 'executable', fallback='')
-            self.game_dir = config.get('Game', 'directory', fallback='')
-            self.game_name = config.get('Game', 'name', fallback=self.game_name)
-            self.iso_path = config.get('Game', 'isopath', fallback='')
-        
+        sec = s('Game')
+        if sec:
+            self.game_path = config.get(sec, 'executable', fallback='')
+            self.game_dir = config.get(sec, 'directory', fallback='')
+            self.game_name = config.get(sec, 'name', fallback=self.game_name)
+            self.iso_path = config.get(sec, 'isopath', fallback='')
+
         # Load Launcher section
-        if 'Launcher' in config:
-            self.run_as_admin = config.getboolean('Launcher', 'runasadmin', fallback=False)
-            self.hide_taskbar = config.getboolean('Launcher', 'hidetaskbar', fallback=False)
-            self.borderless = config.get('Launcher', 'borderless', fallback='0')
-            self.use_kill_list = config.getboolean('Launcher', 'usekilllist', fallback=False)
-            self.kill_list_str = config.get('Launcher', 'killlist', fallback='')
+        sec = s('Launcher')
+        if sec:
+            self.run_as_admin = config.getboolean(sec, 'runasadmin', fallback=False)
+            self.hide_taskbar = config.getboolean(sec, 'hidetaskbar', fallback=False)
+            self.borderless = config.get(sec, 'borderless', fallback='0')
+            self.use_kill_list = config.getboolean(sec, 'usekilllist', fallback=False)
+            self.kill_list_str = config.get(sec, 'killlist', fallback='')
             self.kill_list = [x.strip() for x in self.kill_list_str.split(',') if x.strip()]
-        
+
         # Load mapperprofiles section
-        if 'mapperprofiles' in config:
-            self.player1_profile = config.get('mapperprofiles', 'player1profile', fallback='')
-            self.player1_profile_options = config.get('mapperprofiles', 'player1profileoptions', fallback='')
-            self.player1_profile_arguments = config.get('mapperprofiles', 'player1profilearguments', fallback='')
-            self.player2_profile = config.get('mapperprofiles', 'player2profile', fallback='')
-            self.player2_profile_options = config.get('mapperprofiles', 'player2profileoptions', fallback='')
-            self.player2_profile_arguments = config.get('mapperprofiles', 'player2profilearguments', fallback='')
-            self.desk_profile = config.get('mapperprofiles', 'deskprofile', fallback='')
-            self.desk_profile_options = config.get('mapperprofiles', 'deskprofileoptions', fallback='')
-            self.desk_profile_arguments = config.get('mapperprofiles', 'deskprofilearguments', fallback='')
+        sec = s('mapperprofiles')
+        if sec:
+            self.player1_profile = config.get(sec, 'player1profile', fallback='')
+            self.player1_profile_options = config.get(sec, 'player1profileoptions', fallback='')
+            self.player1_profile_arguments = config.get(sec, 'player1profilearguments', fallback='')
+            self.player2_profile = config.get(sec, 'player2profile', fallback='')
+            self.player2_profile_options = config.get(sec, 'player2profileoptions', fallback='')
+            self.player2_profile_arguments = config.get(sec, 'player2profilearguments', fallback='')
+            self.desk_profile = config.get(sec, 'deskprofile', fallback='')
+            self.desk_profile_options = config.get(sec, 'deskprofileoptions', fallback='')
+            self.desk_profile_arguments = config.get(sec, 'deskprofilearguments', fallback='')
         else:
             self.player1_profile = ''
             self.player1_profile_options = ''
@@ -413,187 +419,175 @@ class GameLauncher:
             self.desk_profile_arguments = ''
 
         # Load MonitorLayouts section
-        if 'MonitorLayouts' in config:
-            self.monitor_game_cfg = config.get('MonitorLayouts', 'monitorgamecfg', fallback='')
-            self.monitor_game_cfg_options = config.get('MonitorLayouts', 'monitorgamecfgoptions', fallback='')
-            self.monitor_game_cfg_arguments = config.get('MonitorLayouts', 'monitorgamecfgarguments', fallback='')
-            self.monitor_desk_cfg = config.get('MonitorLayouts', 'monitordeskcfg', fallback='')
-            self.monitor_desk_cfg_options = config.get('MonitorLayouts', 'monitordeskcfgoptions', fallback='')
-            self.monitor_desk_cfg_arguments = config.get('MonitorLayouts', 'monitordeskcfgarguments', fallback='')
-        else:
-            # Fallback to old Paths section for backward compatibility
-            self.monitor_game_cfg = ''
-            self.monitor_game_cfg_options = ''
-            self.monitor_game_cfg_arguments = ''
-            self.monitor_desk_cfg = ''
-            self.monitor_desk_cfg_options = ''
-            self.monitor_desk_cfg_arguments = ''
-        
+        sec = s('MonitorLayouts')
+        if sec:
+            self.monitor_game_cfg = config.get(sec, 'monitorgamecfg', fallback='')
+            self.monitor_game_cfg_options = config.get(sec, 'monitorgamecfgoptions', fallback='')
+            self.monitor_game_cfg_arguments = config.get(sec, 'monitorgamecfgarguments', fallback='')
+            self.monitor_desk_cfg = config.get(sec, 'monitordeskcfg', fallback='')
+            self.monitor_desk_cfg_options = config.get(sec, 'monitordeskcfgoptions', fallback='')
+            self.monitor_desk_cfg_arguments = config.get(sec, 'monitordeskcfgarguments', fallback='')
+
         # Load ControllerMapper section
-        if 'ControllerMapper' in config:
-            self.controller_mapper_app = config.get('ControllerMapper', 'controllermapperpath', fallback='')
-            self.controller_mapper_options = config.get('ControllerMapper', 'controllermapperpathoptions', fallback='')
-            self.controller_mapper_arguments = config.get('ControllerMapper', 'controllermapperpatharguments', fallback='')
-        
+        sec = s('ControllerMapper')
+        if sec:
+            self.controller_mapper_app = config.get(sec, 'controllermapperpath', fallback='')
+            self.controller_mapper_options = config.get(sec, 'controllermapperpathoptions', fallback='')
+            self.controller_mapper_arguments = config.get(sec, 'controllermapperpatharguments', fallback='')
+
         # Load BorderlessWindowing section
-        if 'BorderlessWindowing' in config:
-            self.borderless_app = config.get('BorderlessWindowing', 'borderlesswindowingpath', fallback='')
-            self.borderless_options = config.get('BorderlessWindowing', 'borderlesswindowingpathoptions', fallback='')
-            self.borderless_arguments = config.get('BorderlessWindowing', 'borderlesswindowingpatharguments', fallback='')
-        
+        sec = s('BorderlessWindowing')
+        if sec:
+            self.borderless_app = config.get(sec, 'borderlesswindowingpath', fallback='')
+            self.borderless_options = config.get(sec, 'borderlesswindowingpathoptions', fallback='')
+            self.borderless_arguments = config.get(sec, 'borderlesswindowingpatharguments', fallback='')
+
         # Load Monitor section
-        if 'Monitor' in config:
-            self.monitorapp = config.get('Monitor', 'monitorapppath', fallback='')
-            self.monitorapp_options = config.get('Monitor', 'monitorapppathoptions', fallback='')
-            self.monitorapp_arguments = config.get('Monitor', 'monitorapppatharguments', fallback='')
+        sec = s('Monitor')
+        if sec:
+            self.monitorapp = config.get(sec, 'monitorapppath', fallback='')
+            self.monitorapp_options = config.get(sec, 'monitorapppathoptions', fallback='')
+            self.monitorapp_arguments = config.get(sec, 'monitorapppatharguments', fallback='')
 
         # Load DiscMount section
-        if 'DiscMount' in config:
-            self.disc_mount_app = config.get('DiscMount', 'discmountpath', fallback='')
-            self.disc_mount_options = config.get('DiscMount', 'discmountpathoptions', fallback='')
-            self.disc_mount_arguments = config.get('DiscMount', 'discmountpatharguments', fallback='')
-            self.disc_mount_wait = config.getboolean('DiscMount', 'discmountpathrunwait', fallback=False)
+        sec = s('DiscMount')
+        if sec:
+            self.disc_mount_app = config.get(sec, 'discmountpath', fallback='')
+            self.disc_mount_options = config.get(sec, 'discmountpathoptions', fallback='')
+            self.disc_mount_arguments = config.get(sec, 'discmountpatharguments', fallback='')
+            self.disc_mount_wait = config.getboolean(sec, 'discmountpathrunwait', fallback=False)
         # Load DiscDrivePrefs section
-        if 'DiscDrivePrefs' in config:
-            self.disc_mount_cfg_enabled = config.getboolean('DiscDrivePrefs', 'enablediscmountcfg', fallback=False)
-            self.disc_mount_cfg = config.get('DiscDrivePrefs', 'discmountcfgpath', fallback='')
-            self.disc_mount_cfg_options = config.get('DiscDrivePrefs', 'discmountcfgpathoptions', fallback='')
-            self.disc_mount_cfg_arguments = config.get('DiscDrivePrefs', 'discmountcfgpatharguments', fallback='')
-            self.disc_unmount_cfg_enabled = config.getboolean('DiscDrivePrefs', 'enablediscunmountcfg', fallback=False)
-            self.disc_unmount_cfg = config.get('DiscDrivePrefs', 'discunmountcfgpath', fallback='')
-            self.disc_unmount_cfg_options = config.get('DiscDrivePrefs', 'discunmountcfgpathoptions', fallback='')
-            self.disc_unmount_cfg_arguments = config.get('DiscDrivePrefs', 'discunmountcfgpatharguments', fallback='')
-        else:
-            # Backward compatibility with old sections
-            if 'DiscMountCfg' in config:
-                self.disc_mount_cfg_enabled = config.getboolean('DiscMountCfg', 'enablediscmountcfg', fallback=False)
-                self.disc_mount_cfg = config.get('DiscMountCfg', 'discmountcfgpath', fallback='')
-                self.disc_mount_cfg_options = config.get('DiscMountCfg', 'discmountcfgpathoptions', fallback='')
-                self.disc_mount_cfg_arguments = config.get('DiscMountCfg', 'discmountcfgpatharguments', fallback='')
-            if 'DiscUnmountCfg' in config:
-                self.disc_unmount_cfg_enabled = config.getboolean('DiscUnmountCfg', 'enablediscunmountcfg', fallback=False)
-                self.disc_unmount_cfg = config.get('DiscUnmountCfg', 'discunmountcfgpath', fallback='')
-                self.disc_unmount_cfg_options = config.get('DiscUnmountCfg', 'discunmountcfgpathoptions', fallback='')
-                self.disc_unmount_cfg_arguments = config.get('DiscUnmountCfg', 'discunmountcfgpatharguments', fallback='')
+        sec = s('DiscDrivePrefs')
+        if sec:
+            self.disc_mount_cfg_enabled = config.getboolean(sec, 'enablediscmountcfg', fallback=False)
+            self.disc_mount_cfg = config.get(sec, 'discmountcfgpath', fallback='')
+            self.disc_mount_cfg_options = config.get(sec, 'discmountcfgpathoptions', fallback='')
+            self.disc_mount_cfg_arguments = config.get(sec, 'discmountcfgpatharguments', fallback='')
+            self.disc_unmount_cfg_enabled = config.getboolean(sec, 'enablediscunmountcfg', fallback=False)
+            self.disc_unmount_cfg = config.get(sec, 'discunmountcfgpath', fallback='')
+            self.disc_unmount_cfg_options = config.get(sec, 'discunmountcfgpathoptions', fallback='')
+            self.disc_unmount_cfg_arguments = config.get(sec, 'discunmountcfgpatharguments', fallback='')
 
         # Load AudioApp section
-        if 'AudioApp' in config:
-            self.audio_app_enabled = config.getboolean('AudioApp', 'enableaudioapp', fallback=False)
-            self.audio_app = config.get('AudioApp', 'audioapppath', fallback='')
-            self.audio_app_options = config.get('AudioApp', 'audioapppathoptions', fallback='')
-            self.audio_app_arguments = config.get('AudioApp', 'audioapppatharguments', fallback='')
-            self.audio_app_run_wait = config.getboolean('AudioApp', 'audioapppathrunwait', fallback=False)
+        sec = s('AudioApp')
+        if sec:
+            self.audio_app_enabled = config.getboolean(sec, 'enableaudioapp', fallback=False)
+            self.audio_app = config.get(sec, 'audioapppath', fallback='')
+            self.audio_app_options = config.get(sec, 'audioapppathoptions', fallback='')
+            self.audio_app_arguments = config.get(sec, 'audioapppatharguments', fallback='')
+            self.audio_app_run_wait = config.getboolean(sec, 'audioapppathrunwait', fallback=False)
 
         # Load BorderlessProfiles section
-        if 'BorderlessProfiles' in config:
-            self.unborder_cfg_enabled = config.getboolean('BorderlessProfiles', 'enableunbordercfg', fallback=False)
-            self.unborder_cfg = config.get('BorderlessProfiles', 'unbordercfgpath', fallback='')
-            self.unborder_cfg_options = config.get('BorderlessProfiles', 'unbordercfgpathoptions', fallback='')
-            self.unborder_cfg_arguments = config.get('BorderlessProfiles', 'unbordercfgpatharguments', fallback='')
-            self.reborder_cfg_enabled = config.getboolean('BorderlessProfiles', 'enablerebordercfg', fallback=False)
-            self.reborder_cfg = config.get('BorderlessProfiles', 'rebordercfgpath', fallback='')
-            self.reborder_cfg_options = config.get('BorderlessProfiles', 'rebordercfgpathoptions', fallback='')
-            self.reborder_cfg_arguments = config.get('BorderlessProfiles', 'rebordercfgpatharguments', fallback='')
+        sec = s('BorderlessProfiles')
+        if sec:
+            self.unborder_cfg_enabled = config.getboolean(sec, 'enableunbordercfg', fallback=False)
+            self.unborder_cfg = config.get(sec, 'unbordercfgpath', fallback='')
+            self.unborder_cfg_options = config.get(sec, 'unbordercfgpathoptions', fallback='')
+            self.unborder_cfg_arguments = config.get(sec, 'unbordercfgpatharguments', fallback='')
+            self.reborder_cfg_enabled = config.getboolean(sec, 'enablerebordercfg', fallback=False)
+            self.reborder_cfg = config.get(sec, 'rebordercfgpath', fallback='')
+            self.reborder_cfg_options = config.get(sec, 'rebordercfgpathoptions', fallback='')
+            self.reborder_cfg_arguments = config.get(sec, 'rebordercfgpatharguments', fallback='')
 
         # Load AudioPresets section
-        if 'AudioPresets' in config:
-            self.audio_game_cfg_enabled = config.getboolean('AudioPresets', 'enableaudiogamecfg', fallback=False)
-            self.audio_game_cfg = config.get('AudioPresets', 'audiogamecfgpath', fallback='')
-            self.audio_game_cfg_options = config.get('AudioPresets', 'audiogamecfgpathoptions', fallback='')
-            self.audio_game_cfg_arguments = config.get('AudioPresets', 'audiogamecfgpatharguments', fallback='')
-            self.audio_desk_cfg_enabled = config.getboolean('AudioPresets', 'enableaudiodeskcfg', fallback=False)
-            self.audio_desk_cfg = config.get('AudioPresets', 'audiodeskcfgpath', fallback='')
-            self.audio_desk_cfg_options = config.get('AudioPresets', 'audiodeskcfgpathoptions', fallback='')
-            self.audio_desk_cfg_arguments = config.get('AudioPresets', 'audiodeskcfgpatharguments', fallback='')
-        else:
-            # Backward compatibility with old sections
-            if 'AudioGameCfg' in config:
-                self.audio_game_cfg_enabled = config.getboolean('AudioGameCfg', 'enableaudiogamecfg', fallback=False)
-                self.audio_game_cfg = config.get('AudioGameCfg', 'audiogamecfgpath', fallback='')
-                self.audio_game_cfg_options = config.get('AudioGameCfg', 'audiogamecfgpathoptions', fallback='')
-                self.audio_game_cfg_arguments = config.get('AudioGameCfg', 'audiogamecfgpatharguments', fallback='')
-            if 'AudioDeskCfg' in config:
-                self.audio_desk_cfg_enabled = config.getboolean('AudioDeskCfg', 'enableaudiodeskcfg', fallback=False)
-                self.audio_desk_cfg = config.get('AudioDeskCfg', 'audiodeskcfgpath', fallback='')
-                self.audio_desk_cfg_options = config.get('AudioDeskCfg', 'audiodeskcfgpathoptions', fallback='')
-                self.audio_desk_cfg_arguments = config.get('AudioDeskCfg', 'audiodeskcfgpatharguments', fallback='')
+        sec = s('AudioPresets')
+        if sec:
+            self.audio_game_cfg_enabled = config.getboolean(sec, 'enableaudiogamecfg', fallback=False)
+            self.audio_game_cfg = config.get(sec, 'audiogamecfgpath', fallback='')
+            self.audio_game_cfg_options = config.get(sec, 'audiogamecfgpathoptions', fallback='')
+            self.audio_game_cfg_arguments = config.get(sec, 'audiogamecfgpatharguments', fallback='')
+            self.audio_desk_cfg_enabled = config.getboolean(sec, 'enableaudiodeskcfg', fallback=False)
+            self.audio_desk_cfg = config.get(sec, 'audiodeskcfgpath', fallback='')
+            self.audio_desk_cfg_options = config.get(sec, 'audiodeskcfgpathoptions', fallback='')
+            self.audio_desk_cfg_arguments = config.get(sec, 'audiodeskcfgpatharguments', fallback='')
 
         # Load CloudSync configuration
-        if 'CloudSync' in config:
-            self.cloud_enabled = config.getboolean('CloudSync', 'enablecloudsync', fallback=False)
-            self.cloud_app = config.get('CloudSync', 'cloudsyncpath', fallback='')
-            self.cloud_options = config.get('CloudSync', 'cloudsyncpathoptions', fallback='')
-            self.cloud_arguments = config.get('CloudSync', 'cloudsyncpatharguments', fallback='')
-            self.cloud_wait = config.getboolean('CloudSync', 'cloudsyncpathrunwait', fallback=False)
+        sec = s('CloudSync')
+        if sec:
+            self.cloud_enabled = config.getboolean(sec, 'enablecloudsync', fallback=False)
+            self.cloud_app = config.get(sec, 'cloudsyncpath', fallback='')
+            self.cloud_options = config.get(sec, 'cloudsyncpathoptions', fallback='')
+            self.cloud_arguments = config.get(sec, 'cloudsyncpatharguments', fallback='')
+            self.cloud_wait = config.getboolean(sec, 'cloudsyncpathrunwait', fallback=False)
         else:
             self.cloud_enabled = False
-        
+
         # Load LocalBackup configuration
-        if 'LocalBackup' in config:
-            self.backup_enabled = config.getboolean('LocalBackup', 'enablelocalbackup', fallback=False)
-            self.backup_app = config.get('LocalBackup', 'localbackuppath', fallback='')
-            self.backup_options = config.get('LocalBackup', 'localbackuppathoptions', fallback='')
-            self.backup_arguments = config.get('LocalBackup', 'localbackuppatharguments', fallback='')
-            self.backup_wait = config.getboolean('LocalBackup', 'localbackuppathrunwait', fallback=False)
+        sec = s('LocalBackup')
+        if sec:
+            self.backup_enabled = config.getboolean(sec, 'enablelocalbackup', fallback=False)
+            self.backup_app = config.get(sec, 'localbackuppath', fallback='')
+            self.backup_options = config.get(sec, 'localbackuppathoptions', fallback='')
+            self.backup_arguments = config.get(sec, 'localbackuppatharguments', fallback='')
+            self.backup_wait = config.getboolean(sec, 'localbackuppathrunwait', fallback=False)
         else:
             self.backup_enabled = False
-        
+
         # Load Pre1, Pre2, Pre3 sections
-        if 'Pre1' in config:
-            self.pre_launch_app_1 = config.get('Pre1', 'pre1path', fallback='')
-            self.pre_launch_app_1_options = config.get('Pre1', 'pre1pathoptions', fallback='')
-            self.pre_launch_app_1_arguments = config.get('Pre1', 'pre1patharguments', fallback='')
-            self.pre_launch_app_1_wait = config.getboolean('Pre1', 'pre1pathrunwait', fallback=False)
-        
-        if 'Pre2' in config:
-            self.pre_launch_app_2 = config.get('Pre2', 'pre2path', fallback='')
-            self.pre_launch_app_2_options = config.get('Pre2', 'pre2pathoptions', fallback='')
-            self.pre_launch_app_2_arguments = config.get('Pre2', 'pre2patharguments', fallback='')
-            self.pre_launch_app_2_wait = config.getboolean('Pre2', 'pre2pathrunwait', fallback=False)
-        
-        if 'Pre3' in config:
-            self.pre_launch_app_3 = config.get('Pre3', 'pre3path', fallback='')
-            self.pre_launch_app_3_options = config.get('Pre3', 'pre3pathoptions', fallback='')
-            self.pre_launch_app_3_arguments = config.get('Pre3', 'pre3patharguments', fallback='')
-            self.pre_launch_app_3_wait = config.getboolean('Pre3', 'pre3pathrunwait', fallback=False)
-        
+        sec = s('Pre1')
+        if sec:
+            self.pre_launch_app_1 = config.get(sec, 'pre1path', fallback='')
+            self.pre_launch_app_1_options = config.get(sec, 'pre1pathoptions', fallback='')
+            self.pre_launch_app_1_arguments = config.get(sec, 'pre1patharguments', fallback='')
+            self.pre_launch_app_1_wait = config.getboolean(sec, 'pre1pathrunwait', fallback=False)
+
+        sec = s('Pre2')
+        if sec:
+            self.pre_launch_app_2 = config.get(sec, 'pre2path', fallback='')
+            self.pre_launch_app_2_options = config.get(sec, 'pre2pathoptions', fallback='')
+            self.pre_launch_app_2_arguments = config.get(sec, 'pre2patharguments', fallback='')
+            self.pre_launch_app_2_wait = config.getboolean(sec, 'pre2pathrunwait', fallback=False)
+
+        sec = s('Pre3')
+        if sec:
+            self.pre_launch_app_3 = config.get(sec, 'pre3path', fallback='')
+            self.pre_launch_app_3_options = config.get(sec, 'pre3pathoptions', fallback='')
+            self.pre_launch_app_3_arguments = config.get(sec, 'pre3patharguments', fallback='')
+            self.pre_launch_app_3_wait = config.getboolean(sec, 'pre3pathrunwait', fallback=False)
+
         # Load Post1, Post2, Post3 sections
-        if 'Post1' in config:
-            self.post_launch_app_1 = config.get('Post1', 'post1path', fallback='')
-            self.post_launch_app_1_options = config.get('Post1', 'post1pathoptions', fallback='')
-            self.post_launch_app_1_arguments = config.get('Post1', 'post1patharguments', fallback='')
-            self.post_launch_app_1_wait = config.getboolean('Post1', 'post1pathrunwait', fallback=False)
-        
-        if 'Post2' in config:
-            self.post_launch_app_2 = config.get('Post2', 'post2path', fallback='')
-            self.post_launch_app_2_options = config.get('Post2', 'post2pathoptions', fallback='')
-            self.post_launch_app_2_arguments = config.get('Post2', 'post2patharguments', fallback='')
-            self.post_launch_app_2_wait = config.getboolean('Post2', 'post2pathrunwait', fallback=False)
-        
-        if 'Post3' in config:
-            self.post_launch_app_3 = config.get('Post3', 'post3path', fallback='')
-            self.post_launch_app_3_options = config.get('Post3', 'post3pathoptions', fallback='')
-            self.post_launch_app_3_arguments = config.get('Post3', 'post3patharguments', fallback='')
-            self.post_launch_app_3_wait = config.getboolean('Post3', 'post3pathrunwait', fallback=False)
-        
+        sec = s('Post1')
+        if sec:
+            self.post_launch_app_1 = config.get(sec, 'post1path', fallback='')
+            self.post_launch_app_1_options = config.get(sec, 'post1pathoptions', fallback='')
+            self.post_launch_app_1_arguments = config.get(sec, 'post1patharguments', fallback='')
+            self.post_launch_app_1_wait = config.getboolean(sec, 'post1pathrunwait', fallback=False)
+
+        sec = s('Post2')
+        if sec:
+            self.post_launch_app_2 = config.get(sec, 'post2path', fallback='')
+            self.post_launch_app_2_options = config.get(sec, 'post2pathoptions', fallback='')
+            self.post_launch_app_2_arguments = config.get(sec, 'post2patharguments', fallback='')
+            self.post_launch_app_2_wait = config.getboolean(sec, 'post2pathrunwait', fallback=False)
+
+        sec = s('Post3')
+        if sec:
+            self.post_launch_app_3 = config.get(sec, 'post3path', fallback='')
+            self.post_launch_app_3_options = config.get(sec, 'post3pathoptions', fallback='')
+            self.post_launch_app_3_arguments = config.get(sec, 'post3patharguments', fallback='')
+            self.post_launch_app_3_wait = config.getboolean(sec, 'post3pathrunwait', fallback=False)
+
         # Load JustAfterLaunch section
-        if 'JustAfterLaunch' in config:
-            self.just_after_launch_app = config.get('JustAfterLaunch', 'path', fallback='')
-            self.just_after_launch_options = config.get('JustAfterLaunch', 'pathoptions', fallback='')
-            self.just_after_launch_arguments = config.get('JustAfterLaunch', 'patharguments', fallback='')
-            self.just_after_launch_wait = config.getboolean('JustAfterLaunch', 'pathrunwait', fallback=False)
-        
+        sec = s('JustAfterLaunch')
+        if sec:
+            self.just_after_launch_app = config.get(sec, 'path', fallback='')
+            self.just_after_launch_options = config.get(sec, 'pathoptions', fallback='')
+            self.just_after_launch_arguments = config.get(sec, 'patharguments', fallback='')
+            self.just_after_launch_wait = config.getboolean(sec, 'pathrunwait', fallback=False)
+
         # Load JustBeforeExit section
-        if 'JustBeforeExit' in config:
-            self.just_before_exit_app = config.get('JustBeforeExit', 'path', fallback='')
-            self.just_before_exit_options = config.get('JustBeforeExit', 'pathoptions', fallback='')
-            self.just_before_exit_arguments = config.get('JustBeforeExit', 'patharguments', fallback='')
-            self.just_before_exit_wait = config.getboolean('JustBeforeExit', 'pathrunwait', fallback=False)
-        
+        sec = s('JustBeforeExit')
+        if sec:
+            self.just_before_exit_app = config.get(sec, 'path', fallback='')
+            self.just_before_exit_options = config.get(sec, 'pathoptions', fallback='')
+            self.just_before_exit_arguments = config.get(sec, 'patharguments', fallback='')
+            self.just_before_exit_wait = config.getboolean(sec, 'pathrunwait', fallback=False)
+
         # Load sequences
-        if 'Sequences' in config:
+        sec = s('Sequences')
+        if sec:
             # Get launch sequence
-            launch_sequence_str = config.get('Sequences', 'launchsequence', fallback='')
+            launch_sequence_str = config.get(sec, 'launchsequence', fallback='')
             if launch_sequence_str:
                 self.launch_sequence = launch_sequence_str.split(',')
             else:
@@ -676,19 +670,21 @@ class GameLauncher:
             return
 
         config = configparser.ConfigParser()
-        config.optionxform = str # Preserve case
         config.read(self.ini_path)
-        
+
         changed = False
-        
+
         if self.args.set:
             for item in self.args.set:
                 if '=' in item:
                     key_part, value = item.split('=', 1)
                     if '.' in key_part:
                         section, key = key_part.split('.', 1)
-                        if not config.has_section(section):
+                        existing = self._get_section(config, section)
+                        if not existing:
                             config.add_section(section)
+                        else:
+                            section = existing
                         config.set(section, key, value)
                         changed = True
                         self.show_message(f"Set {section}.{key} = {value}")
@@ -697,10 +693,11 @@ class GameLauncher:
             for item in self.args.clear:
                 if '.' in item:
                     section, key = item.split('.', 1)
-                    if config.has_section(section) and config.has_option(section, key):
-                        config.remove_option(section, key)
+                    existing = self._get_section(config, section)
+                    if existing and config.has_option(existing, key):
+                        config.remove_option(existing, key)
                         changed = True
-                        self.show_message(f"Cleared {section}.{key}")
+                        self.show_message(f"Cleared {existing}.{key}")
 
         if changed:
             with open(self.ini_path, 'w') as f:
@@ -1023,7 +1020,7 @@ class GameLauncher:
             # Local backup (before launch)
             self.local_backup_create(on_launch=True)
             
-            # Backup saves if enabled (legacy)
+            # Backup saves if enabled
             self.backup_save_files()
 
             # Execute launch sequence
@@ -1065,6 +1062,24 @@ class GameLauncher:
             self.show_message("Exiting launcher")
     
     # Helper methods
+    @staticmethod
+    def _find_game_ini(directory):
+        """Find Game.ini in directory with case-insensitive matching."""
+        if not os.path.isdir(directory):
+            return None
+        for entry in os.listdir(directory):
+            if entry.lower() == 'game.ini':
+                return os.path.join(directory, entry)
+        return None
+
+    @staticmethod
+    def _get_section(config, name):
+        """Case-insensitive section lookup in a ConfigParser."""
+        for section in config.sections():
+            if section.lower() == name.lower():
+                return section
+        return None
+
     def split_path(self, path):
         """Split a path into components (similar to SplitPath in AHK)"""
         p = Path(path)

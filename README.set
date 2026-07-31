@@ -184,9 +184,7 @@ Run the installer or extract the binary to a location of your choice, **or** dow
 │   ├── main_window_new.py
 │   ├── models.py
 │   ├── sequence_executor.py
-│   ├── sequence_executor_v2.py
 │   ├── tray_menu.py
-│   └── utils.py
 ├── site/
 │   ├── img/
 │   │   ├── Install.png

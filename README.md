@@ -56,7 +56,7 @@ AntimicroX, keySticks, monitorapp,  borderless-gaming,  borderless ,  rclone,  l
 
 ## Installation
 
-99.98.32.20
+99.98.32.21
 
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```
@@ -184,9 +184,7 @@ freeduction/
 │   ├── main_window_new.py
 │   ├── models.py
 │   ├── sequence_executor.py
-│   ├── sequence_executor_v2.py
 │   ├── tray_menu.py
-│   └── utils.py
 ├── site/
 │   ├── img/
 │   │   ├── Install.png

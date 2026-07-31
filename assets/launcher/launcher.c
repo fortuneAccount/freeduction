@@ -65,16 +65,19 @@ HWND G_TASKBAR_HWND = NULL;
 BOOL G_TASKBAR_WAS_HIDDEN = FALSE;
 char G_LOG_PATH[MAX_PATH_LEN] = "";
 char G_HOME_DIR[MAX_PATH_LEN] = "";
+char G_GAME_EXE_NAME[MAX_NAME_LEN] = "";
 char G_PID_FILE[MAX_PATH_LEN] = "";
 BOOL G_IS_ADMIN = FALSE;
-int G_VERBOSE_LEVEL = 0; // 0=normal, 1=verbose, 2=very verbose
+int G_VERBOSE_LEVEL = 2; // Default to debug-level logging
+int G_CLI_VERBOSE_SET = 0;
 
 // --- Function Prototypes ---
 void show_message(const char* message);
 void log_message(const char* level, const char* message);
 void log_debug(const char* message);
 static int config_handler(void* user, const char* section, const char* name, const char* value);
-int load_configuratiozn(const char* ini_path);
+int load_configuration(const char* ini_path);
+void resolve_config_paths();
 void execute_sequence(const char* sequence_str, int is_exit_sequence);
 void execute_action(const char* action, int is_exit_sequence);
 void run_game_process();
@@ -219,6 +222,14 @@ char* resolve_path(const char* path, char* resolved, size_t resolved_size) {
     string_replace(temp, sizeof(temp), temp, "$HOME", G_HOME_DIR);
     string_replace(temp, sizeof(temp), temp, "$ISO", G_CONFIG.iso_path);
     
+    // Resolve relative paths against the profile directory (G_HOME_DIR)
+    if (strchr(temp, ':') == NULL && temp[0] != '\\' && temp[0] != '/' && strlen(temp) > 0) {
+        char abs_path[MAX_CMD_LEN * 2];
+        snprintf(abs_path, sizeof(abs_path), "%s\\%s", G_HOME_DIR, temp);
+        strncpy(temp, abs_path, sizeof(temp) - 1);
+        temp[sizeof(temp) - 1] = '\0';
+    }
+    
     strncpy(resolved, temp, resolved_size - 1);
     resolved[resolved_size - 1] = '\0';
     
@@ -298,6 +309,8 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_STR(name);
     } else if (MATCH("Game", "IsoPath")) {
         SET_STR(iso_path);
+    } else if (MATCH("Game", "logging_verbosity")) {
+        SET_STR(logging_verbosity);
     }
     // [Paths] section
     else if (MATCH("Paths", "ControllerMapperApp")) {
@@ -530,6 +543,20 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("AudioDeskCfg", "audiodeskcfgpatharguments")) {
         SET_STR(audio_desk_cfg_arguments);
     }
+    // [Launcher] section (for compatibility with Python-created Game.ini)
+    else if (MATCH("Launcher", "runasadmin")) {
+        SET_BOOL(run_as_admin);
+    } else if (MATCH("Launcher", "hidetaskbar")) {
+        SET_BOOL(hide_taskbar);
+    } else if (MATCH("Launcher", "borderless")) {
+        strncpy(pConfig->borderless, value, sizeof(pConfig->borderless) - 1);
+    } else if (MATCH("Launcher", "usekilllist")) {
+        SET_BOOL(use_kill_list);
+    } else if (MATCH("Launcher", "killlist")) {
+        SET_STR(kill_list);
+    } else if (MATCH("Launcher", "terminateborderlessonexit")) {
+        SET_BOOL(terminate_borderless_on_exit);
+    }
     // [Options] section
     else if (MATCH("Options", "RunAsAdmin")) {
         SET_BOOL(run_as_admin);
@@ -574,6 +601,32 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("PreLaunch", "App3Wait")) {
         SET_BOOL(pre_launch_app_3_wait);
     }
+    // [Pre1], [Pre2], [Pre3] sections (for compatibility with Python-created Game.ini)
+    else if (MATCH("Pre1", "pre1path")) {
+        SET_STR(pre_launch_app_1);
+    } else if (MATCH("Pre1", "pre1pathoptions")) {
+        SET_STR(pre_launch_app_1_options);
+    } else if (MATCH("Pre1", "pre1patharguments")) {
+        SET_STR(pre_launch_app_1_arguments);
+    } else if (MATCH("Pre1", "pre1pathrunwait")) {
+        SET_BOOL(pre_launch_app_1_wait);
+    } else if (MATCH("Pre2", "pre2path")) {
+        SET_STR(pre_launch_app_2);
+    } else if (MATCH("Pre2", "pre2pathoptions")) {
+        SET_STR(pre_launch_app_2_options);
+    } else if (MATCH("Pre2", "pre2patharguments")) {
+        SET_STR(pre_launch_app_2_arguments);
+    } else if (MATCH("Pre2", "pre2pathrunwait")) {
+        SET_BOOL(pre_launch_app_2_wait);
+    } else if (MATCH("Pre3", "pre3path")) {
+        SET_STR(pre_launch_app_3);
+    } else if (MATCH("Pre3", "pre3pathoptions")) {
+        SET_STR(pre_launch_app_3_options);
+    } else if (MATCH("Pre3", "pre3patharguments")) {
+        SET_STR(pre_launch_app_3_arguments);
+    } else if (MATCH("Pre3", "pre3pathrunwait")) {
+        SET_BOOL(pre_launch_app_3_wait);
+    }
     // [PostLaunch] section
     else if (MATCH("PostLaunch", "App1")) {
         SET_STR(post_launch_app_1);
@@ -616,6 +669,48 @@ static int config_handler(void* user, const char* section, const char* name, con
     } else if (MATCH("PostLaunch", "JustBeforeExitWait")) {
         SET_BOOL(just_before_exit_wait);
     }
+    // [Post1], [Post2], [Post3], [JustAfterLaunch], [JustBeforeExit] sections (for compatibility with Python-created Game.ini)
+    else if (MATCH("Post1", "post1path")) {
+        SET_STR(post_launch_app_1);
+    } else if (MATCH("Post1", "post1pathoptions")) {
+        SET_STR(post_launch_app_1_options);
+    } else if (MATCH("Post1", "post1patharguments")) {
+        SET_STR(post_launch_app_1_arguments);
+    } else if (MATCH("Post1", "post1pathrunwait")) {
+        SET_BOOL(post_launch_app_1_wait);
+    } else if (MATCH("Post2", "post2path")) {
+        SET_STR(post_launch_app_2);
+    } else if (MATCH("Post2", "post2pathoptions")) {
+        SET_STR(post_launch_app_2_options);
+    } else if (MATCH("Post2", "post2patharguments")) {
+        SET_STR(post_launch_app_2_arguments);
+    } else if (MATCH("Post2", "post2pathrunwait")) {
+        SET_BOOL(post_launch_app_2_wait);
+    } else if (MATCH("Post3", "post3path")) {
+        SET_STR(post_launch_app_3);
+    } else if (MATCH("Post3", "post3pathoptions")) {
+        SET_STR(post_launch_app_3_options);
+    } else if (MATCH("Post3", "post3patharguments")) {
+        SET_STR(post_launch_app_3_arguments);
+    } else if (MATCH("Post3", "post3pathrunwait")) {
+        SET_BOOL(post_launch_app_3_wait);
+    } else if (MATCH("JustAfterLaunch", "path")) {
+        SET_STR(just_after_launch_app);
+    } else if (MATCH("JustAfterLaunch", "pathoptions")) {
+        SET_STR(just_after_launch_options);
+    } else if (MATCH("JustAfterLaunch", "patharguments")) {
+        SET_STR(just_after_launch_arguments);
+    } else if (MATCH("JustAfterLaunch", "pathrunwait")) {
+        SET_BOOL(just_after_launch_wait);
+    } else if (MATCH("JustBeforeExit", "path")) {
+        SET_STR(just_before_exit_app);
+    } else if (MATCH("JustBeforeExit", "pathoptions")) {
+        SET_STR(just_before_exit_options);
+    } else if (MATCH("JustBeforeExit", "patharguments")) {
+        SET_STR(just_before_exit_arguments);
+    } else if (MATCH("JustBeforeExit", "pathrunwait")) {
+        SET_BOOL(just_before_exit_wait);
+    }
     // [Sequences] section
     else if (MATCH("Sequences", "LaunchSequence")) {
         SET_STR(launch_sequence);
@@ -654,6 +749,26 @@ int load_configuration(const char* ini_path) {
     }
     show_message("Configuration loaded successfully.");
     
+    // Resolve all relative paths against the profile directory (G_HOME_DIR)
+    resolve_config_paths();
+    
+    if (!G_CLI_VERBOSE_SET && strlen(G_CONFIG.logging_verbosity) > 0) {
+        if (_stricmp(G_CONFIG.logging_verbosity, "none") == 0) {
+            G_VERBOSE_LEVEL = 0;
+        } else if (_stricmp(G_CONFIG.logging_verbosity, "low") == 0) {
+            G_VERBOSE_LEVEL = 1;
+        } else if (_stricmp(G_CONFIG.logging_verbosity, "medium") == 0) {
+            G_VERBOSE_LEVEL = 1;
+        } else if (_stricmp(G_CONFIG.logging_verbosity, "high") == 0) {
+            G_VERBOSE_LEVEL = 2;
+        } else if (_stricmp(G_CONFIG.logging_verbosity, "debug") == 0) {
+            G_VERBOSE_LEVEL = 2;
+        }
+        char debug_msg[256];
+        snprintf(debug_msg, sizeof(debug_msg), "Logging verbosity set from INI: %s (level %d)", G_CONFIG.logging_verbosity, G_VERBOSE_LEVEL);
+        log_debug(debug_msg);
+    }
+    
     if (G_VERBOSE_LEVEL >= 1) {
         char debug_msg[256];
         snprintf(debug_msg, sizeof(debug_msg), "Game: %s", G_CONFIG.name);
@@ -667,6 +782,44 @@ int load_configuration(const char* ini_path) {
     return 0;
 }
 
+// --- Post-load path resolution ---
+void resolve_config_paths() {
+    #define RESOLVE_FIELD(field) do { \
+        char _resolved[MAX_PATH_LEN]; \
+        resolve_path(G_CONFIG.field, _resolved, sizeof(_resolved)); \
+        strncpy(G_CONFIG.field, _resolved, sizeof(G_CONFIG.field) - 1); \
+    } while(0)
+    
+    RESOLVE_FIELD(controller_mapper_app);
+    RESOLVE_FIELD(borderless_windowing_app);
+    RESOLVE_FIELD(monitorapp);
+    RESOLVE_FIELD(cloud_app);
+    RESOLVE_FIELD(disc_mount_app);
+    RESOLVE_FIELD(disc_unmount_app);
+    RESOLVE_FIELD(audio_app_path);
+    RESOLVE_FIELD(pre_launch_app_1);
+    RESOLVE_FIELD(pre_launch_app_2);
+    RESOLVE_FIELD(pre_launch_app_3);
+    RESOLVE_FIELD(post_launch_app_1);
+    RESOLVE_FIELD(post_launch_app_2);
+    RESOLVE_FIELD(post_launch_app_3);
+    RESOLVE_FIELD(just_after_launch_app);
+    RESOLVE_FIELD(just_before_exit_app);
+    RESOLVE_FIELD(player1_profile);
+    RESOLVE_FIELD(player2_profile);
+    RESOLVE_FIELD(desk_profile);
+    RESOLVE_FIELD(monitor_game_config);
+    RESOLVE_FIELD(monitor_desk_config);
+    RESOLVE_FIELD(unborder_cfg);
+    RESOLVE_FIELD(reborder_cfg);
+    RESOLVE_FIELD(disc_mount_cfg);
+    RESOLVE_FIELD(disc_unmount_cfg);
+    RESOLVE_FIELD(audio_game_cfg);
+    RESOLVE_FIELD(audio_desk_cfg);
+    
+    #undef RESOLVE_FIELD
+}
+
 // --- Process Management ---
 BOOL run_process(const char* command, const char* working_dir, BOOL wait, PROCESS_INFORMATION* pi) {
     STARTUPINFOA si;
@@ -674,17 +827,43 @@ BOOL run_process(const char* command, const char* working_dir, BOOL wait, PROCES
     si.cb = sizeof(si);
     ZeroMemory(pi, sizeof(*pi));
 
+    char debug_msg[512];
+    snprintf(debug_msg, sizeof(debug_msg), "run_process: command=\"%s\", working_dir=\"%s\", wait=%d", command, working_dir ? working_dir : "NULL", wait);
+    log_debug(debug_msg);
+    
     // CreateProcess needs a mutable command line string
     char* cmd_mutable = _strdup(command);
-    if (cmd_mutable == NULL) return FALSE;
+    if (cmd_mutable == NULL) {
+        log_message("ERROR", "run_process: failed to duplicate command string");
+        return FALSE;
+    }
 
-    BOOL success = CreateProcessA(NULL, cmd_mutable, NULL, NULL, FALSE, 0, NULL, working_dir, &si, pi);
+    DWORD creation_flags = 0;
+    if (G_IS_ADMIN && !wait) {
+        creation_flags = CREATE_NEW_CONSOLE;
+    }
+    
+    BOOL success = CreateProcessA(NULL, cmd_mutable, NULL, NULL, FALSE, creation_flags, NULL, working_dir, &si, pi);
     free(cmd_mutable);
-
-    if (success && wait) {
-        WaitForSingleObject(pi->hProcess, INFINITE);
-        CloseHandle(pi->hProcess);
-        CloseHandle(pi->hThread);
+    
+    if (success) {
+        snprintf(debug_msg, sizeof(debug_msg), "run_process: CreateProcess succeeded (PID: %lu)", pi->dwProcessId);
+        log_debug(debug_msg);
+        
+        if (wait) {
+            WaitForSingleObject(pi->hProcess, INFINITE);
+            DWORD exit_code = 0;
+            if (GetExitCodeProcess(pi->hProcess, &exit_code)) {
+                snprintf(debug_msg, sizeof(debug_msg), "run_process: process exited with code %lu", exit_code);
+                log_debug(debug_msg);
+            }
+            CloseHandle(pi->hProcess);
+            CloseHandle(pi->hThread);
+        }
+    } else {
+        DWORD error = GetLastError();
+        snprintf(debug_msg, sizeof(debug_msg), "run_process: CreateProcess failed (error: %lu)", error);
+        log_message("ERROR", debug_msg);
     }
     
     return success;
@@ -774,6 +953,10 @@ void action_run_controller_mapper(int is_exit) {
     const char* profile1;
     const char* profile2;
     PROCESS_INFORMATION pi;
+    char debug_msg[512];
+    
+    snprintf(debug_msg, sizeof(debug_msg), "Controller Mapper: %s (exit=%d)", is_exit ? "exit sequence" : "launch sequence", is_exit);
+    log_debug(debug_msg);
     
     if (is_exit) {
         action_kill_controller_mapper();
@@ -941,8 +1124,15 @@ void action_run_borderless() {
     if ((strcmp(G_CONFIG.borderless, "E") == 0 || strcmp(G_CONFIG.borderless, "K") == 0) &&
         strlen(G_CONFIG.borderless_windowing_app) > 0) {
         
+        char debug_msg[512];
+        snprintf(debug_msg, sizeof(debug_msg), "Borderless app: %s, options: %s, args: %s", G_CONFIG.borderless_windowing_app, G_CONFIG.borderless_options, G_CONFIG.borderless_arguments);
+        log_debug(debug_msg);
+        
         DWORD attribs = GetFileAttributesA(G_CONFIG.borderless_windowing_app);
-        if (attribs == INVALID_FILE_ATTRIBUTES) return;
+        if (attribs == INVALID_FILE_ATTRIBUTES) {
+            log_debug("Borderless app not found");
+            return;
+        }
 
         char cmd[MAX_CMD_LEN];
         snprintf(cmd, sizeof(cmd), "\"%s\" %s %s",
@@ -953,6 +1143,8 @@ void action_run_borderless() {
         PROCESS_INFORMATION pi;
         if (run_process(cmd, NULL, FALSE, &pi)) {
             G_BORDERLESS_PROCESS = pi.hProcess;
+            snprintf(debug_msg, sizeof(debug_msg), "Borderless process started (PID: %lu)", pi.dwProcessId);
+            log_debug(debug_msg);
             // Don't add to tracked - we handle separately
             CloseHandle(pi.hThread);
         }
@@ -960,8 +1152,13 @@ void action_run_borderless() {
 }
 
 void action_kill_borderless() {
+    char debug_msg[256];
+    
     if (G_CONFIG.terminate_borderless_on_exit && G_BORDERLESS_PROCESS) {
-        terminate_process_tree(GetProcessId(G_BORDERLESS_PROCESS));
+        DWORD pid = GetProcessId(G_BORDERLESS_PROCESS);
+        snprintf(debug_msg, sizeof(debug_msg), "Terminating borderless process (PID: %lu)", pid);
+        log_debug(debug_msg);
+        terminate_process_tree(pid);
         CloseHandle(G_BORDERLESS_PROCESS);
         G_BORDERLESS_PROCESS = NULL;
     } else if (G_CONFIG.terminate_borderless_on_exit && strlen(G_CONFIG.borderless_windowing_app) > 0) {
@@ -970,6 +1167,8 @@ void action_kill_borderless() {
         if (!name) name = strrchr(G_CONFIG.borderless_windowing_app, '/');
         if (!name) name = G_CONFIG.borderless_windowing_app;
         else name++;
+        snprintf(debug_msg, sizeof(debug_msg), "Killing borderless by name: %s", name);
+        log_debug(debug_msg);
         kill_process_by_name(name);
     }
 }
@@ -993,11 +1192,22 @@ void action_run_cloud_sync() {
 void action_run_generic_app(const char* app_path, int wait, const char* options, const char* args) {
     if (strlen(app_path) == 0) return;
     
+    char debug_msg[512];
+    snprintf(debug_msg, sizeof(debug_msg), "action_run_generic_app: path='%s', wait=%d, options='%s', args='%s'", app_path, wait, options ? options : "", args ? args : "");
+    log_debug(debug_msg);
+    
     char resolved[MAX_PATH_LEN];
     resolve_path(app_path, resolved, sizeof(resolved));
     
+    snprintf(debug_msg, sizeof(debug_msg), "Resolved path: '%s'", resolved);
+    log_debug(debug_msg);
+    
     DWORD attribs = GetFileAttributesA(resolved);
-    if (attribs == INVALID_FILE_ATTRIBUTES) return;
+    if (attribs == INVALID_FILE_ATTRIBUTES) {
+        snprintf(debug_msg, sizeof(debug_msg), "App not found: %s", resolved);
+        log_message("ERROR", debug_msg);
+        return;
+    }
 
     char cmd[MAX_CMD_LEN];
     snprintf(cmd, sizeof(cmd), "\"%s\"", resolved);
@@ -1011,6 +1221,9 @@ void action_run_generic_app(const char* app_path, int wait, const char* options,
         strncat(cmd, args, sizeof(cmd) - strlen(cmd) - 1);
     }
     
+    snprintf(debug_msg, sizeof(debug_msg), "Command: %s", cmd);
+    log_debug(debug_msg);
+    
     PROCESS_INFORMATION pi;
     run_process(cmd, NULL, wait, &pi);
     if (!wait && pi.hProcess) {
@@ -1021,7 +1234,12 @@ void action_run_generic_app(const char* app_path, int wait, const char* options,
 }
 
 void action_kill_game() {
-    if (strlen(G_CONFIG.executable) > 0) {
+    if (strlen(G_GAME_EXE_NAME) > 0) {
+        char debug_msg[256];
+        snprintf(debug_msg, sizeof(debug_msg), "Killing game by exe name: %s", G_GAME_EXE_NAME);
+        log_debug(debug_msg);
+        kill_process_by_name(G_GAME_EXE_NAME);
+    } else if (strlen(G_CONFIG.executable) > 0) {
         char* name = strrchr(G_CONFIG.executable, '\\');
         if (!name) name = strrchr(G_CONFIG.executable, '/');
         if (!name) name = G_CONFIG.executable;
@@ -1227,11 +1445,14 @@ void action_run_audio_desktop() {
 
 // --- Sequence Execution ---
 void execute_action(const char* action, int is_exit_sequence) {
+    char debug_msg[256];
+    
+    snprintf(debug_msg, sizeof(debug_msg), "Executing action: %s (exit_sequence=%d)", action, is_exit_sequence);
+    log_debug(debug_msg);
     show_message(action);
     
-    if (G_VERBOSE_LEVEL >= 1) {
-        char debug_msg[256];
-        snprintf(debug_msg, sizeof(debug_msg), "Executing action: %s (exit_sequence=%d)", action, is_exit_sequence);
+    if (G_VERBOSE_LEVEL >= 2) {
+        snprintf(debug_msg, sizeof(debug_msg), "Action: %s, Exit sequence: %s", action, is_exit_sequence ? "Yes" : "No");
         log_debug(debug_msg);
     }
     
@@ -1301,19 +1522,30 @@ void execute_action(const char* action, int is_exit_sequence) {
 void execute_sequence(const char* sequence_str, int is_exit_sequence) {
     if (strlen(sequence_str) == 0) return;
     
+    char debug_msg[256];
+    snprintf(debug_msg, sizeof(debug_msg), "Starting %s sequence", is_exit_sequence ? "exit" : "launch");
+    log_debug(debug_msg);
+    
     char* sequence_copy = _strdup(sequence_str);
     if (sequence_copy == NULL) return;
 
     char* context = NULL;
     char* token = strtok_s(sequence_copy, ",", &context);
+    int action_num = 0;
 
     while (token != NULL) {
         trim_whitespace(token);
         if (strlen(token) > 0) {
+            action_num++;
+            snprintf(debug_msg, sizeof(debug_msg), "Sequence action %d: %s", action_num, token);
+            log_debug(debug_msg);
             execute_action(token, is_exit_sequence);
         }
         token = strtok_s(NULL, ",", &context);
     }
+    
+    snprintf(debug_msg, sizeof(debug_msg), "Completed %s sequence (%d actions)", is_exit_sequence ? "exit" : "launch", action_num);
+    log_debug(debug_msg);
 
     free(sequence_copy);
 }
@@ -1322,11 +1554,15 @@ void run_game_process() {
     show_message("Running game...");
     
     char debug_msg[512];
+    char full_exe_path[MAX_PATH_LEN];
     
-    snprintf(debug_msg, sizeof(debug_msg), "Executable: '%s'", G_CONFIG.executable);
+    snprintf(debug_msg, sizeof(debug_msg), "Game executable: '%s'", G_CONFIG.executable);
     log_debug(debug_msg);
     
-    snprintf(debug_msg, sizeof(debug_msg), "Directory: '%s'", G_CONFIG.directory);
+    snprintf(debug_msg, sizeof(debug_msg), "Game directory: '%s'", G_CONFIG.directory);
+    log_debug(debug_msg);
+    
+    snprintf(debug_msg, sizeof(debug_msg), "Elevation requested: %s", G_CONFIG.run_as_admin ? "Administrator" : "Standard");
     log_debug(debug_msg);
     
     if (strlen(G_CONFIG.executable) == 0) {
@@ -1336,7 +1572,6 @@ void run_game_process() {
     }
     
     // Build full path to executable if it's not already absolute
-    char full_exe_path[MAX_PATH_LEN];
     if (strchr(G_CONFIG.executable, ':') != NULL || 
         (G_CONFIG.executable[0] == '\\' && G_CONFIG.executable[1] == '\\')) {
         // Already an absolute path (has drive letter or UNC path)
@@ -1368,7 +1603,6 @@ void run_game_process() {
     const char* working_dir = strlen(G_CONFIG.directory) > 0 ? G_CONFIG.directory : NULL;
     
     if (G_CONFIG.run_as_admin) {
-        // Use ShellExecute for admin elevation
         snprintf(debug_msg, sizeof(debug_msg), "Launching as admin: %s", full_exe_path);
         log_debug(debug_msg);
         
@@ -1384,7 +1618,6 @@ void run_game_process() {
         log_debug(debug_msg);
         
         if (result_code <= 32) {
-            // ShellExecute error codes
             const char* error_desc = "Unknown error";
             switch (result_code) {
                 case 0: error_desc = "Out of memory or resources"; break;
@@ -1407,8 +1640,15 @@ void run_game_process() {
             return;
         }
         log_message("INFO", "Game launched as administrator (process tracking unavailable)");
-        // Note: We can't easily track the process with ShellExecute
         G_GAME_PROCESS_INFO.hProcess = NULL;
+        
+        // Extract exe name for fallback process tracking
+        char* exe_name = strrchr(G_CONFIG.executable, '\\');
+        if (!exe_name) exe_name = strrchr(G_CONFIG.executable, '/');
+        if (!exe_name) exe_name = G_CONFIG.executable;
+        else exe_name++;
+        strncpy(G_GAME_EXE_NAME, exe_name, MAX_NAME_LEN - 1);
+        log_debug("Game exe name for fallback tracking saved");
     } else {
         char cmd[MAX_CMD_LEN];
         snprintf(cmd, sizeof(cmd), "\"%s\"", full_exe_path);
@@ -1518,16 +1758,18 @@ int main(int argc, char* argv[]) {
     for (int i = 1; i < argc; i++) {
         if (strcmp(argv[i], "-v") == 0) {
             G_VERBOSE_LEVEL = 1;
+            G_CLI_VERBOSE_SET = 1;
         } else if (strcmp(argv[i], "-vv") == 0 || strcmp(argv[i], "-vvv") == 0) {
             G_VERBOSE_LEVEL = 2;
+            G_CLI_VERBOSE_SET = 1;
         } else if (strncmp(argv[i], "-v", 2) == 0) {
-            // Count number of 'v's in flag like -vvv
             int count = 0;
             for (const char* p = argv[i] + 1; *p == 'v'; p++) {
                 count++;
             }
             if (count > 0) {
                 G_VERBOSE_LEVEL = (count >= 2) ? 2 : 1;
+                G_CLI_VERBOSE_SET = 1;
             }
         }
     }
@@ -1566,8 +1808,44 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    const char* shortcut_path = argv[1];
-    
+    // Reconstruct the full shortcut path from argv tokens.
+    // Shortcut.exe crashes if parameters are double-quoted, so paths with spaces
+    // arrive as separate argv tokens. Collect all non-flag tokens, then try
+    // progressively shorter joins (longest first) until a valid path or .lnk is found.
+    int path_start = 1;
+    for (int i = 1; i < argc; i++) {
+        if (argv[i][0] != '-') {
+            path_start = i;
+            break;
+        }
+    }
+    char* tokens[MAX_NAME_LEN];
+    int token_count = 0;
+    for (int i = path_start; i < argc && argv[i][0] != '-'; i++) {
+        tokens[token_count++] = argv[i];
+    }
+    char shortcut_path[MAX_PATH_LEN];
+    shortcut_path[0] = '\0';
+    for (int t = token_count; t >= 1; t--) {
+        char candidate[MAX_PATH_LEN] = "";
+        for (int j = 0; j < t; j++) {
+            if (j > 0) strncat(candidate, " ", sizeof(candidate) - strlen(candidate) - 1);
+            strncat(candidate, tokens[j], sizeof(candidate) - strlen(candidate) - 1);
+        }
+        DWORD attr = GetFileAttributesA(candidate);
+        size_t len = strlen(candidate);
+        int is_lnk = (len >= 4 && _stricmp(candidate + len - 4, ".lnk") == 0);
+        if (attr != INVALID_FILE_ATTRIBUTES || is_lnk) {
+            strncpy(shortcut_path, candidate, sizeof(shortcut_path) - 1);
+            shortcut_path[sizeof(shortcut_path) - 1] = '\0';
+            break;
+        }
+    }
+    if (shortcut_path[0] == '\0') {
+        strncpy(shortcut_path, tokens[0], sizeof(shortcut_path) - 1);
+        shortcut_path[sizeof(shortcut_path) - 1] = '\0';
+    }
+
     char ini_path[MAX_PATH_LEN];
     
     // Determine the path to Game.ini based on the shortcut path
@@ -1587,8 +1865,32 @@ int main(int argc, char* argv[]) {
         *(last_slash + 1) = '\0';
     }
     
-    // Append Game.ini
-    strncat(ini_path, "Game.ini", MAX_PATH_LEN - strlen(ini_path) - 1);
+    // Search for Game.ini case-insensitively in the shortcut directory
+    char game_ini_path[MAX_PATH_LEN] = "";
+    WIN32_FIND_DATAA find_data;
+    char search_pattern[MAX_PATH_LEN];
+    snprintf(search_pattern, sizeof(search_pattern), "%s*", ini_path);
+    
+    HANDLE hFind = FindFirstFileA(search_pattern, &find_data);
+    if (hFind != INVALID_HANDLE_VALUE) {
+        do {
+            if (!(find_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) {
+                if (_stricmp(find_data.cFileName, "Game.ini") == 0) {
+                    snprintf(game_ini_path, sizeof(game_ini_path), "%s%s", ini_path, find_data.cFileName);
+                    break;
+                }
+            }
+        } while (FindNextFileA(hFind, &find_data));
+        FindClose(hFind);
+    }
+    
+    // If no Game.ini found, fall back so ini_path is still a file path (for proper error messages)
+    if (strlen(game_ini_path) > 0) {
+        strncpy(ini_path, game_ini_path, MAX_PATH_LEN - 1);
+        ini_path[MAX_PATH_LEN - 1] = '\0';
+    } else {
+        strncat(ini_path, "Game.ini", MAX_PATH_LEN - strlen(ini_path) - 1);
+    }
     
     if (G_VERBOSE_LEVEL > 0) {
         char debug_msg[512];
@@ -1614,6 +1916,12 @@ int main(int argc, char* argv[]) {
         printf("[INFO] Verbose mode enabled (level %d)\n", G_VERBOSE_LEVEL);
     }
     
+    if (G_VERBOSE_LEVEL >= 2) {
+        char debug_msg[128];
+        snprintf(debug_msg, sizeof(debug_msg), "Elevation: %s", G_IS_ADMIN ? "Administrator" : "Standard User");
+        log_debug(debug_msg);
+    }
+    
     // Check admin privileges
     G_IS_ADMIN = check_admin();
     if (G_IS_ADMIN) {
@@ -1630,6 +1938,16 @@ int main(int argc, char* argv[]) {
     // Initialize the configuration struct with zeros
     memset(&G_CONFIG, 0, sizeof(GameConfiguration));
     memset(&G_GAME_PROCESS_INFO, 0, sizeof(PROCESS_INFORMATION));
+
+    // Check if Game.ini exists
+    if (GetFileAttributesA(ini_path) == INVALID_FILE_ATTRIBUTES) {
+        char debug_msg[512];
+        snprintf(debug_msg, sizeof(debug_msg), "Game.ini not found at: %s", ini_path);
+        log_message("ERROR", debug_msg);
+        show_message("Game.ini not found.");
+        SleepMs(2000);
+        return 1;
+    }
 
     // Load configuration
     if (load_configuration(ini_path) != 0) {
@@ -1658,6 +1976,7 @@ int main(int argc, char* argv[]) {
     if (G_GAME_PROCESS_INFO.hProcess != NULL) {
         MSG msg;
         BOOL game_running = TRUE;
+        char exit_debug[256];
         
         while (game_running) {
             // Check if game is still running
@@ -1665,6 +1984,8 @@ int main(int argc, char* argv[]) {
             if (GetExitCodeProcess(G_GAME_PROCESS_INFO.hProcess, &exit_code)) {
                 if (exit_code != STILL_ACTIVE) {
                     game_running = FALSE;
+                    snprintf(exit_debug, sizeof(exit_debug), "Game process exited with code: %lu", exit_code);
+                    log_debug(exit_debug);
                     break;
                 }
             }
@@ -1686,15 +2007,37 @@ int main(int argc, char* argv[]) {
         CloseHandle(G_GAME_PROCESS_INFO.hProcess);
         CloseHandle(G_GAME_PROCESS_INFO.hThread);
     } else {
-        // If we used ShellExecute, wait a bit with message loop
+        // No process handle (e.g., ShellExecute "runas") — poll by name
         MSG msg;
-        DWORD start_time = GetTickCount();
-        DWORD wait_time = 5000; // 5 seconds
+        HANDLE hSnapshot;
+        PROCESSENTRY32 pe;
+        BOOL game_running = TRUE;
         
-        while (GetTickCount() - start_time < wait_time) {
+        log_message("INFO", "Fallback process tracking enabled (by executable name)");
+        char debug_msg[256];
+        snprintf(debug_msg, sizeof(debug_msg), "Tracking process name: '%s'", G_GAME_EXE_NAME);
+        log_debug(debug_msg);
+        
+        while (game_running) {
+            game_running = FALSE;
+            hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+            if (hSnapshot != INVALID_HANDLE_VALUE) {
+                pe.dwSize = sizeof(PROCESSENTRY32);
+                if (Process32First(hSnapshot, &pe)) {
+                    do {
+                        if (_stricmp(pe.szExeFile, G_GAME_EXE_NAME) == 0) {
+                            game_running = TRUE;
+                            break;
+                        }
+                    } while (Process32Next(hSnapshot, &pe));
+                }
+                CloseHandle(hSnapshot);
+            }
+            
             // Process Windows messages (for tray menu)
             while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
                 if (msg.message == WM_QUIT) {
+                    game_running = FALSE;
                     break;
                 }
                 TranslateMessage(&msg);
@@ -1703,6 +2046,8 @@ int main(int argc, char* argv[]) {
             
             SleepMs(100);
         }
+        
+        log_message("INFO", "Game process exited (detected by name polling)");
     }
 
     // Execute exit sequence
