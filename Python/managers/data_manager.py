@@ -67,6 +67,22 @@ class DataManager(QObject):
                 
                 match_name = name_processor.get_match_name(name_to_use)
                 cutoff = getattr(self.config, 'fuzzy_match_cutoff', 0.6)
+
+                # First attempt exact / prefix / base-name matching so
+                # subtitle-aware matches (e.g. "SuperGame" → "SuperGame:
+                # Super Dupers") populate the AppID immediately instead of
+                # relying on the fuzzy fallback below.
+                steam_name, steam_id_found = name_processor.find_steam_match(
+                    match_name, steam_index, display_name=name_to_use
+                )
+                if steam_id_found:
+                    game['steam_id'] = steam_id_found
+                    logging.debug(
+                        f"Subtitle-aware match for '{name_to_use}': "
+                        f"{steam_name} (AppID {steam_id_found})"
+                    )
+                    continue
+
                 matches = difflib.get_close_matches(match_name, all_keys, n=5, cutoff=cutoff)
                 if matches:
                     game['_fuzzy_matches'] = matches

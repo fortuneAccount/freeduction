@@ -49,6 +49,9 @@ def normalize_name_for_matching(name, stemmer=None):
     """
     Normalize a name for matching purposes.
     
+    Delegates to NameProcessor.get_match_name() as the canonical normalizer.
+    The stemmer variant is available via NameProcessor.get_match_name_with_stemmer().
+    
     Args:
         name: The name to normalize
         stemmer: Optional stemmer to use for word stemming
@@ -59,45 +62,12 @@ def normalize_name_for_matching(name, stemmer=None):
     if not name:
         return ""
     
-    # Store original for debugging
-    original = name
+    from .name_processor import NameProcessor
+    processor = NameProcessor()
     
-    # Convert to lowercase
-    result = name.lower()
-    
-    # Special handling for short titles (4 chars or less)
-    # These are often acronyms or unique names that should be preserved as-is
-    if len(name) <= 4:
-
-        return result
-    
-    # Special handling for all-uppercase titles (likely acronyms)
-    if name.isupper() and len(name) <= 10:
-
-        return result
-    
-    # Remove non-alphanumeric characters
-    result = re.sub(r'[^a-z0-9\s]', '', result)
-    
-    # Remove common prefixes
-    result = re.sub(r'^(?:the|a|an)\s+', '', result)
-    
-    # Remove common suffixes
-    result = re.sub(r'\s+(?:game|edition|collection|complete|deluxe|goty|premium)$', '', result)
-    
-    # Replace multiple spaces with a single space
-    result = re.sub(r'\s+', ' ', result)
-    
-    # Trim leading and trailing whitespace
-    result = result.strip()
-    
-    # Apply stemming if a stemmer is provided
-    if stemmer and len(result) > 3:  # Only stem if longer than 3 chars
-        words = result.split()
-        stemmed_words = [stemmer.stem(word) for word in words]
-        result = ' '.join(stemmed_words)
-    
-    return result
+    if stemmer:
+        return processor.get_match_name_with_stemmer(name, stemmer)
+    return processor.get_match_name(name)
 
 def title_case_and_cleanup(name: str) -> str:
     """

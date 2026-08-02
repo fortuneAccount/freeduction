@@ -513,27 +513,129 @@ class NameProcessor:
             'excluded': False
         }
     
-    def find_steam_match(self, match_name: str, steam_index: Dict[str, Dict[str, str]]) -> tuple[str, str]:
+    def find_steam_match(
+        self,
+        match_name: str,
+        steam_index: Dict[str, Dict[str, str]],
+        display_name: str = None,
+    ) -> tuple[str, str]:
         """
         Find a matching Steam title for a normalized match name.
-        
+
+        Uses up to three strategies in order:
+          1. Exact match of the normalized key.
+          2. Prefix fallback — when the search term is a prefix of a longer
+             key (handles subtitle suffixes on the Steam side, e.g.
+             "supergame" → "SuperGame: Super Dupers").
+          3. Base-name fallback — when ``display_name`` is supplied and the
+             search term contains subtitle delimiters (``:``, ``;``, `` - ``,
+             ``(``, ``[``, etc.), derive a "base" name by trimming the first
+             delimiter and retry matching.  This covers the reverse case
+             where a user's search term includes a subtitle but the Steam
+             title is just the base name.
+
         Args:
-            match_name: Normalized name to match
-            steam_index: Dictionary mapping normalized Steam names to original names and IDs
-            
+            match_name: Normalized name to match.
+            steam_index: Dictionary mapping normalized Steam names to original
+                         names and IDs.
+            display_name: Optional original (non-normalised) display name used
+                          for the base-name fallback strategy.
+
         Returns:
-            Tuple of (steam_name, steam_id) if a match is found, or ("", "") if no match
+            Tuple of (steam_name, steam_id) if a match is found, or ("", "")
+            if no match.
         """
         if not match_name or not steam_index:
             return "", ""
-        
-        # Try exact match first
-        if match_name in steam_index:
-            steam_data = steam_index[match_name]
-            return steam_data["name"], steam_data["id"]
-        
+
+        # Strategy 1 — exact match
+        match_data = steam_index.get(match_name)
+        if match_data:
+            return match_data["name"], match_data["id"]
+
+        # Strategy 2 — prefix fallback: the search term is a prefix of a
+        # longer normalised key (user typed "supergame" but Steam has
+        # "supergamesuperdupers").
+        if len(match_name) >= 3:
+            best_key = None
+            for key in steam_index:
+                if len(key) > len(match_name) and key.startswith(match_name):
+                    if best_key is None or len(key) < len(best_key):
+                        best_key = key
+            if best_key:
+                match_data = steam_index[best_key]
+                return match_data["name"], match_data["id"]
+
+        # Strategy 3 — base-name fallback: the user's search term includes
+        # subtitle text that the Steam entry doesn't have.  Strip endings
+        # after common delimiters and retry.
+        if display_name and len(match_name) >= 3:
+            for sep in ("::", ": ", "; ", " - ", " \u2013 ", "-", "(", "["):
+                if sep in display_name:
+                    idx = display_name.index(sep)
+                    base_display = display_name[:idx].strip()
+                    if base_display:
+                        match_name_base = self.get_match_name(base_display)
+                        if match_name_base and len(match_name_base) >= 3:
+                            # Try exact on the base
+                            match_data = steam_index.get(match_name_base)
+                            if match_data:
+                                return match_data["name"], match_data["id"]
+                            # Try prefix from the base
+                            best_key = None
+                            for key in steam_index:
+                                if (len(key) > len(match_name_base) and
+                                    key.startswith(match_name_base)):
+                                    if best_key is None or len(key) < len(best_key):
+                                        best_key = key
+                            if best_key:
+                                match_data = steam_index[best_key]
+                                return match_data["name"], match_data["id"]
+                    break  # Only try the first delimiter hit
+
         # No match found
         return "", ""
+
+    def find_steam_match_candidates(
+        self,
+        match_name: str,
+        steam_index: Dict[str, Dict[str, str]],
+        limit: int = 8,
+    ) -> list[tuple[str, str, float]]:
+        """Return up to *limit* plausible candidates from ``steam_index``.
+
+        Each candidate is ``(steam_name, steam_id, score)`` where *score* is a
+        simple normalised prefix-overlap ratio (1.0 for exact match).
+        """
+        if not match_name or not steam_index:
+            return []
+
+        candidates: list[tuple[str, str, float]] = []
+
+        # Exact match → perfect score
+        if match_name in steam_index:
+            d = steam_index[match_name]
+            candidates.append((d["name"], d["id"], 1.0))
+
+        # Prefix candidates (key starts with match_name)
+        for key, val in steam_index.items():
+            if len(key) > len(match_name) and key.startswith(match_name):
+                score = len(match_name) / max(len(key), 1)
+                candidates.append((val["name"], val["id"], score))
+
+        # Reverse prefix (match_name starts with key)
+        for key, val in steam_index.items():
+            if (len(match_name) > len(key) and
+                match_name.startswith(key) and
+                len(key) >= 3):
+                score = len(key) / max(len(match_name), 1)
+                # Avoid duplicates
+                if not any(c[1] == val["id"] for c in candidates):
+                    candidates.append((val["name"], val["id"], score))
+
+        # Sort descending by score, then by name length ascending
+        candidates.sort(key=lambda c: (-c[2], len(c[0])))
+        return candidates[:limit]
 
     def find_candidate_directory(self, exec_path: str) -> Tuple[str, bool]:
         """

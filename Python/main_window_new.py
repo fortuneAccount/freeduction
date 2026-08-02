@@ -8,7 +8,7 @@ import os
 import shutil
 from Python.ui.deployment_tab import DeploymentTab
 from Python.ui.setup_tab import SetupTab
-from Python.ui.steam_cache import SteamCacheManager, STEAM_FILTERED_TXT, NORMALIZED_INDEX_CACHE
+from Python.ui.steam_cache import GameCacheManager, STEAM_FILTERED_TXT
 from Python.ui.editor_tab import EditorTab
 from Python.models import AppConfig
 from Python.managers.config_manager import ConfigManager
@@ -60,7 +60,7 @@ class MainWindow(QMainWindow):
         self.indexing_cancelled = False
         self.enabled_tools = set()
         self.data_manager = DataManager(self.config, self)
-        self.steam_cache_manager = SteamCacheManager(self)
+        self.steam_cache_manager = GameCacheManager(self)
         self.steam_manager = SteamManager(self.steam_cache_manager)
         
         # Initialize plugin manager
@@ -686,13 +686,13 @@ class MainWindow(QMainWindow):
             self.statusBar().showMessage(f"Creation process finished. Processed: {result['processed_count']}, Failed: {result['failed_count']}", 5000)
             self.deployment_tab.append_log_message(f"Creation process finished. Processed: {result['processed_count']}, Failed: {result['failed_count']}")
 
-    def _backup_steam_cache_files(self):
+def _backup_steam_cache_files(self):
         """Backup Steam cache files before processing"""
-        from Python.ui.steam_cache import STEAM_FILTERED_TXT, NORMALIZED_INDEX_CACHE
+        from Python.ui.steam_cache import STEAM_FILTERED_TXT
         
         cache_files = [
             os.path.join(constants.APP_ROOT_DIR, STEAM_FILTERED_TXT),
-            os.path.join(constants.APP_ROOT_DIR, NORMALIZED_INDEX_CACHE)
+            os.path.join(constants.APP_ROOT_DIR, constants.NORMALIZED_STEAM_INDEX_CACHE)
         ]
         
         for cache_path in cache_files:

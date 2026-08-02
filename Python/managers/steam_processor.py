@@ -1,38 +1,37 @@
 import json
 import logging
-import re
 import threading
 from PyQt6.QtCore import QObject, pyqtSignal
 
-def create_filtered_list(steam_data):
-    """Filters the raw Steam data to get a simple list of names."""
+# Use NameProcessor as the single canonical normalizer for all title matching.
+from ..ui.name_processor import NameProcessor
+
+def create_filtered_list(game_data):
+    """Filters the raw game data to get a simple list of names."""
     filtered_list = []
-    for app in steam_data:
+    for app in game_data:
         if 'name' in app and app.get('name'):
             filtered_list.append(app['name'])
     return filtered_list
 
-def _normalize_steam_name(name: str) -> str:
-    """Normalizes a Steam name for matching."""
-    if not name:
-        return ""
-    # 1. Remove non-alphanumeric characters except spaces
-    result = re.sub(r'[^a-zA-Z0-9 ]', '', name)
-    # 2. Remove common prefixes
-    result = re.sub(r'^(?:the|a|an)\s+', '', result, flags=re.IGNORECASE)
-    # 3. Remove all spaces
-    result = result.replace(' ', '')
-    # 4. Convert to lowercase
-    return result.lower()
+def create_normalized_index(game_data, name_processor=None):
+    """Creates a normalized index (normalized_name: {id: appid, name: app_name}) from raw game data.
 
-def create_normalized_index(steam_data):
-    """Creates a normalized index (normalized_name: {id: appid, name: app_name}) from the raw Steam data."""
+    Args:
+        game_data: list of dicts with 'name' and 'appid' (or 'gogdb_id') keys.
+        name_processor: optional NameProcessor instance; created if omitted.
+
+    Returns:
+        dict mapping normalized_name → {id, name}
+    """
+    if name_processor is None:
+        name_processor = NameProcessor()
     normalized_index = {}
-    for app in steam_data:
-        app_id = app.get('appid') or app.get('steam_id')
+    for app in game_data:
+        app_id = app.get('appid') or app.get('gogdb_id') or app.get('steam_id')
         app_name = app.get('name')
         if app_id and app_name:
-            match_name = _normalize_steam_name(app_name)
+            match_name = name_processor.get_match_name(app_name)
             if match_name:
                 normalized_index[match_name] = {"id": str(app_id), "name": app_name}
     return normalized_index

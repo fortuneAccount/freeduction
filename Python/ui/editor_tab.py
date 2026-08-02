@@ -13,8 +13,8 @@ import collections
 import re
 import difflib
 import datetime
-from PyQt6.QtCore import Qt, pyqtSignal, QItemSelectionModel
-from PyQt6.QtGui import QColor, QBrush, QFont
+from PyQt6.QtCore import Qt, pyqtSignal, QItemSelectionModel, QUrl
+from PyQt6.QtGui import QColor, QBrush, QFont, QDesktopServices
 from Python import constants
 from Python.managers.index_manager import backup_index
 
@@ -973,22 +973,18 @@ class EditorTab(QWidget):
             
             # Lookup
             if self.main_window.config.enable_name_matching:
-                match_data = self.main_window.steam_cache_manager.normalized_steam_index.get(match_name)
-                if match_data:
-                    steam_name = match_data.get("name", "")
-                    found_id = match_data.get("id", "")
-                    
-                    if found_id:
-                        steam_id = found_id
-                    
-                    if steam_name:
-                        # Clean steam name for override
-                        clean_steam_name = replace_illegal_chars(steam_name, " - ")
-                        while "  " in clean_steam_name: clean_steam_name = clean_steam_name.replace("  ", " ")
-                        while "- -" in clean_steam_name: clean_steam_name = clean_steam_name.replace("- -", " - ")
-                        name_override = clean_steam_name.strip()
-                    else:
-                        name_override = clean_name
+                steam_index = self.main_window.steam_cache_manager.normalized_steam_index
+                steam_name, found_id = name_processor.find_steam_match(match_name, steam_index)
+
+                if found_id:
+                    steam_id = found_id
+
+                if steam_name:
+                    # Clean steam name for override
+                    clean_steam_name = replace_illegal_chars(steam_name, " - ")
+                    while "  " in clean_steam_name: clean_steam_name = clean_steam_name.replace("  ", " ")
+                    while "- -" in clean_steam_name: clean_steam_name = clean_steam_name.replace("- -", " - ")
+                    name_override = clean_steam_name.strip()
                 else:
                     name_override = clean_name
             else:
@@ -1229,6 +1225,18 @@ class EditorTab(QWidget):
         # Regenerate Names Action
         regenerate_names_action = menu.addAction("Regenerate Names")
         regenerate_names_action.triggered.connect(lambda: self.regenerate_names_selected(row))
+
+        # Auto-Fill Steam Title & ID Action
+        auto_fill_steam_action = menu.addAction("Auto-Fill Steam Title & ID")
+        auto_fill_steam_action.triggered.connect(lambda: self.auto_fill_steam_title_selected(row))
+
+        # Search on Steampowered Action
+        search_steampowered_action = menu.addAction("Search on Steampowered")
+        search_steampowered_action.triggered.connect(lambda: self.open_steam_search(row, "store.steampowered.com"))
+
+        # Search on Steamdb Action
+        search_steamdb_action = menu.addAction("Search on Steamdb")
+        search_steamdb_action.triggered.connect(lambda: self.open_steam_search(row, "steamdb.info"))
 
         menu.addSeparator()
 
@@ -1756,25 +1764,25 @@ class EditorTab(QWidget):
                 # Normalize
                 clean_name = name_processor.get_display_name(name_to_use)
                 match_name = name_processor.get_match_name(clean_name)
-                
-                match_data = self.main_window.steam_cache_manager.normalized_steam_index.get(match_name)
-                
-                if match_data:
-                    steam_id = match_data.get("id")
-                    if steam_id:
-                        game['steam_id'] = steam_id
-                        # Update UI
-                        item = self.table.item(r, constants.EditorCols.STEAMID.value)
-                        if not item:
-                            item = QTableWidgetItem()
-                            self.table.setItem(r, constants.EditorCols.STEAMID.value, item)
-                        item.setText(str(steam_id))
-                        
-                        # Clear background if it was highlighted as empty
-                        item.setData(Qt.ItemDataRole.BackgroundRole, None)
-                        item.setData(Qt.ItemDataRole.ForegroundRole, None)
-                        
-                        matched_count += 1
+
+                steam_name, steam_id = name_processor.find_steam_match(
+                    match_name, self.main_window.steam_cache_manager.normalized_steam_index
+                )
+
+                if steam_id:
+                    game['steam_id'] = steam_id
+                    # Update UI
+                    item = self.table.item(r, constants.EditorCols.STEAMID.value)
+                    if not item:
+                        item = QTableWidgetItem()
+                        self.table.setItem(r, constants.EditorCols.STEAMID.value, item)
+                    item.setText(str(steam_id))
+
+                    # Clear background if it was highlighted as empty
+                    item.setData(Qt.ItemDataRole.BackgroundRole, None)
+                    item.setData(Qt.ItemDataRole.ForegroundRole, None)
+
+                    matched_count += 1
                 elif all_keys:
                     # Fuzzy match
                     cutoff = getattr(self.main_window.config, 'fuzzy_match_cutoff', 0.6)
@@ -1803,6 +1811,128 @@ class EditorTab(QWidget):
             self.main_window.statusBar().showMessage(msg, 3000)
         else:
             QMessageBox.information(self, "Auto-Match", "No matches found in cache for selected items.")
+
+    def auto_fill_steam_title_selected(self, row):
+        """Auto-match Steam title & ID for selected rows and populate the Name-Override field."""
+        selected_rows = set()
+        for range_ in self.table.selectedRanges():
+            for r in range(range_.topRow(), range_.bottomRow() + 1):
+                selected_rows.add(r)
+
+        if row is not None and row >= 0 and row not in selected_rows:
+            selected_rows.add(row)
+
+        if not selected_rows:
+            return
+
+        self.push_undo()
+
+        # Ensure cache is loaded
+        if not self.main_window.steam_cache_manager.normalized_steam_index:
+            self.main_window.steam_cache_manager.load_normalized_steam_index()
+
+        if not self.main_window.steam_cache_manager.normalized_steam_index:
+            QMessageBox.warning(self, "Cache Empty", "Steam index cache is empty or not loaded.")
+            return
+
+        from Python.ui.name_processor import NameProcessor
+        from Python.ui.name_utils import replace_illegal_chars
+        release_groups = getattr(self.main_window, 'release_groups_set', set())
+        exclude_exe = getattr(self.main_window, 'exclude_exe_set', set())
+        name_processor = NameProcessor(release_groups, exclude_exe)
+
+        steam_index = self.main_window.steam_cache_manager.normalized_steam_index
+        matched_count = 0
+
+        for r in selected_rows:
+            real_index = (self.current_page * self.page_size) + r
+            if real_index < len(self.filtered_data):
+                game = self.filtered_data[real_index]
+
+                # Determine name to use
+                name_to_use = game.get('name_override', '')
+                if not name_to_use:
+                    # Fallback to filename without extension
+                    filename = game.get('name', '')
+                    name_to_use = os.path.splitext(filename)[0]
+
+                # Normalize and run the (exact + subtitle/prefix) matcher
+                clean_name = name_processor.get_display_name(name_to_use)
+                match_name = name_processor.get_match_name(clean_name)
+                steam_name, steam_id = name_processor.find_steam_match(match_name, steam_index)
+
+                if steam_id:
+                    # Steam ID
+                    game['steam_id'] = steam_id
+                    item = self.table.item(r, constants.EditorCols.STEAMID.value)
+                    if not item:
+                        item = QTableWidgetItem()
+                        self.table.setItem(r, constants.EditorCols.STEAMID.value, item)
+                    item.setText(str(steam_id))
+                    # Clear background if it was highlighted as empty
+                    item.setData(Qt.ItemDataRole.BackgroundRole, None)
+                    item.setData(Qt.ItemDataRole.ForegroundRole, None)
+
+                if steam_name:
+                    # Clean the Steam title for the Name-Override field
+                    clean_steam_name = replace_illegal_chars(steam_name, " - ")
+                    while "  " in clean_steam_name: clean_steam_name = clean_steam_name.replace("  ", " ")
+                    while "- -" in clean_steam_name: clean_steam_name = clean_steam_name.replace("- -", " - ")
+                    clean_steam_name = clean_steam_name.strip()
+
+                    game['name_override'] = clean_steam_name
+                    no_item = self.table.item(r, constants.EditorCols.NAME_OVERRIDE.value)
+                    widget = self.table.cellWidget(r, constants.EditorCols.NAME_OVERRIDE.value)
+                    if isinstance(widget, QComboBox):
+                        # Replace the fuzzy combo with a plain item now that we have a match
+                        self.table.setCellWidget(r, constants.EditorCols.NAME_OVERRIDE.value, None)
+                        no_item = QTableWidgetItem(clean_steam_name)
+                        self.table.setItem(r, constants.EditorCols.NAME_OVERRIDE.value, no_item)
+                    else:
+                        if not no_item:
+                            no_item = QTableWidgetItem()
+                            self.table.setItem(r, constants.EditorCols.NAME_OVERRIDE.value, no_item)
+                        no_item.setText(clean_steam_name)
+                    # Clear empty-ID / duplicate styling on the override cell
+                    no_item.setData(Qt.ItemDataRole.BackgroundRole, None)
+                    no_item.setData(Qt.ItemDataRole.ForegroundRole, None)
+                    no_item.setToolTip("")
+
+                if steam_id or steam_name:
+                    matched_count += 1
+
+        if matched_count > 0:
+            self.main_window._on_editor_table_edited(None)
+            self.main_window.statusBar().showMessage(f"Auto-filled Steam title & ID for {matched_count} items", 3000)
+        else:
+            QMessageBox.information(self, "Auto-Fill", "No matches found in cache for selected items.")
+
+    def open_steam_search(self, row, site):
+        """Open a web search for the game's name on the given Steam site."""
+        real_index = (self.current_page * self.page_size) + row
+        if real_index >= len(self.filtered_data):
+            return
+
+        game = self.filtered_data[real_index]
+        search_term = game.get('name_override', '')
+        if not search_term:
+            filename = game.get('name', '')
+            search_term = os.path.splitext(filename)[0]
+
+        if not search_term:
+            return
+
+        from urllib.parse import quote
+        encoded = quote(search_term)
+
+        if site == "store.steampowered.com":
+            url = f"https://store.steampowered.com/search/?term={encoded}"
+        elif site == "steamdb.info":
+            url = f"https://steamdb.info/search/?q={encoded}"
+        else:
+            return
+
+        QDesktopServices.openUrl(QUrl(url))
 
     def download_artwork_selected(self, row):
         """Download artwork for selected games."""
@@ -1988,11 +2118,11 @@ class EditorTab(QWidget):
                 name_processor = NameProcessor(release_groups, exclude_exe)
                 
                 match_name = name_processor.get_match_name(search_term)
-                match_data = self.main_window.steam_cache_manager.normalized_steam_index.get(match_name)
+                steam_name, steam_id = name_processor.find_steam_match(
+                    match_name, self.main_window.steam_cache_manager.normalized_steam_index
+                )
                 
-                if match_data:
-                    steam_id = match_data.get("id")
-                    steam_name = match_data.get("name")
+                if steam_id:
                     confirm = QMessageBox.question(self, "Steam AppID Found", f"Found: {steam_name}\nAppID: {steam_id}\n\nApply this ID?", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No)
                     if confirm == QMessageBox.StandardButton.Yes:
                         self.table.setItem(row, constants.EditorCols.STEAMID.value, QTableWidgetItem(str(steam_id)))

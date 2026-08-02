@@ -80,13 +80,12 @@ def _get_steam_match(
         return steam_name, steam_id, name_override
 
     match_name = name_processor.get_match_name(name_override)
-    match_data = steam_match_index.get(match_name)
+    steam_name, steam_id = name_processor.find_steam_match(
+        match_name, steam_match_index, display_name=name_override
+    )
 
-    if not match_data:
+    if not steam_name and not steam_id:
         return steam_name, steam_id, name_override
-
-    steam_name = match_data.get("name", "")
-    steam_id = match_data.get("id", "")
 
     if steam_name:
         # Clean the steam name for use as a display name

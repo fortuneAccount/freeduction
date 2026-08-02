@@ -10,6 +10,7 @@ pyinstaller
 cloudscraper
 pystray
 pillow
+rapidfuzz
 winshell
 pywin32
 

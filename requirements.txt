@@ -10,6 +10,7 @@ pyinstaller
 cloudscraper
 pystray
 pillow
+rapidfuzz
 
 setuptools
 qdarkstyle
