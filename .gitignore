@@ -23,6 +23,7 @@ __pycache__/
 *.json
 *.code-workspace
 !steam.json
+TODO.*
 
 # Index and cache files
 *.old
