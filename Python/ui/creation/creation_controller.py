@@ -316,10 +316,9 @@ class CreationController:
             )
 
             # 7. Create Launcher Shortcut (pointing to Launcher.exe)
-            # Ensure profile shortcut path uses Windows-style backslashes when passed as an argument
-            # We do NOT wrap the path in internal double quotes because Shortcut.exe crashes with nested quoting.
-            # Launcher.py's argument parser handles reconstructing space-split paths.
-            launcher_args = os.path.normpath(str(profile_shortcut_path))
+            # Ensure profile shortcut path uses Windows-style backslashes and is wrapped
+            # in double quotes so paths containing spaces are passed as a single argument.
+            launcher_args = f'"{os.path.normpath(str(profile_shortcut_path))}"'
             extra_args = game_data.get('launcher_executable_arguments', app_config.launcher_executable_arguments)
             if extra_args:
                 launcher_args += f" {extra_args}"
@@ -328,7 +327,7 @@ class CreationController:
                 target_path=target_launcher_exe,
                 shortcut_path=launcher_shortcut_path,
                 arguments=launcher_args,
-                working_dir=game_data.get('directory', ''),
+                working_dir=game_profile_dir,
                 icon_path=game_exe_path,
                 description=f"Launch {game_name_override}"
             )
@@ -382,8 +381,10 @@ class CreationController:
         """Creates a Windows shortcut using the bundled Shortcut.exe."""
         # Pre-check for Unicode characters which Shortcut.exe (ANSI) cannot handle
         is_unicode = any(ord(c) > 127 for c in (str(target_path) + str(shortcut_path) + str(arguments) + str(working_dir)))
-        if is_unicode:
-            logging.info(f"Unicode detected in paths. Using PowerShell for shortcut: {shortcut_path}")
+        # Shortcut.exe crashes (0xC0000005) on nested quoting, so arguments that already
+        # contain double quotes are handled by the PowerShell fallback instead.
+        if is_unicode or '"' in str(arguments):
+            logging.info(f"Unicode or quoted arguments detected. Using PowerShell for shortcut: {shortcut_path}")
             return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
 
         shortcut_exe = os.path.join(constants.APP_ROOT_DIR, "bin", "Shortcut.exe")
@@ -761,6 +762,14 @@ class CreationController:
         config.set('BorderlessWindowing', 'borderlesswindowingpathoptions', game_data.get('borderless_windowing_options', app_config.borderless_gaming_path_options))
         config.set('BorderlessWindowing', 'borderlesswindowingpatharguments', game_data.get('borderless_windowing_arguments', app_config.borderless_gaming_path_arguments))
         config.set('BorderlessWindowing', 'borderlesswindowingpathrunwait', str(game_data.get('borderless_windowing_run_wait', False)))
+
+        # --- [Monitor] Section ---
+        config.add_section('Monitor')
+        config.set('Monitor', 'enablemonitorapp', str(game_data.get('monitorapp_enabled', True)))
+        config.set('Monitor', 'monitorapppath', self._get_app_path_for_ini('monitorapp_path', game_data, game_profile_dir))
+        config.set('Monitor', 'monitorapppathoptions', game_data.get('monitorapp_options', app_config.monitorapp_options))
+        config.set('Monitor', 'monitorapppatharguments', game_data.get('monitorapp_arguments', app_config.monitorapp_arguments))
+        config.set('Monitor', 'monitorapppathrunwait', str(game_data.get('monitorapp_run_wait', False)))
 
         # --- [PostLaunch] Section ---
         config.add_section('PostLaunch')

@@ -227,24 +227,8 @@ class GameLauncher:
         parser.add_argument("--clear", action="append", help="Clear config value: Section.Key")
         
         # Use parse_known_args to allow for other potential flags
-        self.args, unknown = parser.parse_known_args()
+        self.args, _ = parser.parse_known_args()
         args = self.args
-
-        # Reconstruct target path if it contained spaces and wasn't quoted in the shortcut.
-        # This is required because Shortcut.exe crashes (0xC0000005) if parameters are double-quoted.
-        if args.target and unknown:
-            # Collect all positional tokens
-            pos_tokens = [args.target]
-            for item in unknown:
-                if item.startswith('-'):
-                    break
-                pos_tokens.append(item)
-            # Try progressive joins from longest to shortest
-            for t in range(len(pos_tokens), 0, -1):
-                reconstructed = " ".join(pos_tokens[:t])
-                if os.path.exists(reconstructed) or reconstructed.lower().endswith('.lnk'):
-                    args.target = reconstructed
-                    break
 
         if args.home:
             self.home = os.path.abspath(args.home)

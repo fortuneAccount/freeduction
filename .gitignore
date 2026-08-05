@@ -34,6 +34,7 @@ steam_filtered.txt
 *.obj
 index_backups/
 cache/
+
 # IDE specific
 .agent.md
 .devcontainer/

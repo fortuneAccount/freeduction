@@ -974,7 +974,9 @@ class EditorTab(QWidget):
             # Lookup
             if self.main_window.config.enable_name_matching:
                 steam_index = self.main_window.steam_cache_manager.normalized_steam_index
-                steam_name, found_id = name_processor.find_steam_match(match_name, steam_index)
+                steam_name, found_id = name_processor.find_steam_match(
+                    match_name, steam_index, display_name=clean_name
+                )
 
                 if found_id:
                     steam_id = found_id
@@ -1766,7 +1768,8 @@ class EditorTab(QWidget):
                 match_name = name_processor.get_match_name(clean_name)
 
                 steam_name, steam_id = name_processor.find_steam_match(
-                    match_name, self.main_window.steam_cache_manager.normalized_steam_index
+                    match_name, self.main_window.steam_cache_manager.normalized_steam_index,
+                    display_name=clean_name
                 )
 
                 if steam_id:
@@ -1859,7 +1862,9 @@ class EditorTab(QWidget):
                 # Normalize and run the (exact + subtitle/prefix) matcher
                 clean_name = name_processor.get_display_name(name_to_use)
                 match_name = name_processor.get_match_name(clean_name)
-                steam_name, steam_id = name_processor.find_steam_match(match_name, steam_index)
+                steam_name, steam_id = name_processor.find_steam_match(
+                    match_name, steam_index, display_name=clean_name
+                )
 
                 if steam_id:
                     # Steam ID
