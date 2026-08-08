@@ -4,12 +4,49 @@
 ; Section names correspond to internal config variables.
 ; Pipe-delimited values populate comboboxes in the right-click modal.
 ; The parser also maps these to config_keys via SECTION_TO_CONFIG_KEY.
+;
+; FORMAT:
+;   [section]       MUST be the canonical section referenced by
+;                   constants.SECTION_TO_CONFIG_KEY (Python) and by
+;                   get_options_section_for_key() (C config editor).
+;   options =       pipe-delimited preset options. A LEADING '|' marks a
+;                   "no option" empty-priority default. When queried via the
+;                   launcher, the FIRST EFFECTIVE (non-empty) token is used;
+;                   if the string begins with '|', the resolved value is empty.
+;   arguments =     same semantics for preset arguments.
+;
+; The launcher observes absent (empty) elements when building launcher
+; parameters, i.e. an empty option/argument is omitted from the command.
+;
+; Example:
+;   [someappoptions]
+;   options = |--vvv|--debug|^>^>NUL 2^>&1|--help
+;   (empty-priority: the default option is empty; the dropdown offers the rest)
+;
+; NOTE: The <exe>options / <exe>arguments Application sections below are kept
+; as ALIASES so the Python exe-basename lookup path also resolves. The
+; canonical sections referenced by SECTION_TO_CONFIG_KEY are the ones above
+; each alias group.
 ; ==============================================================================
 
 ; ── Controller Mapper ────────────────────────────────────────────────────────
 
 [controllermapperoptions]
-options = --tray --hidden --profile-controller ${P#} --profile
+options = |--tray --hidden --profile-controller 1 --profile|
+arguments = --profile-controller ${P#} --profile
+
+[controllermapperarguments]
+options = |--tray --hidden --profile-controller 1 --profile|
+arguments = --profile-controller ${P#} --profile
+
+; Alias: antimicrox.exe
+[antimicroxoptions]
+options = --tray --hidden --profile-controller 1 --profile
+arguments = --profile-controller ${P#} --profile
+
+; Alias: keysticks.exe
+[keysticksoptions]
+options =
 arguments =
 
 ; ── Profiles ─────────────────────────────────────────────────────────────────
@@ -18,7 +55,15 @@ arguments =
 options = |--tray --hidden --profile-controller 1 --profile|
 arguments =
 
+[player1profilearguments]
+options = |--tray --hidden --profile-controller 1 --profile|
+arguments =
+
 [player2profileoptions]
+options = |--tray --hidden --profile-controller 2 --profile|
+arguments =
+
+[player2profilearguments]
 options = |--tray --hidden --profile-controller 2 --profile|
 arguments =
 
@@ -26,13 +71,25 @@ arguments =
 options = |--tray --hidden --profile-controller 1 --profile|
 arguments =
 
+[deskprofilearguments]
+options = |--tray --hidden --profile-controller 1 --profile|
+arguments =
+
 ; ── Display ──────────────────────────────────────────────────────────────────
 
 [monitorappoptions]
-options = /loadconfig|/internal|/extend|/clone|/external|/SetMonitors "Name=\\.\$MONITOR${M#}_NAME Primary=1 BitsPerPixel=32 Width=$MONITOR${M#}_RESX Height=$MONITOR${M#}_RESY DisplayFrequency=$MONITOR${M#}_FREQ DisplayOrientation=$MONITOR${M#}_ORIENT PositionX=$MONITOR${M#}_POSX PositionY=$MONITOR${M#}_POSY" "Name=\\.\$MONITOR(${M#}+1)_NAME BitsPerPixel=$MONITOR(${M#}+1)_DEPTH Width=$MONITOR(${M#}+1)_RESX Height=$MONITOR(${M#}+1)_RESY DisplayFrequency=$MONITOR(${M#}+1)_FREQ DisplayOrientation=$MONITOR(${M#}+1)_ORIENT PositionX=$MONITOR(${M#}+1)_POSX PositionY=$MONITOR(${M#}+1)_POSY"|-width=$MONITOR${M#}_RESX -height=$MONITOR${M#}_RESY -depth=$MONITOR${M#}_DEPTH =refresh=$MONITOR${M#}_FREQ -lx=$MONITOR${M#}_POSX -ty=$MONITOR${M#}_POSY -primary -monitor="$MONITOR${M#}_NAME"
+options = |/loadconfig|
+arguments =
+
+[monitorapparguments]
+options = |/loadconfig|
 arguments =
 
 [monitorgamecfgoptions]
+options = |/loadconfig|/internal|/extend|/clone|/external|
+arguments =
+
+[monitorgamecfgarguments]
 options = |/loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
@@ -40,17 +97,33 @@ arguments =
 options = |/loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
+[monitordeskcfgarguments]
+options = |/loadconfig|/internal|/extend|/clone|/external|
+arguments =
+
 ; ── Windowing ────────────────────────────────────────────────────────────────
 
 [borderlessgamingoptions]
-options =
+options = |--internal --external|
+arguments =
+
+[borderlessgamingarguments]
+options = |--internal --external|
 arguments =
 
 [unbordercfgoptions]
 options =
 arguments =
 
+[unbordercfgarguments]
+options =
+arguments =
+
 [rebordercfgoptions]
+options =
+arguments =
+
+[rebordercfgarguments]
 options =
 arguments =
 
@@ -60,11 +133,23 @@ arguments =
 options =
 arguments =
 
+[discmountarguments]
+options =
+arguments =
+
 [discmountcfgoptions]
 options =
 arguments =
 
+[discmountcfgarguments]
+options =
+arguments =
+
 [discunmountcfgoptions]
+options =
+arguments =
+
+[discunmountcfgarguments]
 options =
 arguments =
 
@@ -74,9 +159,17 @@ arguments =
 options =
 arguments =
 
+[localbackuparguments]
+options =
+arguments =
+
 ; ── Cloud Sync ───────────────────────────────────────────────────────────────
 
 [cloudsyncoptions]
+options =
+arguments =
+
+[cloudsyncarguments]
 options =
 arguments =
 
@@ -86,11 +179,23 @@ arguments =
 options =
 arguments =
 
+[audiotoolarguments]
+options =
+arguments =
+
 [gameaudiooptions]
 options =
 arguments =
 
+[gameaudioarguments]
+options =
+arguments =
+
 [deskaudiooptions]
+options =
+arguments =
+
+[deskaudioarguments]
 options =
 arguments =
 
@@ -100,7 +205,15 @@ arguments =
 options =
 arguments =
 
+[pre1arguments]
+options =
+arguments =
+
 [pre2options]
+options =
+arguments =
+
+[pre2arguments]
 options =
 arguments =
 
@@ -108,7 +221,15 @@ arguments =
 options =
 arguments =
 
+[pre3arguments]
+options =
+arguments =
+
 [post1options]
+options =
+arguments =
+
+[post1arguments]
 options =
 arguments =
 
@@ -116,7 +237,15 @@ arguments =
 options =
 arguments =
 
+[post2arguments]
+options =
+arguments =
+
 [post3options]
+options =
+arguments =
+
+[post3arguments]
 options =
 arguments =
 
@@ -124,12 +253,150 @@ arguments =
 options =
 arguments =
 
+[justafterlauncharguments]
+options =
+arguments =
+
 [justbeforeexitoptions]
+options =
+arguments =
+
+[justbeforeexitarguments]
 options =
 arguments =
 
 ; ── Launcher ─────────────────────────────────────────────────────────────────
 
 [launcherexecutableoptions]
+options =
+arguments =
+
+[launcherexecutablearguments]
+options =
+arguments =
+
+;  ── Applications (aliases for exe-basename lookup) ──────────────────────────
+
+[antimicroxoptions]
+options = --tray --hidden --profile-controller 1 --profile
+arguments = --profile-controller ${P#} --profile
+
+[keysticksoptions]
+options =
+arguments =
+
+[ds4windowsoptions]
+options =
+arguments =
+
+[ds4windowscmdoptions]
+options =
+arguments =
+
+[ihatebordersoptions]
+options =
+arguments =
+
+[borderlessgamingoptions]
+options = |--internal --external|
+arguments =
+
+[borderlessgamingportableoptions]
+options =
+arguments =
+
+[borderlessoptions]
+options =
+arguments =
+
+[borderlesseroptions]
+options =
+arguments =
+
+[borderstripperoptions]
+options =
+arguments =
+
+[fullscreenizeroptions]
+options =
+arguments =
+
+[magpieoptions]
+options =
+arguments =
+
+[multiresoptions]
+options =
+arguments =
+
+[displaychangeroptions]
+options =
+arguments =
+
+[clickmonitorddcoptions]
+options =
+arguments =
+
+[persistentwindowsoptions]
+options =
+arguments =
+
+[opencloudsaveoptions]
+options =
+arguments =
+
+[rcloneoptions]
+options =
+arguments =
+
+[ludusavioptions]
+options =
+arguments =
+
+[syncthingoptions]
+options =
+arguments =
+
+[emusyncoptions]
+options =
+arguments =
+
+[gamebackupmonitoroptions]
+options =
+arguments =
+
+[gamesavemanageroptions]
+options =
+arguments =
+
+[savestateoptions]
+options =
+arguments =
+
+[setsounddeviceoptions]
+options =
+arguments =
+
+[soundvolumeviewoptions]
+options =
+arguments =
+
+[swreoptions]
+options =
+arguments =
+
+[wincdemuoptions]
+options =
+arguments =
+
+[osfoptions]
+options =
+arguments =
+
+[cdmageoptions]
+options =
+arguments =
+
+[imgdriveoptions]
 options =
 arguments =

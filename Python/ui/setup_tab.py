@@ -1344,16 +1344,34 @@ class SetupTab(QWidget):
             defaults_state['opts'], defaults_state['args'] = self.options_args_map[config_key]
             defaults_state['has_defaults'] = True
 
+        def _first_effective_token(pipe_delimited_str):
+            """Return the first EFFECTIVE token of a pipe-delimited preset string.
+            Empty-priority (leading '|' or empty) resolves to '' (parameter omitted).
+            Non-pipe values pass through unchanged."""
+            if not pipe_delimited_str:
+                return ""
+            s = pipe_delimited_str.strip()
+            if s.startswith('|'):
+                return ""
+            if '|' not in s:
+                return s
+            return s.split('|', 1)[0].strip()
+
         def _populate_combo(combo, pipe_delimited_str, current_value):
-            """Fill a QComboBox from a pipe-delimited string and select current_value."""
+            """Fill a QComboBox from a pipe-delimited string and select the
+            current value (compared against the first-effective token)."""
             choices = list(dict.fromkeys(pipe_delimited_str.split('|'))) if pipe_delimited_str else ['']
             for choice in choices:
                 combo.addItem(choice)
-            idx = combo.findText(current_value)
+            # Compare the current value against the first effective token so that a
+            # pipe-delimited preset (e.g. '|-vvv|--debug|') selects '-vvv' and an
+            # empty-priority (leading '|') selects the empty entry.
+            effective = _first_effective_token(current_value)
+            idx = combo.findText(effective)
             if idx >= 0:
                 combo.setCurrentIndex(idx)
-            elif current_value:
-                combo.insertItem(0, current_value)
+            elif effective:
+                combo.insertItem(0, effective)
                 combo.setCurrentIndex(0)
 
         options_combo = QComboBox()
@@ -1377,8 +1395,12 @@ class SetupTab(QWidget):
                 status_label.setText("")
                 return
             
-            is_match = (options_combo.currentText() == defaults_state['opts'] and 
-                        args_combo.currentText() == defaults_state['args'])
+            # Compare against the first effect token (honoring empty-priority), not
+            # the raw pipe-delimited default string.
+            is_match = (_first_effective_token(options_combo.currentText()) ==
+                        _first_effective_token(defaults_state['opts']) and
+                        _first_effective_token(args_combo.currentText()) ==
+                        _first_effective_token(defaults_state['args']))
             
             if is_match:
                 status_label.setText("✓ Matches defaults")
@@ -1399,9 +1421,12 @@ class SetupTab(QWidget):
         
         def reset_values():
             if defaults_state['has_defaults']:
-                idx = options_combo.findText(defaults_state['opts'])
+                # Reset selects the first effective token of the default preset.
+                eff_opts = _first_effective_token(defaults_state['opts'])
+                idx = options_combo.findText(eff_opts)
                 options_combo.setCurrentIndex(idx if idx >= 0 else 0)
-                idx = args_combo.findText(defaults_state['args'])
+                eff_args = _first_effective_token(defaults_state['args'])
+                idx = args_combo.findText(eff_args)
                 args_combo.setCurrentIndex(idx if idx >= 0 else 0)
         reset_btn.clicked.connect(reset_values)
 

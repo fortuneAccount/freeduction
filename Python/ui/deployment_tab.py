@@ -327,6 +327,9 @@ class DeploymentTab(QWidget):
             cb.setChecked(checked)
         self.overwrite_game_ini_checkbox.setChecked(checked)
         self.recreate_game_ini_checkbox.setChecked(checked)
+        self.overwrite_game_json_checkbox.setChecked(checked)
+        self.overwrite_artwork_checkbox.setChecked(checked)
+        self.overwrite_pcgw_checkbox.setChecked(checked)
 
     def _toggle_all_overwrite_checkboxes(self):
         """Toggle the state of all overwrite checkboxes."""
@@ -334,6 +337,9 @@ class DeploymentTab(QWidget):
             cb.setChecked(not cb.isChecked())
         self.overwrite_game_ini_checkbox.setChecked(not self.overwrite_game_ini_checkbox.isChecked())
         self.recreate_game_ini_checkbox.setChecked(not self.recreate_game_ini_checkbox.isChecked())
+        self.overwrite_game_json_checkbox.setChecked(not self.overwrite_game_json_checkbox.isChecked())
+        self.overwrite_artwork_checkbox.setChecked(not self.overwrite_artwork_checkbox.isChecked())
+        self.overwrite_pcgw_checkbox.setChecked(not self.overwrite_pcgw_checkbox.isChecked())
 
     def _set_overwrite_for_active_options(self, enable_for_active):
         """Enable or disable overwrite checkboxes based on whether their corresponding option in the Setup tab is active."""

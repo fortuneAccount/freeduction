@@ -139,7 +139,7 @@ if defined MSYSROOT (
     call :run "!BASH!" -lc "cd '!UNIXDIR!' && bash ./build.sh --windows"
 ) else (
     set "CLFLAGS=/std:c11 /O2 /W4 /nologo /D_CRT_SECURE_NO_WARNINGS"
-    set "LIBS=user32.lib shell32.lib shlwapi.lib ole32.lib psapi.lib advapi32.lib gdi32.lib comctl32.lib"
+set "LIBS=user32.lib shell32.lib shlwapi.lib ole32.lib psapi.lib advapi32.lib gdi32.lib comctl32.lib winmm.lib"
     set "LINKFLAGS=/SUBSYSTEM:WINDOWS"
     call :log "Compiler : cl.exe"
     call :log "Output   : %OUT%"

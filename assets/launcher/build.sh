@@ -19,7 +19,7 @@ OS_NAME=$(uname -s)
 if [ "$MODE" = "windows" ]; then
     OUT=launcher.exe
     # Note: -mwindows must come first, then libraries in dependency order
-    LDFLAGS="-mwindows -lgdi32 -luser32 -lshell32 -lshlwapi -lole32 -lpsapi -ladvapi32 -lcomctl32"
+LDFLAGS="-mwindows -lgdi32 -luser32 -lshell32 -lshlwapi -lole32 -lpsapi -ladvapi32 -lcomctl32 -lwinmm"
     # If on Linux, use cross-compiler
     if [ "$OS_NAME" = "Linux" ]; then
         CC=${CC:-x86_64-w64-mingw32-gcc}

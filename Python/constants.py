@@ -60,9 +60,22 @@ SECTION_TO_CONFIG_KEY = {
     'post1options': 'post1_path',
     'post2options': 'post2_path',
     'post3options': 'post3_path',
-    'justafterlaunchoptions': 'just_after_launch_path',
+'justafterlaunchoptions': 'just_after_launch_path',
     'justbeforeexitoptions': 'just_before_exit_path',
     'launcherexecutableoptions': 'launcher_executable',
+
+    # Alias sections — map alternate .set section names to the canonical
+    # config attribute (mirrors the alias remapping in the C config_editor).
+    'borderlesswindowingoptions': 'borderless_gaming_path',
+    'borderlesswindowingarguments': 'borderless_gaming_path',
+    'audioappoptions': 'audio_tool_path',
+    'audioapparguments': 'audio_tool_path',
+    'gameaudiooptions': 'audio_game_cfg',
+    'gameaudioarguments': 'audio_game_cfg',
+    'deskaudiooptions': 'audio_desk_cfg',
+    'deskaudioarguments': 'audio_desk_cfg',
+    'discunmountoptions': 'disc_unmount_cfg',
+    'discunmountarguments': 'disc_unmount_cfg',
 }
 
 # --- Editor Column Indices ---

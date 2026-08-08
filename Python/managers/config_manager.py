@@ -528,13 +528,38 @@ class ConfigManager(QObject):
             current_options = getattr(config, options_attr, "")
             current_arguments = getattr(config, arguments_attr, "")
             
-            if not current_options and options:
-                setattr(config, options_attr, options)
-                logging.info(f"  Applied default options for {config_attr}: {options}")
+            # Resolve the FIRST EFFECTIVE token (honoring empty-priority) instead
+            # of storing the raw pipe-delimited string.  A leading '|' (or empty
+            # value) means "no option/argument" -> resolved to empty string so the
+            # parameter is omitted when the launcher builds its command.
+            resolved_options = self._resolve_first_token(options)
+            resolved_arguments = self._resolve_first_token(arguments)
             
-            if not current_arguments and arguments:
-                setattr(config, arguments_attr, arguments)
-                logging.info(f"  Applied default arguments for {config_attr}: {arguments}")
+            if not current_options and resolved_options:
+                setattr(config, options_attr, resolved_options)
+                logging.info(f"  Applied default options for {config_attr}: {resolved_options}")
+            
+            if not current_arguments and resolved_arguments:
+                setattr(config, arguments_attr, resolved_arguments)
+                logging.info(f"  Applied default arguments for {config_attr}: {resolved_arguments}")
+
+    @staticmethod
+    def _resolve_first_token(value):
+        """
+        Return the first EFFECTIVE token of a pipe-delimited preset string.
+        Empty-priority (leading '|' or empty value) resolves to an empty string,
+        meaning "no option/argument" (omitted when building launcher parameters).
+        Non-pipe values pass through unchanged.
+        """
+        if not value or not isinstance(value, str):
+            return ""
+        value = value.strip()
+        if value.startswith('|'):
+            return ""
+        if '|' not in value:
+            return value
+        first = value.split('|', 1)[0].strip()
+        return first
     
     def refresh_tool_paths(self, config: AppConfig):
         """

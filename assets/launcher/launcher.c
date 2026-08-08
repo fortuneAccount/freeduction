@@ -1,9 +1,8 @@
-/**
  * launcher.c - Game Launcher
  *
  * A complete C port of the Python game launcher script.
  *
- * Compilation (using MinGW-w64):
+* Compilation (using MinGW-w64):
  * gcc -o launcher.exe launcher.c inih/ini.c -luser32 -lshlwapi -lole32 -lpsapi -Wall
  *
  * Dependencies:
@@ -20,6 +19,7 @@
 #include <tlhelp32.h> // For process snapshots
 #include <shlwapi.h>   // For PathRemoveFileSpecA, PathAppendA
 #include <psapi.h>     // For GetModuleBaseName
+#include <mmsystem.h>  // For joystick detection (joyGetNumDevs, joyGetPosEx)
 #include <time.h>
 
 // Include the inih library header
@@ -47,6 +47,7 @@
 
 // Include common definitions and tray menu
 #include "launcher_common.h"
+#include "pipe_parse.h"
 #include "tray_menu.h"
 
 // --- Tracked Process Structure ---
@@ -96,6 +97,8 @@ BOOL check_instances();
 void write_pid_file();
 void cleanup_pid_file();
 void string_replace(char* dest, size_t dest_size, const char* src, const char* find, const char* replace);
+int count_connected_controllers();
+void normalize_pipe_options_arguments();
 
 // Action function prototypes
 void action_run_controller_mapper(int is_exit);
@@ -283,7 +286,7 @@ void kill_all_tracked_processes() {
         current = current->next;
     }
     
-    // Free all tracked processes
+// Free all tracked processes
     while (G_TRACKED_PROCESSES) {
         TrackedProcess* to_remove = G_TRACKED_PROCESSES;
         G_TRACKED_PROCESSES = G_TRACKED_PROCESSES->next;
@@ -291,7 +294,7 @@ void kill_all_tracked_processes() {
     }
 }
 
-// --- INI Parsing Handler ---
+// --- INI Configuration Handler ---
 static int config_handler(void* user, const char* section, const char* name, const char* value) {
     GameConfiguration* pConfig = (GameConfiguration*)user;
     
@@ -445,8 +448,12 @@ static int config_handler(void* user, const char* section, const char* name, con
         SET_BOOL(desk_profile_enabled);
     } else if (MATCH("mapperprofiles", "player1profile")) {
         SET_STR(player1_profile);
-    } else if (MATCH("mapperprofiles", "player2profile")) {
+} else if (MATCH("mapperprofiles", "player2profile")) {
         SET_STR(player2_profile);
+    } else if (MATCH("mapperprofiles", "player3profile")) {
+        SET_STR(player3_profile);
+    } else if (MATCH("mapperprofiles", "player4profile")) {
+        SET_STR(player4_profile);
     } else if (MATCH("mapperprofiles", "deskprofile")) {
         SET_STR(desk_profile);
     } else if (MATCH("mapperprofiles", "player1profileoptions")) {
@@ -640,8 +647,15 @@ int load_configuration(const char* ini_path) {
     }
     show_message("Configuration loaded successfully.");
     
+    // Resolve pipe-delimited options/arguments inherited from options_arguments.set:
+    // observe the first effective token (with whitespace trimmed) as the default,
+    // and honor empty-token priority (leading '|' or empty value -> omit the
+    // parameter when executing launcher-parameters).
+    normalize_pipe_options_arguments();
+    
     // Resolve all relative paths against the profile directory (G_HOME_DIR)
     resolve_config_paths();
+    
     
     if (!G_CLI_VERBOSE_SET && strlen(G_CONFIG.logging_verbosity) > 0) {
         if (_stricmp(G_CONFIG.logging_verbosity, "none") == 0) {
@@ -696,8 +710,10 @@ void resolve_config_paths() {
     RESOLVE_FIELD(post_launch_app_3);
     RESOLVE_FIELD(just_after_launch_app);
     RESOLVE_FIELD(just_before_exit_app);
-    RESOLVE_FIELD(player1_profile);
+RESOLVE_FIELD(player1_profile);
     RESOLVE_FIELD(player2_profile);
+    RESOLVE_FIELD(player3_profile);
+    RESOLVE_FIELD(player4_profile);
     RESOLVE_FIELD(desk_profile);
     RESOLVE_FIELD(monitor_game_config);
     RESOLVE_FIELD(monitor_desk_config);
@@ -709,6 +725,97 @@ void resolve_config_paths() {
     RESOLVE_FIELD(audio_desk_cfg);
     
     #undef RESOLVE_FIELD
+}
+
+// --- Pipe-delimited options/arguments normalization ---
+//
+// Values inherited by Game.ini from config.json are strings queried from a
+// matching section ([${(itemtype|appname)(options|arguments}] found in
+// config.json / options_arguments.set). They can carry pipe-delimited presets:
+//
+//   |-vvv|--debug|^>^>NUL 2^>&1|--help
+//
+// The launcher must observe the FIRST EFFECTIVE token as the default (falling
+// back through the delimited alternatives), and must honor EMPTY-token
+// priority: a leading '|' (or empty value) means "no option/argument" and the
+// parameter is omitted entirely when executing launcher-parameters.
+#define NORMALIZE_PIPE_FIELD(field) do { \
+    if (strchr(G_CONFIG.field, '|') != NULL) { \
+        char _tok[sizeof(G_CONFIG.field)]; \
+        if (pipe_first_effective_token(G_CONFIG.field, _tok, sizeof(_tok))) { \
+            strncpy(G_CONFIG.field, _tok, sizeof(G_CONFIG.field) - 1); \
+            G_CONFIG.field[sizeof(G_CONFIG.field) - 1] = '\0'; \
+        } else { \
+            G_CONFIG.field[0] = '\0'; /* empty priority -> omit */ \
+        } \
+    } \
+} while(0)
+
+void normalize_pipe_options_arguments() {
+    // Controller mapper
+    NORMALIZE_PIPE_FIELD(controller_mapper_options);
+    NORMALIZE_PIPE_FIELD(controller_mapper_arguments);
+    // Borderless windowing
+    NORMALIZE_PIPE_FIELD(borderless_options);
+    NORMALIZE_PIPE_FIELD(borderless_arguments);
+    // Monitor app / layouts
+    NORMALIZE_PIPE_FIELD(monitorapp_options);
+    NORMALIZE_PIPE_FIELD(monitorapp_arguments);
+    NORMALIZE_PIPE_FIELD(monitor_game_config_options);
+    NORMALIZE_PIPE_FIELD(monitor_game_config_arguments);
+    NORMALIZE_PIPE_FIELD(monitor_desk_config_options);
+    NORMALIZE_PIPE_FIELD(monitor_desk_config_arguments);
+    // Cloud sync
+    NORMALIZE_PIPE_FIELD(cloud_app_options);
+    NORMALIZE_PIPE_FIELD(cloud_app_arguments);
+    // Disc mount / unmount
+    NORMALIZE_PIPE_FIELD(disc_mount_options);
+    NORMALIZE_PIPE_FIELD(disc_mount_arguments);
+    NORMALIZE_PIPE_FIELD(disc_unmount_options);
+    NORMALIZE_PIPE_FIELD(disc_unmount_arguments);
+    NORMALIZE_PIPE_FIELD(disc_mount_cfg_options);
+    NORMALIZE_PIPE_FIELD(disc_mount_cfg_arguments);
+    NORMALIZE_PIPE_FIELD(disc_unmount_cfg_options);
+    NORMALIZE_PIPE_FIELD(disc_unmount_cfg_arguments);
+    // Audio app / presets
+    NORMALIZE_PIPE_FIELD(audio_app_options);
+    NORMALIZE_PIPE_FIELD(audio_app_arguments);
+    NORMALIZE_PIPE_FIELD(audio_game_cfg_options);
+    NORMALIZE_PIPE_FIELD(audio_game_cfg_arguments);
+    NORMALIZE_PIPE_FIELD(audio_desk_cfg_options);
+    NORMALIZE_PIPE_FIELD(audio_desk_cfg_arguments);
+// Borderless profiles
+    NORMALIZE_PIPE_FIELD(unborder_cfg_options);
+    NORMALIZE_PIPE_FIELD(unborder_cfg_arguments);
+    NORMALIZE_PIPE_FIELD(reborder_cfg_options);
+    NORMALIZE_PIPE_FIELD(reborder_cfg_arguments);
+    // Controller-mapper profiles
+    NORMALIZE_PIPE_FIELD(player1_profile_options);
+    NORMALIZE_PIPE_FIELD(player1_profile_arguments);
+    NORMALIZE_PIPE_FIELD(player2_profile_options);
+    NORMALIZE_PIPE_FIELD(player2_profile_arguments);
+    NORMALIZE_PIPE_FIELD(player3_profile_options);
+    NORMALIZE_PIPE_FIELD(player3_profile_arguments);
+    // Pre-launch
+    NORMALIZE_PIPE_FIELD(pre_launch_app_1_options);
+    NORMALIZE_PIPE_FIELD(pre_launch_app_1_arguments);
+    NORMALIZE_PIPE_FIELD(pre_launch_app_2_options);
+    NORMALIZE_PIPE_FIELD(pre_launch_app_2_arguments);
+    NORMALIZE_PIPE_FIELD(pre_launch_app_3_options);
+    NORMALIZE_PIPE_FIELD(pre_launch_app_3_arguments);
+    // Post-launch
+    NORMALIZE_PIPE_FIELD(post_launch_app_1_options);
+    NORMALIZE_PIPE_FIELD(post_launch_app_1_arguments);
+    NORMALIZE_PIPE_FIELD(post_launch_app_2_options);
+    NORMALIZE_PIPE_FIELD(post_launch_app_2_arguments);
+    NORMALIZE_PIPE_FIELD(post_launch_app_3_options);
+    NORMALIZE_PIPE_FIELD(post_launch_app_3_arguments);
+    NORMALIZE_PIPE_FIELD(just_after_launch_options);
+    NORMALIZE_PIPE_FIELD(just_after_launch_arguments);
+    NORMALIZE_PIPE_FIELD(just_before_exit_options);
+    NORMALIZE_PIPE_FIELD(just_before_exit_arguments);
+
+    #undef NORMALIZE_PIPE_FIELD
 }
 
 // --- Process Management ---
@@ -730,7 +837,10 @@ BOOL run_process(const char* command, const char* working_dir, BOOL wait, PROCES
     }
 
     DWORD creation_flags = 0;
-    if (G_IS_ADMIN && !wait) {
+    // Only give child processes their own console when the user explicitly
+    // passed a verbose CLI flag; otherwise keep them windowless so no stray
+    // console "prompt" echoing the launcher log is spawned.
+    if (G_CLI_VERBOSE_SET && G_IS_ADMIN && !wait) {
         creation_flags = CREATE_NEW_CONSOLE;
     }
     
@@ -838,26 +948,48 @@ static void build_cm_cmd(char* cmd, size_t cmd_size, const char* app,
     snprintf(cmd, cmd_size, "\"%s\" %s \"%s\" %s", app, opts, profile, args);
 }
 
+// Count the number of connected joystick/controller devices.
+int count_connected_controllers() {
+    int count = 0;
+    JOYINFOEX joyInfo;
+    ZeroMemory(&joyInfo, sizeof(joyInfo));
+    joyInfo.dwSize = sizeof(joyInfo);
+    joyInfo.dwFlags = JOY_RETURNALL;
+
+    UINT num_devs = joyGetNumDevs();
+    for (UINT i = 0; i < num_devs; i++) {
+        // Query each device; if it returns JOYERR_NOERROR it is present/connected.
+        if (joyGetPosEx(i, &joyInfo) == JOYERR_NOERROR) {
+            count++;
+        }
+    }
+    return count;
+}
+
 void action_run_controller_mapper(int is_exit) {
     if (!G_CONFIG.controller_mapper_enabled) return;
-    char cmd[MAX_CMD_LEN];
-    const char* profile1;
-    const char* profile2;
     PROCESS_INFORMATION pi;
     char debug_msg[512];
-    
+
     snprintf(debug_msg, sizeof(debug_msg), "Controller Mapper: %s (exit=%d)", is_exit ? "exit sequence" : "launch sequence", is_exit);
     log_debug(debug_msg);
-    
+
+    if (strlen(G_CONFIG.controller_mapper_app) == 0) {
+        show_message("  - Controller Mapper not configured/found.");
+        return;
+    }
+    DWORD attribs = GetFileAttributesA(G_CONFIG.controller_mapper_app);
+    if (attribs == INVALID_FILE_ATTRIBUTES) {
+        show_message("  - Controller Mapper executable not found.");
+        return;
+    }
+
     if (is_exit) {
+        // Exit sequence: kill any running mapper and start a single instance
+        // using the desk profile.
         action_kill_controller_mapper();
-        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.desk_profile) == 0) {
-            show_message("  - Controller Mapper or Desk Profile not configured/found.");
-            return;
-        }
-        DWORD attribs = GetFileAttributesA(G_CONFIG.controller_mapper_app);
-        if (attribs == INVALID_FILE_ATTRIBUTES) {
-            show_message("  - Controller Mapper executable not found.");
+        if (strlen(G_CONFIG.desk_profile) == 0) {
+            show_message("  - Desk Profile not configured/found.");
             return;
         }
         attribs = GetFileAttributesA(G_CONFIG.desk_profile);
@@ -865,61 +997,57 @@ void action_run_controller_mapper(int is_exit) {
             show_message("  - Desk profile not found.");
             return;
         }
-        profile1 = G_CONFIG.desk_profile;
-        profile2 = G_CONFIG.desk_profile;
-    } else {
-        if (strlen(G_CONFIG.controller_mapper_app) == 0 || strlen(G_CONFIG.player1_profile) == 0) {
-            show_message("  - Controller Mapper or P1 Profile not configured/found.");
-            return;
+
+        char cmd[MAX_CMD_LEN];
+        snprintf(cmd, sizeof(cmd), "\"%s\" --tray --hidden --profile-controller 1 --profile \"%s\"",
+                 G_CONFIG.controller_mapper_app, G_CONFIG.desk_profile);
+        if (run_process(cmd, NULL, FALSE, &pi)) {
+            add_tracked_process("controller_mapper", &pi);
         }
-        DWORD attribs = GetFileAttributesA(G_CONFIG.controller_mapper_app);
-        if (attribs == INVALID_FILE_ATTRIBUTES) {
-            show_message("  - Controller Mapper executable not found.");
-            return;
-        }
-        attribs = GetFileAttributesA(G_CONFIG.player1_profile);
-        if (attribs == INVALID_FILE_ATTRIBUTES) {
-            show_message("  - Player 1 profile not found.");
-            return;
-        }
-        profile1 = G_CONFIG.player1_profile;
-        profile2 = strlen(G_CONFIG.player2_profile) > 0 ? G_CONFIG.player2_profile : NULL;
+        return;
     }
 
-    if (is_exit) {
-        // Exit: use desk profile options/arguments for both players
-        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
-                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
-                     G_CONFIG.desk_profile_options, G_CONFIG.desk_profile_arguments,
-                     profile1, "1");
-        if (run_process(cmd, NULL, FALSE, &pi)) {
-            add_tracked_process("controller_mapper", &pi);
-        }
-        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
-                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
-                     G_CONFIG.desk_profile_options, G_CONFIG.desk_profile_arguments,
-                     profile2, "2");
-        if (run_process(cmd, NULL, FALSE, &pi)) {
-            add_tracked_process("controller_mapper", &pi);
-        }
-    } else {
-        // Launch: use per-player profile options/arguments
-        build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
-                     G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
-                     G_CONFIG.player1_profile_options, G_CONFIG.player1_profile_arguments,
-                     profile1, "1");
-        if (run_process(cmd, NULL, FALSE, &pi)) {
-            add_tracked_process("controller_mapper", &pi);
-        }
-        if (profile2) {
-            build_cm_cmd(cmd, sizeof(cmd), G_CONFIG.controller_mapper_app,
-                         G_CONFIG.controller_mapper_options, G_CONFIG.controller_mapper_arguments,
-                         G_CONFIG.player2_profile_options, G_CONFIG.player2_profile_arguments,
-                         profile2, "2");
-            if (run_process(cmd, NULL, FALSE, &pi)) {
-                add_tracked_process("controller_mapper", &pi);
-            }
-        }
+    // Launch sequence: probe how many controllers are connected.
+    if (strlen(G_CONFIG.player1_profile) == 0) {
+        show_message("  - P1 Profile not configured/found.");
+        return;
+    }
+    attribs = GetFileAttributesA(G_CONFIG.player1_profile);
+    if (attribs == INVALID_FILE_ATTRIBUTES) {
+        show_message("  - Player 1 profile not found.");
+        return;
+    }
+
+    int controller_count = count_connected_controllers();
+    snprintf(debug_msg, sizeof(debug_msg), "Detected %d connected controller(s).", controller_count);
+    log_debug(debug_msg);
+
+    // Always assign the first controller to Player 1.
+    char cmd[MAX_CMD_LEN];
+    snprintf(cmd, sizeof(cmd), "\"%s\" --tray --hidden --profile-controller 1 --profile \"%s\"",
+             G_CONFIG.controller_mapper_app, G_CONFIG.player1_profile);
+
+    // For each additional detected controller, append its profile operand.
+    // Profiles are indexed 1..4; skip any that are not configured.
+    const char* const profiles[4] = {
+        G_CONFIG.player1_profile,
+        G_CONFIG.player2_profile,
+        G_CONFIG.player3_profile,
+        G_CONFIG.player4_profile
+    };
+
+    for (int i = 1; i < controller_count && i < 4; i++) {
+        if (strlen(profiles[i]) == 0) continue;
+        char player_num[4];
+        snprintf(player_num, sizeof(player_num), "%d", i + 1);
+        char append[MAX_CMD_LEN];
+        snprintf(append, sizeof(append), " --profile-controller %d --profile \"%s\"",
+                 i + 1, profiles[i]);
+        strncat(cmd, append, sizeof(cmd) - strlen(cmd) - 1);
+    }
+
+    if (run_process(cmd, NULL, FALSE, &pi)) {
+        add_tracked_process("controller_mapper", &pi);
     }
 }
 
@@ -1665,8 +1793,10 @@ int main(int argc, char* argv[]) {
         }
     }
     
-    // Allocate console only if verbose mode is enabled
-    if (G_VERBOSE_LEVEL > 0) {
+// Allocate a console ONLY when -v/-vv/-vvv was explicitly passed on the
+    // command line. By default the launcher runs as a silent GUI app so no
+    // log-echoing console window is spawned.
+    if (G_CLI_VERBOSE_SET) {
         AllocConsole();
         #ifdef _MSC_VER
         // MSVC version

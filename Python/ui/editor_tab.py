@@ -260,15 +260,16 @@ class EditorTab(QWidget):
         self.sort_flyout_menu.addAction("Parent Folder", lambda: self.sort_data('_parent_folder'))
         self.sort_flyout_btn.setMenu(self.sort_flyout_menu)
 
+# Clear View Button (left of Undo, bold red font, right margin 30px)
+        self.clear_button = QPushButton("Clear View")
+        self.clear_button.setStyleSheet("font-weight: bold; color: red; margin-right: 30px;")
+        self.clear_button.clicked.connect(self.on_clear_view_clicked)
+        
         # Undo Button
         self.undo_button = QPushButton("Undo")
         self.undo_button.setStyleSheet("font-weight: bold;")
         self.undo_button.setEnabled(False)
         self.undo_button.clicked.connect(self.undo)
-        
-        # Clear View Button
-        self.clear_button = QPushButton("Clear View")
-        self.clear_button.clicked.connect(self.clear_view_requested.emit)
         
         # Compact View Checkbox
         self.compact_view_cb = QCheckBox("Compact View")
@@ -283,9 +284,9 @@ class EditorTab(QWidget):
         tools_layout.addStretch()
         
         # Right aligned
+        tools_layout.addWidget(self.clear_button)
         tools_layout.addWidget(self.undo_button, alignment=Qt.AlignmentFlag.AlignCenter)
         tools_layout.addWidget(self.remove_unchecked_btn)
-        tools_layout.addWidget(self.clear_button)
         tools_layout.addWidget(self.compact_view_cb)
 
         main_layout.addLayout(tools_layout)
@@ -2457,9 +2458,16 @@ class EditorTab(QWidget):
         self.data_changed.emit()
 
     def update_compact_view(self):
-        """Hides or shows columns based on the Compact View checkbox."""
+        """Hides or shows columns based on the Compact View checkbox.
+
+        When Compact View is enabled, any column whose values are blank/unset
+        (or actions are unchecked) across all visible rows is hidden. Columns
+        gated by a disabled tool plugin remain hidden regardless of the toggle.
+        Core identifying columns (Create, Name, Dir, SteamID, NameOverride,
+        opts, args, AsAdmin) are always kept visible so the table stays usable.
+        """
         compact = self.compact_view_cb.isChecked()
-        
+
         # Build set of column indices that should stay hidden because
         # their corresponding tool plugin is not enabled.
         tool_hidden_cols = set()
@@ -2467,69 +2475,66 @@ class EditorTab(QWidget):
             if tool not in self._enabled_tools:
                 for col_enum in col_enums:
                     tool_hidden_cols.add(col_enum.value)
-        
-        # Groups of columns: (Path Column, [List of columns to hide if Path is empty OR Compact is on])
-        # For Compact mode, we hide the extra columns regardless.
-        # We also hide the Path column if it's empty for ALL visible rows.
-        # Columns for disabled tools are always hidden regardless of compact state.
-        
-        groups = [
-            (constants.EditorCols.CM_PATH, [constants.EditorCols.CM_OPTIONS, constants.EditorCols.CM_ARGUMENTS, constants.EditorCols.CM_RUN_WAIT]),
-            (constants.EditorCols.BW_PATH, [constants.EditorCols.BW_OPTIONS, constants.EditorCols.BW_ARGUMENTS, constants.EditorCols.BW_RUN_WAIT]),
-            (constants.EditorCols.JA_PATH, [constants.EditorCols.JA_OPTIONS, constants.EditorCols.JA_ARGUMENTS, constants.EditorCols.JA_RUN_WAIT]),
-            (constants.EditorCols.JB_PATH, [constants.EditorCols.JB_OPTIONS, constants.EditorCols.JB_ARGUMENTS, constants.EditorCols.JB_RUN_WAIT]),
-            (constants.EditorCols.PRE1_PATH, [constants.EditorCols.PRE1_OPTIONS, constants.EditorCols.PRE1_ARGUMENTS, constants.EditorCols.PRE1_RUN_WAIT]),
-            (constants.EditorCols.POST1_PATH, [constants.EditorCols.POST1_OPTIONS, constants.EditorCols.POST1_ARGUMENTS, constants.EditorCols.POST1_RUN_WAIT]),
-            (constants.EditorCols.PRE2_PATH, [constants.EditorCols.PRE2_OPTIONS, constants.EditorCols.PRE2_ARGUMENTS, constants.EditorCols.PRE2_RUN_WAIT]),
-            (constants.EditorCols.POST2_PATH, [constants.EditorCols.POST2_OPTIONS, constants.EditorCols.POST2_ARGUMENTS, constants.EditorCols.POST2_RUN_WAIT]),
-            (constants.EditorCols.PRE3_PATH, [constants.EditorCols.PRE3_OPTIONS, constants.EditorCols.PRE3_ARGUMENTS, constants.EditorCols.PRE3_RUN_WAIT]),
-            (constants.EditorCols.POST3_PATH, [constants.EditorCols.POST3_OPTIONS, constants.EditorCols.POST3_ARGUMENTS, constants.EditorCols.POST3_RUN_WAIT]),
-            (constants.EditorCols.DM_PATH, [constants.EditorCols.DM_OPTIONS, constants.EditorCols.DM_ARGUMENTS, constants.EditorCols.DM_RUN_WAIT]),
-            (constants.EditorCols.AUDIO_APP_PATH, [constants.EditorCols.AUDIO_APP_OPTIONS, constants.EditorCols.AUDIO_APP_ARGUMENTS, constants.EditorCols.AUDIO_APP_RUN_WAIT]),
-            (constants.EditorCols.MONITORAPP_PATH, [constants.EditorCols.MONITORAPP_OPTIONS, constants.EditorCols.MONITORAPP_ARGUMENTS, constants.EditorCols.MONITORAPP_RUN_WAIT]),
-        ]
-        # Launcher Executable group
-        groups.append((constants.EditorCols.LAUNCHER_EXE, [constants.EditorCols.LAUNCHER_EXE_OPTIONS, constants.EditorCols.LAUNCHER_EXE_ARGUMENTS]))
-        # Config file groups (no run_wait columns)
-        groups.append((constants.EditorCols.DM_MOUNT_CFG, [constants.EditorCols.DM_MOUNT_CFG_OPTIONS, constants.EditorCols.DM_MOUNT_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.DM_UNMOUNT_CFG, [constants.EditorCols.DM_UNMOUNT_CFG_OPTIONS, constants.EditorCols.DM_UNMOUNT_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.UNBORDER_CFG, [constants.EditorCols.UNBORDER_CFG_OPTIONS, constants.EditorCols.UNBORDER_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.REBORDER_CFG, [constants.EditorCols.REBORDER_CFG_OPTIONS, constants.EditorCols.REBORDER_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.MONITOR_GAME_CFG, [constants.EditorCols.MONITOR_GAME_CFG_OPTIONS, constants.EditorCols.MONITOR_GAME_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.MONITOR_DESK_CFG, [constants.EditorCols.MONITOR_DESK_CFG_OPTIONS, constants.EditorCols.MONITOR_DESK_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.PLAYER1_PROFILE, [constants.EditorCols.PLAYER1_PROFILE_OPTIONS, constants.EditorCols.PLAYER1_PROFILE_ARGUMENTS]))
-        groups.append((constants.EditorCols.PLAYER2_PROFILE, [constants.EditorCols.PLAYER2_PROFILE_OPTIONS, constants.EditorCols.PLAYER2_PROFILE_ARGUMENTS]))
-        groups.append((constants.EditorCols.DESK_PROFILE, [constants.EditorCols.DESK_PROFILE_OPTIONS, constants.EditorCols.DESK_PROFILE_ARGUMENTS]))
-        groups.append((constants.EditorCols.AUDIO_GAME_CFG, [constants.EditorCols.AUDIO_GAME_CFG_OPTIONS, constants.EditorCols.AUDIO_GAME_CFG_ARGUMENTS]))
-        groups.append((constants.EditorCols.AUDIO_DESK_CFG, [constants.EditorCols.AUDIO_DESK_CFG_OPTIONS, constants.EditorCols.AUDIO_DESK_CFG_ARGUMENTS]))
 
-        for path_col_enum, extra_cols_enums in groups:
-            path_col = path_col_enum.value
-            extra_cols = [c.value for c in extra_cols_enums]
-            
-            # Check if path column is empty for all visible rows
-            is_empty = True
-            if compact:
-                for row in range(self.table.rowCount()):
-                    widget = self.table.cellWidget(row, path_col)
-                    if widget:
-                        le = widget.findChild(QLineEdit)
-                        if le and le.text().strip().lstrip('<> '):
-                            is_empty = False
-                            break
-            
-            # Hide extras if compact (unless tool-disabled)
-            for col in extra_cols:
-                if col in tool_hidden_cols:
-                    self.table.setColumnHidden(col, True)
-                else:
-                    self.table.setColumnHidden(col, compact)
-            
-            # Hide path if compact AND empty (unless tool-disabled)
-            if path_col in tool_hidden_cols:
-                self.table.setColumnHidden(path_col, True)
-            else:
-                self.table.setColumnHidden(path_col, compact and is_empty)
+        # Core identifying columns that must always remain visible.
+        always_visible_cols = {
+            constants.EditorCols.INCLUDE.value,
+            constants.EditorCols.NAME.value,
+            constants.EditorCols.DIRECTORY.value,
+            constants.EditorCols.STEAMID.value,
+            constants.EditorCols.NAME_OVERRIDE.value,
+            constants.EditorCols.OPTIONS.value,
+            constants.EditorCols.ARGUMENTS.value,
+            constants.EditorCols.RUN_AS_ADMIN.value,
+        }
+
+        for col in range(self.table.columnCount()):
+            # Columns gated by a disabled tool remain hidden.
+            if col in tool_hidden_cols:
+                self.table.setColumnHidden(col, True)
+                continue
+
+            # Core identifying columns are always shown.
+            if col in always_visible_cols:
+                self.table.setColumnHidden(col, False)
+                continue
+
+            # In non-compact mode, show the column (unless tool-gated).
+            if not compact:
+                self.table.setColumnHidden(col, False)
+                continue
+
+            # Compact mode: hide the column if it is blank/unset in all rows.
+            self.table.setColumnHidden(col, self._is_column_blank(col))
+
+    def _is_column_blank(self, col):
+        """Return True if the given column is blank/unset across all visible rows."""
+        for row in range(self.table.rowCount()):
+            # Merged widget (Enabled checkbox, QLineEdit, Overwrite checkbox)
+            widget = self.table.cellWidget(row, col)
+            if widget:
+                cbs = widget.findChildren(QCheckBox)
+                le = widget.findChild(QLineEdit)
+                if len(cbs) == 2:
+                    # Enabled / Overwrite checkbox pair -> treat as blank only if
+                    # the enabled box is unchecked (path then has no effect).
+                    if not cbs[0].isChecked():
+                        continue
+                if le and le.text().strip().lstrip('<> '):
+                    return False
+                # Checkboxes that are checked indicate a set value.
+                if any(cb.isChecked() for cb in cbs):
+                    return False
+                continue
+
+            # Checkable item (e.g. Kill List) or plain text item
+            item = self.table.item(row, col)
+            if item:
+                if item.checkState() == Qt.CheckState.Checked:
+                    return False
+                if item.text().strip():
+                    return False
+        return True
 
     # ── Tool (plugin) gated column visibility ────────────────────── #
     TOOL_COLUMN_MAP = {
@@ -3885,6 +3890,26 @@ class EditorTab(QWidget):
         self.filtered_data = []
         self.current_page = 0
         self.data_changed.emit()
+
+    def on_clear_view_clicked(self):
+        """Handle the Clear View button press, confirming before clearing when
+        the index spans more than one page."""
+        total_pages = max(1, (len(self.filtered_data) + self.page_size - 1) // self.page_size)
+        if total_pages > 1:
+            reply = QMessageBox(self)
+            reply.setWindowTitle("Confirm Clear View")
+            reply.setIcon(QMessageBox.Icon.Warning)
+            reply.setText(
+                f"The current list contains {len(self.filtered_data)} items across "
+                f"{total_pages} pages.\n\nAre you sure you want to clear the view? "
+                f"This will remove all items from the editor."
+            )
+            reply.setStandardButtons(QMessageBox.StandardButton.Ok | QMessageBox.StandardButton.Cancel)
+            reply.setDefaultButton(QMessageBox.StandardButton.Cancel)
+            if reply.exec() != QMessageBox.StandardButton.Ok:
+                return
+
+        self.clear_view_requested.emit()
 
     def import_profiles(self):
         """Import games from a profile directory."""

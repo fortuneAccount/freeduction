@@ -12,6 +12,7 @@
 #include <stdlib.h>
 #include "compat.h"
 #include "launcher_common.h"
+#include "pipe_parse.h"
 #include "inih/ini.h"
 
 // External function from launcher.c
@@ -42,8 +43,19 @@ typedef enum {
     CTRL_PATH_FILE,
     CTRL_PATH_FOLDER,
     CTRL_BOOL,
-    CTRL_LIST
+    CTRL_LIST,
+    CTRL_OPTIONS   // Pipe-delimited options/arguments dropdown populated from options_arguments.set
 } ControlType;
+
+// Pipe-delimited token list (preserves empty tokens -> priority of empty value)
+#define MAX_PIPE_TOKENS 64
+#define MAX_TOKEN_LEN MAX_CMD_LEN
+
+typedef struct {
+    char tokens[MAX_PIPE_TOKENS][MAX_TOKEN_LEN];
+    int count;
+    int has_empty_priority;   // First token is empty (leading '|')
+} PipeList;
 
 // Control structure
 typedef struct {
@@ -289,6 +301,282 @@ void reset_config(ConfigEditorData* data);
 void export_config(ConfigEditorData* data);
 void clear_controls(ConfigEditorData* data);
 void reload_ini_file(ConfigEditorData* data, const char* ini_path);
+
+// Pipe-delimited options/arguments parsing
+void parse_pipe_list(const char* value, PipeList* out);
+BOOL load_options_section(const char* section_name, const char* want_key, PipeList* out);
+const char* get_options_section_for_key(const char* key);
+void populate_options_combo(HWND combo, const char* key, const char* current_val);
+
+// Options/arguments .set file path (relative to launcher exe's ../../assets)
+static const char* OPTIONS_SET_PATH = NULL;
+
+/**
+ * Parse a pipe-delimited value into an ordered token list, preserving empty tokens.
+ * A leading '|' (or empty first token) marks an empty-priority preset.
+ * Example: "|tokenA|tokenB|tokenC|" -> tokens[0]="" tokens[1]="tokenA" ...
+ */
+void parse_pipe_list(const char* value, PipeList* out) {
+    if (!out) return;
+    memset(out, 0, sizeof(PipeList));
+    if (!value) return;
+
+    size_t len = strlen(value);
+    if (len == 0) {
+        // Empty value: empty priority with no tokens
+        out->has_empty_priority = 1;
+        return;
+    }
+
+    const char* p = value;
+    char* tok_start;
+    int idx = 0;
+
+    // Split on '|'
+    while (*p && idx < MAX_PIPE_TOKENS) {
+        tok_start = (char*)p;
+        const char* sep = strchr(p, '|');
+        size_t tok_len = sep ? (size_t)(sep - p) : strlen(p);
+
+        if (tok_len >= MAX_TOKEN_LEN) tok_len = MAX_TOKEN_LEN - 1;
+        memcpy(out->tokens[idx], tok_start, tok_len);
+        out->tokens[idx][tok_len] = '\0';
+        idx++;
+
+        if (!sep) break;
+        p = sep + 1;
+    }
+    out->count = idx;
+
+    // Empty priority if the very first token is empty (leading '|')
+    out->has_empty_priority = (out->count > 0 && out->tokens[0][0] == '\0');
+}
+
+/**
+ * Resolve the path to assets/options_arguments.set relative to the launcher exe.
+ */
+static const char* get_options_set_path(void) {
+    if (OPTIONS_SET_PATH) return OPTIONS_SET_PATH;
+
+    static char pathbuf[MAX_PATH_LEN];
+    char exe[MAX_PATH_LEN];
+    GetModuleFileNameA(NULL, exe, MAX_PATH_LEN);
+    char* last = strrchr(exe, '\\');
+    if (last) *last = '\0';
+    // launcher exe is in <root>/bin ; assets is at <root>/assets
+    snprintf(pathbuf, sizeof(pathbuf), "%s\\..\\assets\\options_arguments.set", exe);
+    OPTIONS_SET_PATH = pathbuf;
+    return pathbuf;
+}
+
+/**
+* Load a section from options_arguments.set and fill the pipe list.
+ * Supports both:
+ *   [someappoptions]  options = |-vvv|--debug|...   (keyed format)
+ *   [someappoptions]  |-vvv|--debug|...             (bare-value format)
+ * The want_key argument selects the specific key to read ("options" or
+ * "arguments"); pass NULL to accept either key. Returns TRUE if the section
+ * was found and populated.
+ */
+BOOL load_options_section(const char* section_name, const char* want_key, PipeList* out) {
+    if (!section_name || !out) return FALSE;
+    memset(out, 0, sizeof(PipeList));
+
+    const char* path = get_options_set_path();
+    FILE* f = fopen(path, "r");
+    if (!f) return FALSE;
+
+    char line[4096];
+    BOOL in_section = FALSE;
+    BOOL found = FALSE;
+    char section_buf[256];
+
+    while (fgets(line, sizeof(line), f)) {
+        // Trim whitespace / newline
+        char* s = line;
+        while (*s == ' ' || *s == '\t') s++;
+        char* nl = strchr(s, '\n');
+        if (nl) *nl = '\0';
+        char* cr = strchr(s, '\r');
+        if (cr) *cr = '\0';
+
+        if (*s == ';' || *s == '#' || *s == '\0') continue;
+
+        // Section header
+        if (*s == '[') {
+            in_section = FALSE;
+            char* close = strchr(s, ']');
+            if (!close) continue;
+            *close = '\0';
+            strncpy(section_buf, s + 1, sizeof(section_buf) - 1);
+            section_buf[sizeof(section_buf) - 1] = '\0';
+            if (_stricmp(section_buf, section_name) == 0) {
+                in_section = TRUE;
+                found = TRUE;
+            }
+            continue;
+        }
+
+        if (!in_section) continue;
+
+        // Look for '=' sign
+        char* eq = strchr(s, '=');
+        if (eq) {
+            // keyed format: key = value
+            char key[128];
+            *eq = '\0';
+            strncpy(key, s, sizeof(key) - 1);
+            key[sizeof(key) - 1] = '\0';
+            // trim key
+            char* ke = key + strlen(key) - 1;
+            while (ke >= key && (*ke == ' ' || *ke == '\t')) *ke-- = '\0';
+
+            char* val = eq + 1;
+            while (*val == ' ' || *val == '\t') val++;
+
+if (want_key) {
+                if (_stricmp(key, want_key) == 0) {
+                    parse_pipe_list(val, out);
+                    fclose(f);
+                    return TRUE;
+                }
+            } else if (_stricmp(key, "options") == 0 || _stricmp(key, "arguments") == 0) {
+                parse_pipe_list(val, out);
+                fclose(f);
+                return TRUE;
+            }
+        } else if (!want_key) {
+            // bare-value format: the whole line is a pipe-delimited value
+            parse_pipe_list(s, out);
+            fclose(f);
+            return TRUE;
+        }
+    }
+
+    fclose(f);
+    return found;
+}
+
+/**
+ * Map a config-editor key to an options_arguments.set section.
+ * Keys ending in "options" -> "<stem>options"; keys ending in "arguments" -> "<stem>arguments".
+ * e.g. "controllermapperpathoptions" -> "controllermapperoptions"
+ *      "player1profileoptions"       -> "player1profileoptions"
+ */
+const char* get_options_section_for_key(const char* key) {
+    if (!key) return NULL;
+    static char secbuf[192];
+
+    char low[MAX_CMD_LEN];
+    strncpy(low, key, sizeof(low) - 1);
+    low[sizeof(low) - 1] = '\0';
+    _strlwr(low);
+
+    size_t len = strlen(low);
+    const char* suffix = NULL;
+    size_t suffix_len = 0;
+
+    if (len >= 7 && strcmp(low + len - 7, "options") == 0) {
+        suffix = "options";
+        suffix_len = 7;
+    } else if (len >= 9 && strcmp(low + len - 9, "arguments") == 0) {
+        suffix = "arguments";
+        suffix_len = 9;
+    } else {
+        return NULL;
+    }
+
+    // stem = key with the trailing suffix stripped
+    size_t stem = len - suffix_len;
+
+    // Strip a trailing "path" token so that config-editor keys like
+    // "controllermapperpathoptions" map to the canonical .set section
+    // "controllermapperoptions" (matching constants.SECTION_TO_CONFIG_KEY).
+    if (stem >= 4 && strcmp(low + stem - 4, "path") == 0) {
+        stem -= 4;
+    }
+
+memcpy(secbuf, low, stem);
+    strcpy(secbuf + stem, suffix);
+
+    // Remap config-editor sections that differ from the canonical .set section
+    // names in assets/options_arguments.set.  These mirrors the alias-section
+    // mappings in constants.SECTION_TO_CONFIG_KEY.
+    typedef struct { const char* from; const char* to; } SectionAlias;
+    static const SectionAlias aliases[] = {
+        { "borderlesswindowingoptions", "borderlessgamingoptions" },
+        { "borderlesswindowingarguments", "borderlessgamingarguments" },
+        { "audioappoptions",            "audiotooloptions" },
+        { "audioapparguments",          "audiotoolarguments" },
+        { "audiogamecfgoptions",        "gameaudiooptions" },
+        { "audiogamecfgarguments",      "gameaudioarguments" },
+        { "audiodeskcfgoptions",        "deskaudiooptions" },
+        { "audiodeskcfgarguments",      "deskaudioarguments" },
+        { "discunmountoptions",         "discunmountcfgoptions" },
+        { "discunmountarguments",       "discunmountcfgarguments" },
+        { NULL, NULL }
+    };
+    for (int i = 0; aliases[i].from != NULL; i++) {
+        if (strcmp(secbuf, aliases[i].from) == 0) {
+            strncpy(secbuf, aliases[i].to, sizeof(secbuf) - 1);
+            secbuf[sizeof(secbuf) - 1] = '\0';
+            break;
+        }
+    }
+    return secbuf;
+}
+
+/**
+ * Populate a combobox with the pipe tokens from the matching options_arguments.set section.
+ * Sets the current selection to the configured value if it matches a token, otherwise
+ * defaults to the first token (empty-priority honored as the first entry).
+ */
+void populate_options_combo(HWND combo, const char* key, const char* current_val) {
+    if (!combo) return;
+
+    const char* sec = get_options_section_for_key(key);
+    if (!sec) {
+        // No matching section; still populate with the current value as a single item
+        if (current_val && strlen(current_val) > 0) {
+            SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)current_val);
+            SendMessage(combo, CB_SETCURSEL, 0, 0);
+        }
+        return;
+    }
+
+// Determine which key to read from the section: the section is named
+    // "<stem>options" or "<stem>arguments"; the want_key is the segment after
+    // the stem, i.e. "options" or "arguments".
+    const char* want_key = NULL;
+    size_t klen = strlen(key);
+    if (klen >= 7 && _stricmp(key + klen - 7, "options") == 0) {
+        want_key = "options";
+    } else if (klen >= 9 && _stricmp(key + klen - 9, "arguments") == 0) {
+        want_key = "arguments";
+    }
+
+    PipeList pl;
+    if (!load_options_section(sec, want_key, &pl) || pl.count == 0) {
+        if (current_val && strlen(current_val) > 0) {
+            SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)current_val);
+            SendMessage(combo, CB_SETCURSEL, 0, 0);
+        }
+        return;
+    }
+
+    // Add all tokens (including empty tokens, which display as blank entries)
+    for (int i = 0; i < pl.count; i++) {
+        SendMessageA(combo, CB_ADDSTRING, 0, (LPARAM)pl.tokens[i]);
+    }
+
+    // Select the configured value if it matches a token; else default to first entry.
+    int sel = 0;
+    if (current_val && strlen(current_val) > 0) {
+        int idx = SendMessageA(combo, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)current_val);
+        if (idx != CB_ERR) sel = idx;
+    }
+    SendMessage(combo, CB_SETCURSEL, sel, 0);
+}
 
 static BOOL g_class_registered = FALSE;
 static const char* CONTENT_CLASS = "ConfigEditorContent";
@@ -713,6 +1001,18 @@ void create_control(ConfigEditorData* data, const char* sec, const char* key, co
             break;
         }
         
+case CTRL_OPTIONS: {
+            ctrl->combo = CreateWindowExA(WS_EX_CLIENTEDGE, "COMBOBOX", "",
+                WS_CHILD | WS_VISIBLE | CBS_DROPDOWN | WS_VSCROLL,
+                x_edit, y, EDIT_WIDTH, 200,
+                data->content_area, (HMENU)(INT_PTR)(ctrl->id),
+                GetModuleHandle(NULL), NULL);
+
+            // Populate from options_arguments.set matching section
+            populate_options_combo(ctrl->combo, key, val);
+            break;
+        }
+
         default: { // CTRL_TEXT
             ctrl->edit = CreateWindowExA(WS_EX_CLIENTEDGE, "EDIT", val,
                 WS_CHILD | WS_VISIBLE | ES_AUTOHSCROLL,
@@ -758,7 +1058,7 @@ void save_config_internal(ConfigEditorData* data, const char* path) {
                 break;
             }
             
-            case CTRL_LIST: {
+case CTRL_LIST: {
                 if (!ctrl->combo) break;
                 // Check if there is text in the edit box part of the combobox
                 char current_text[256];
@@ -772,6 +1072,14 @@ void save_config_internal(ConfigEditorData* data, const char* path) {
                     SendMessageA(ctrl->combo, CB_GETLBTEXT, j, (LPARAM)item);
                     if (j > 0) strcat(value, ",");
                     strcat(value, item);
+                }
+                break;
+            }
+
+            case CTRL_OPTIONS: {
+                // Save the selected pipe-token value (may be empty = empty priority)
+                if (ctrl->combo) {
+                    GetWindowTextA(ctrl->combo, value, sizeof(value));
                 }
                 break;
             }
@@ -810,7 +1118,7 @@ ControlType get_type(const char* key) {
         }
     }
     
-    // Infer from name
+// Infer from name
     if (strstr(key_lower, "path") || strstr(key_lower, "app") || 
         strstr(key_lower, "profile") || strstr(key_lower, "executable")) {
         return CTRL_PATH_FILE;
@@ -819,6 +1127,9 @@ ControlType get_type(const char* key) {
     } else if (strstr(key_lower, "wait") || strstr(key_lower, "enable") || 
                strstr(key_lower, "use") || strstr(key_lower, "hide")) {
         return CTRL_BOOL;
+    } else if (strstr(key_lower, "options") || strstr(key_lower, "arguments")) {
+        // Keys ending in options/arguments become pipe-delimited dropdowns
+        return CTRL_OPTIONS;
     }
     
     return CTRL_TEXT;
