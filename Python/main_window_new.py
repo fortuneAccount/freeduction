@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("[RJPROJ]" + (" [Plugin Creation Mode]" if self.plugin_mode else ""))
         self.setWindowIcon(QIcon(constants.APP_ICON))
         self.setGeometry(100, 100, 930, 500)
+        self.setMinimumWidth(470)
 
         if self.plugin_mode:
             self.setStyleSheet("""
@@ -230,6 +231,16 @@ class MainWindow(QMainWindow):
                 if marker in existing_qss:
                     start = existing_qss.find(marker)
                     app.setStyleSheet(existing_qss[:start].rstrip())
+
+        # --- Recolor slide-menu nav icons for the (possibly new) theme ---
+        # Slide-panel icons are monochrome black/white; their color is decided
+        # from the rail background at build time, so it must be re-evaluated
+        # whenever the theme changes or white-on-light icons become illegible.
+        for tab_name in ("setup_tab", "deployment_tab"):
+            tab = getattr(self, tab_name, None)
+            panel = getattr(tab, "_slide_panel", None)
+            if panel is not None:
+                panel.refresh_icon_colors()
 
     def _locate_and_exclude_manager_config(self):
         """Locate and exclude games from other managers' configurations"""

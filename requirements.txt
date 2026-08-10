@@ -11,6 +11,7 @@ cloudscraper
 pystray
 pillow
 rapidfuzz
+QT-PyQt-PySide-Custom-Widgets
 
 setuptools
 qdarkstyle

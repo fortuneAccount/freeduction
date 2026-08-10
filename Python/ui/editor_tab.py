@@ -3096,7 +3096,15 @@ class EditorTab(QWidget):
         
         if new_entries:
             self.original_data.extend(new_entries)
-            
+
+        # Compact View is enabled by default after indexing sources. Block the
+        # signal so the checkbox state is applied by the refresh below (which
+        # ends in update_compact_view) rather than against the half-built table.
+        if self.original_data and not self.compact_view_cb.isChecked():
+            self.compact_view_cb.blockSignals(True)
+            self.compact_view_cb.setChecked(True)
+            self.compact_view_cb.blockSignals(False)
+
         self.filtered_data = self.original_data
         self.refresh_view()
     

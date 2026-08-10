@@ -2,10 +2,9 @@ from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QScrollArea,
     QPushButton, QCheckBox, QGroupBox, QRadioButton, QButtonGroup, QGridLayout,
     QLineEdit, QTextEdit, QProgressBar, QDialog, QDialogButtonBox, QFileDialog,
-    QMenu, QToolButton
-)
+    QMenu, QToolButton)
 from PyQt6.QtCore import pyqtSignal, Qt
-from Python.ui.accordion import AccordionSection
+from Python.ui.slide_menu_panel import SlideMenuPanel, section_icon
 from Python.models import AppConfig
 from Python import constants
 import os
@@ -246,13 +245,19 @@ class DeploymentTab(QWidget):
 
         creation_options_layout.addWidget(creation_group)
 
-        # --- Accordion Setup ---
-        # Rename General Options to Database Indexing
-        general_options_section = AccordionSection("DATABASE INDEXING", database_indexing_widget, start_expanded=True)
-        creation_section = AccordionSection("CREATION", creation_options_widget, start_expanded=True)
+        # --- Slide-menu navigation with one content page per section ---
+        self._slide_panel = SlideMenuPanel(self)
+        self._slide_panel.add_section(
+            "DATABASE INDEXING", database_indexing_widget,
+            icon=section_icon("database"),
+        )
+        self._slide_panel.add_section(
+            "CREATION", creation_options_widget,
+            icon=section_icon("save"),
+        )
+        self._slide_panel.set_current_index(1)
 
-        main_layout.addWidget(general_options_section)
-        main_layout.addWidget(creation_section, 1)
+        main_layout.addWidget(self._slide_panel, 1)
 
         # Create button shows dynamic count of selected items
         self.create_button = QPushButton()

@@ -19,7 +19,7 @@ from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
 from PyQt6.QtGui import QFont, QColor, QBrush
 from Python.models import AppConfig
 from Python.ui.widgets import DragDropListWidget, PathConfigRow
-from Python.ui.accordion import AccordionSection
+from Python.ui.slide_menu_panel import SlideMenuPanel, section_icon
 from Python.ui.theme_manager import ThemeManager
 from Python.ui.display_wizard import DisplayWizard
 from Python.ui.config_preset_manager import (
@@ -340,6 +340,7 @@ class SetupTab(QWidget):
         excluded_col_layout.setContentsMargins(0, 0, 0, 0)
         excluded_col_layout.setSpacing(2)
         excluded_col_layout.addStretch(4)  # push header 40% down
+        excluded_col_layout.addSpacing(50)  # move header down an extra 50px
         excluded_label = QLabel("<b>Exclude Directories</b>")
         excluded_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         excluded_col_layout.addWidget(excluded_label)
@@ -403,8 +404,6 @@ class SetupTab(QWidget):
         self.path_rows["launchers_dir"].lc_radio.toggled.connect(self.path_rows["launchers_dir"]._on_lc_toggled)
         directories_layout.addRow("Launchers Directory:", self.path_rows["launchers_dir"])
         source_config_layout.addWidget(directories_group, 3, 0, 1, 5)
-
-        source_config_section = AccordionSection("SOURCES AND INDEXING", source_config_widget, start_expanded=True)
 
         # --- Section 2: Paths & Profiles (9 plugin sub-tabs) ---
         paths_widget = QWidget()
@@ -789,8 +788,6 @@ class SetupTab(QWidget):
         scripts_tab_layout.addStretch()
         self.paths_tabs.addTab(scripts_tab, "PRE/POST SCRIPTS")
 
-        paths_section = AccordionSection("PATHS AND PROFILES", paths_widget, max_height=400)
-
         # --- Section 3: Execution Sequence ---
         sequences_widget = QWidget()
         sequences_layout = QHBoxLayout(sequences_widget)
@@ -816,7 +813,6 @@ class SetupTab(QWidget):
         exit_sequence_layout.addWidget(self.exit_sequence_list)
         exit_sequence_layout.addWidget(self.reset_exit_btn)
         sequences_layout.addWidget(exit_sequence_group)
-        sequences_section = AccordionSection("EXECUTION SEQUENCES", sequences_widget)
 
         # --- Section 4: Behavior ---
         behavior_widget = QWidget()
@@ -843,7 +839,6 @@ class SetupTab(QWidget):
         self.restart_btn = QPushButton("Reset to Defaults")
         self.restart_btn.setToolTip("Reset all application configuration to defaults")
         behavior_layout.addRow(self.restart_btn)
-        behavior_section = AccordionSection("BEHAVIOR", behavior_widget)
 
         # --- Section 5: Appearance ---
         appearance_widget = QWidget()
@@ -910,18 +905,35 @@ class SetupTab(QWidget):
         editor_font_row.addWidget(self.reset_editor_font_btn)
         appearance_layout.addRow("EDITOR FONT:", editor_font_row)
 
-        appearance_section = AccordionSection("APPEARANCE", appearance_widget)
-
         # --- Section 6: Configuration Presets (rows within BEHAVIOR) ---
         # The preset control widgets are built here and later injected into the
         # BEHAVIOR section's form layout (see _setup_config_presets_ui).
         self._setup_config_presets_ui(behavior_layout)
 
-        main_layout.addWidget(source_config_section)
-        main_layout.addWidget(paths_section, 1)
-        main_layout.addWidget(sequences_section)
-        main_layout.addWidget(behavior_section)
-        main_layout.addWidget(appearance_section)
+        # --- Slide-menu navigation with one content page per section ---
+        self._slide_panel = SlideMenuPanel(self)
+        self._slide_panel.add_section(
+            "SOURCES AND INDEXING", source_config_widget,
+            icon=section_icon("folder"),
+        )
+        self._slide_panel.add_section(
+            "PATHS AND PROFILES", paths_widget,
+            icon=section_icon("folder_arrow"),
+        )
+        self._slide_panel.add_section(
+            "EXECUTION SEQUENCES", sequences_widget,
+            icon=section_icon("play"),
+        )
+        self._slide_panel.add_section(
+            "BEHAVIOR", behavior_widget,
+            icon=section_icon("sliders"),
+        )
+        self._slide_panel.add_section(
+            "APPEARANCE", appearance_widget,
+            icon=section_icon("monitor"),
+        )
+        self._slide_panel.set_current_index(0)
+        main_layout.addWidget(self._slide_panel)
         self._connect_signals()
 
         # Populate Launcher Executable Combobox
