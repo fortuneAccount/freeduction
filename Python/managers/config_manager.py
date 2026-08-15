@@ -477,7 +477,7 @@ class ConfigManager(QObject):
             return mapping
         
         try:
-            parser = configparser.ConfigParser()
+            parser = configparser.ConfigParser(strict=False)
             with open(options_file, 'r', encoding='utf-8-sig') as f:
                 parser.read_file(f)
             
@@ -486,7 +486,8 @@ class ConfigManager(QObject):
                 arguments = parser.get(section, 'arguments', fallback='')
                 key = section.lower()
                 mapping[key] = (options, arguments)
-                config_key = constants.SECTION_TO_CONFIG_KEY.get(key)
+                config_key = constants.SECTION_TO_CONFIG_KEY.get(
+                    constants.canonical_options_section(section))
                 if config_key:
                     mapping[config_key] = (options, arguments)
             

@@ -371,25 +371,32 @@ static const char* get_options_set_path(void) {
 
 /**
 * Load a section from options_arguments.set and fill the pipe list.
- * Supports both:
- *   [someappoptions]  options = |-vvv|--debug|...   (keyed format)
- *   [someappoptions]  |-vvv|--debug|...             (bare-value format)
+ * Supports both the canonical and the legacy section naming:
+ *   [someapp]       options = |-vvv|--debug|...   (canonical: options/arguments keys)
+ *   [someappoptions] options = ...                (legacy flat section)
+ *   [someapparguments] arguments = ...            (legacy flat section)
+ *   [someappoptions]  |-vvv|--debug|...            (bare-value format)
  * The want_key argument selects the specific key to read ("options" or
- * "arguments"); pass NULL to accept either key. Returns TRUE if the section
- * was found and populated.
+ * "arguments"); pass NULL to accept either key. Returns TRUE if a matching
+ * section was found and populated.
  */
 BOOL load_options_section(const char* section_name, const char* want_key, PipeList* out) {
     if (!section_name || !out) return FALSE;
     memset(out, 0, sizeof(PipeList));
+
+    // Candidate section names: canonical [app], then legacy [appoptions]/[apparguments].
+    char candidates[3][352];
+    snprintf(candidates[0], sizeof(candidates[0]), "%s", section_name);
+    snprintf(candidates[1], sizeof(candidates[1]), "%soptions", section_name);
+    snprintf(candidates[2], sizeof(candidates[2]), "%sarguments", section_name);
 
     const char* path = get_options_set_path();
     FILE* f = fopen(path, "r");
     if (!f) return FALSE;
 
     char line[4096];
-    BOOL in_section = FALSE;
+    int active = -1;   // index of the candidate section we are inside, -1 if none
     BOOL found = FALSE;
-    char section_buf[256];
 
     while (fgets(line, sizeof(line), f)) {
         // Trim whitespace / newline
@@ -404,20 +411,21 @@ BOOL load_options_section(const char* section_name, const char* want_key, PipeLi
 
         // Section header
         if (*s == '[') {
-            in_section = FALSE;
+            active = -1;
             char* close = strchr(s, ']');
             if (!close) continue;
             *close = '\0';
-            strncpy(section_buf, s + 1, sizeof(section_buf) - 1);
-            section_buf[sizeof(section_buf) - 1] = '\0';
-            if (_stricmp(section_buf, section_name) == 0) {
-                in_section = TRUE;
-                found = TRUE;
+            for (int i = 0; i < 3; i++) {
+                if (_stricmp(s + 1, candidates[i]) == 0) {
+                    active = i;
+                    found = TRUE;
+                    break;
+                }
             }
             continue;
         }
 
-        if (!in_section) continue;
+        if (active < 0) continue;
 
         // Look for '=' sign
         char* eq = strchr(s, '=');
@@ -434,7 +442,7 @@ BOOL load_options_section(const char* section_name, const char* want_key, PipeLi
             char* val = eq + 1;
             while (*val == ' ' || *val == '\t') val++;
 
-if (want_key) {
+            if (want_key) {
                 if (_stricmp(key, want_key) == 0) {
                     parse_pipe_list(val, out);
                     fclose(f);
@@ -459,9 +467,11 @@ if (want_key) {
 
 /**
  * Map a config-editor key to an options_arguments.set section.
- * Keys ending in "options" -> "<stem>options"; keys ending in "arguments" -> "<stem>arguments".
- * e.g. "controllermapperpathoptions" -> "controllermapperoptions"
- *      "player1profileoptions"       -> "player1profileoptions"
+ * Keys ending in "options" or "arguments" resolve to the canonical section
+ * named after the tool/app (the 'options'/'arguments' key is selected from
+ * within that section).  A trailing "path" token is stripped too.
+ * e.g. "controllermapperpathoptions" -> "controllermapper"
+ *      "player1profileoptions"       -> "player1profile"
  */
 const char* get_options_section_for_key(const char* key) {
     if (!key) return NULL;
@@ -473,47 +483,37 @@ const char* get_options_section_for_key(const char* key) {
     _strlwr(low);
 
     size_t len = strlen(low);
-    const char* suffix = NULL;
-    size_t suffix_len = 0;
+    size_t stem = len;
 
     if (len >= 7 && strcmp(low + len - 7, "options") == 0) {
-        suffix = "options";
-        suffix_len = 7;
+        stem = len - 7;
     } else if (len >= 9 && strcmp(low + len - 9, "arguments") == 0) {
-        suffix = "arguments";
-        suffix_len = 9;
+        stem = len - 9;
     } else {
         return NULL;
     }
 
-    // stem = key with the trailing suffix stripped
-    size_t stem = len - suffix_len;
-
     // Strip a trailing "path" token so that config-editor keys like
     // "controllermapperpathoptions" map to the canonical .set section
-    // "controllermapperoptions" (matching constants.SECTION_TO_CONFIG_KEY).
+    // "controllermapper" (matching constants.SECTION_TO_CONFIG_KEY).
     if (stem >= 4 && strcmp(low + stem - 4, "path") == 0) {
         stem -= 4;
     }
 
-memcpy(secbuf, low, stem);
-    strcpy(secbuf + stem, suffix);
+    if (stem >= sizeof(secbuf)) stem = sizeof(secbuf) - 1;
+    memcpy(secbuf, low, stem);
+    secbuf[stem] = '\0';
 
     // Remap config-editor sections that differ from the canonical .set section
     // names in assets/options_arguments.set.  These mirrors the alias-section
     // mappings in constants.SECTION_TO_CONFIG_KEY.
     typedef struct { const char* from; const char* to; } SectionAlias;
     static const SectionAlias aliases[] = {
-        { "borderlesswindowingoptions", "borderlessgamingoptions" },
-        { "borderlesswindowingarguments", "borderlessgamingarguments" },
-        { "audioappoptions",            "audiotooloptions" },
-        { "audioapparguments",          "audiotoolarguments" },
-        { "audiogamecfgoptions",        "gameaudiooptions" },
-        { "audiogamecfgarguments",      "gameaudioarguments" },
-        { "audiodeskcfgoptions",        "deskaudiooptions" },
-        { "audiodeskcfgarguments",      "deskaudioarguments" },
-        { "discunmountoptions",         "discunmountcfgoptions" },
-        { "discunmountarguments",       "discunmountcfgarguments" },
+        { "borderlesswindowing", "borderlessgaming" },
+        { "audioapp",            "audiotool" },
+        { "audiogamecfg",        "gameaudio" },
+        { "audiodeskcfg",        "deskaudio" },
+        { "discunmount",         "discunmountcfg" },
         { NULL, NULL }
     };
     for (int i = 0; aliases[i].from != NULL; i++) {
@@ -544,9 +544,9 @@ void populate_options_combo(HWND combo, const char* key, const char* current_val
         return;
     }
 
-// Determine which key to read from the section: the section is named
-    // "<stem>options" or "<stem>arguments"; the want_key is the segment after
-    // the stem, i.e. "options" or "arguments".
+    // Determine which key to read from the canonical section: the config-editor
+    // key's own suffix ("options" or "arguments") selects the key to read from
+    // within the section.
     const char* want_key = NULL;
     size_t klen = strlen(key);
     if (klen >= 7 && _stricmp(key + klen - 7, "options") == 0) {

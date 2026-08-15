@@ -19,7 +19,7 @@
 ; parameters, i.e. an empty option/argument is omitted from the command.
 ;
 ; Example:
-;   [someappoptions]
+;   [someapp]
 ;   options = |--vvv|--debug|^>^>NUL 2^>&1|--help
 ;   (empty-priority: the default option is empty; the dropdown offers the rest)
 ;
@@ -31,372 +31,256 @@
 
 ; ── Controller Mapper ────────────────────────────────────────────────────────
 
-[controllermapperoptions]
+[controllermapper]
 options = |--tray --hidden --profile-controller 1 --profile|
 arguments = --profile-controller ${P#} --profile
-
-[controllermapperarguments]
-options = |--tray --hidden --profile-controller 1 --profile|
-arguments = --profile-controller ${P#} --profile
-
-; Alias: antimicrox.exe
-[antimicroxoptions]
-options = --tray --hidden --profile-controller 1 --profile
-arguments = --profile-controller ${P#} --profile
-
-; Alias: keysticks.exe
-[keysticksoptions]
-options =
-arguments =
-
-; ── Profiles ─────────────────────────────────────────────────────────────────
-
-[player1profileoptions]
-options = |--tray --hidden --profile-controller 1 --profile|
-arguments =
-
-[player1profilearguments]
-options = |--tray --hidden --profile-controller 1 --profile|
-arguments =
-
-[player2profileoptions]
-options = |--tray --hidden --profile-controller 2 --profile|
-arguments =
-
-[player2profilearguments]
-options = |--tray --hidden --profile-controller 2 --profile|
-arguments =
-
-[deskprofileoptions]
-options = |--tray --hidden --profile-controller 1 --profile|
-arguments =
-
-[deskprofilearguments]
-options = |--tray --hidden --profile-controller 1 --profile|
-arguments =
 
 ; ── Display ──────────────────────────────────────────────────────────────────
 
-[monitorappoptions]
-options = |/loadconfig|
-arguments =
-
-[monitorapparguments]
-options = |/loadconfig|
-arguments =
-
-[monitorgamecfgoptions]
-options = |/loadconfig|/internal|/extend|/clone|/external|
-arguments =
-
-[monitorgamecfgarguments]
-options = |/loadconfig|/internal|/extend|/clone|/external|
-arguments =
-
-[monitordeskcfgoptions]
-options = |/loadconfig|/internal|/extend|/clone|/external|
-arguments =
-
-[monitordeskcfgarguments]
+[monitorapp]
 options = |/loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
 ; ── Windowing ────────────────────────────────────────────────────────────────
 
-[borderlessgamingoptions]
+[borderlessgaming]
 options = |--internal --external|
 arguments =
 
-[borderlessgamingarguments]
-options = |--internal --external|
-arguments =
 
-[unbordercfgoptions]
+[unbordercfg]
 options =
 arguments =
 
-[unbordercfgarguments]
+
+[rebordercfg]
 options =
 arguments =
 
-[rebordercfgoptions]
-options =
-arguments =
-
-[rebordercfgarguments]
-options =
-arguments =
 
 ; ── Disc-Mount ───────────────────────────────────────────────────────────────
 
-[discmountoptions]
+[discmount]
 options =
 arguments =
 
-[discmountarguments]
+
+[discmountcfg]
 options =
 arguments =
 
-[discmountcfgoptions]
+
+[discunmountcfg]
 options =
 arguments =
 
-[discmountcfgarguments]
-options =
-arguments =
-
-[discunmountcfgoptions]
-options =
-arguments =
-
-[discunmountcfgarguments]
-options =
-arguments =
 
 ; ── Backup ───────────────────────────────────────────────────────────────────
 
-[localbackupoptions]
+[localbackup]
 options =
 arguments =
 
-[localbackuparguments]
-options =
-arguments =
 
 ; ── Cloud Sync ───────────────────────────────────────────────────────────────
 
-[cloudsyncoptions]
+[cloudsync]
 options =
 arguments =
 
-[cloudsyncarguments]
-options =
-arguments =
 
 ; ── Audio ────────────────────────────────────────────────────────────────────
 
-[audiotooloptions]
+[audiotool]
 options =
 arguments =
 
-[audiotoolarguments]
+
+[gameaudio]
 options =
 arguments =
 
-[gameaudiooptions]
+
+[deskaudio]
 options =
 arguments =
 
-[gameaudioarguments]
-options =
-arguments =
-
-[deskaudiooptions]
-options =
-arguments =
-
-[deskaudioarguments]
-options =
-arguments =
 
 ; ── Pre/Post Launch ──────────────────────────────────────────────────────────
 
-[pre1options]
+[pre1]
 options =
 arguments =
 
-[pre1arguments]
+
+[pre2]
 options =
 arguments =
 
-[pre2options]
+
+[pre3]
 options =
 arguments =
 
-[pre2arguments]
+
+[post1]
 options =
 arguments =
 
-[pre3options]
+
+[post2]
 options =
 arguments =
 
-[pre3arguments]
+
+[post3]
 options =
 arguments =
 
-[post1options]
+
+[justafterlaunch]
 options =
 arguments =
 
-[post1arguments]
+
+[justbeforeexit]
 options =
 arguments =
 
-[post2options]
-options =
-arguments =
-
-[post2arguments]
-options =
-arguments =
-
-[post3options]
-options =
-arguments =
-
-[post3arguments]
-options =
-arguments =
-
-[justafterlaunchoptions]
-options =
-arguments =
-
-[justafterlauncharguments]
-options =
-arguments =
-
-[justbeforeexitoptions]
-options =
-arguments =
-
-[justbeforeexitarguments]
-options =
-arguments =
 
 ; ── Launcher ─────────────────────────────────────────────────────────────────
 
-[launcherexecutableoptions]
+[launcherexecutable]
 options =
 arguments =
 
-[launcherexecutablearguments]
-options =
-arguments =
 
 ;  ── Applications (aliases for exe-basename lookup) ──────────────────────────
 
-[antimicroxoptions]
+[multimonitortool]
+options = /loadconfig
+arguments = 
+
+[antimicrox]
 options = --tray --hidden --profile-controller 1 --profile
 arguments = --profile-controller ${P#} --profile
 
-[keysticksoptions]
+[keysticks]
 options =
 arguments =
 
-[ds4windowsoptions]
+[ds4windows]
 options =
 arguments =
 
-[ds4windowscmdoptions]
+[ds4windowscmd]
 options =
 arguments =
 
-[ihatebordersoptions]
+[ihateborders]
 options =
 arguments =
 
-[borderlessgamingoptions]
+[borderlessgaming]
 options = |--internal --external|
 arguments =
 
-[borderlessgamingportableoptions]
+[borderlessgamingportable]
 options =
 arguments =
 
-[borderlessoptions]
+[borderless]
 options =
 arguments =
 
-[borderlesseroptions]
+[borderlesser]
 options =
 arguments =
 
-[borderstripperoptions]
+[borderstripper]
 options =
 arguments =
 
-[fullscreenizeroptions]
+[fullscreenizer]
 options =
 arguments =
 
-[magpieoptions]
+[magpie]
 options =
 arguments =
 
-[multiresoptions]
+[multires]
 options =
 arguments =
 
-[displaychangeroptions]
+[displaychanger]
 options =
 arguments =
 
-[clickmonitorddcoptions]
+[clickmonitorddc]
 options =
 arguments =
 
-[persistentwindowsoptions]
+[persistentwindows]
 options =
 arguments =
 
-[opencloudsaveoptions]
+[opencloudsave]
 options =
 arguments =
 
-[rcloneoptions]
+[rclone]
 options =
 arguments =
 
-[ludusavioptions]
+[ludusavi]
 options =
 arguments =
 
-[syncthingoptions]
+[syncthing]
 options =
 arguments =
 
-[emusyncoptions]
+[emusync]
 options =
 arguments =
 
-[gamebackupmonitoroptions]
+[gamebackupmonitor]
 options =
 arguments =
 
-[gamesavemanageroptions]
+[gamesavemanager]
 options =
 arguments =
 
-[savestateoptions]
+[savestate]
 options =
 arguments =
 
-[setsounddeviceoptions]
+[setsounddevice]
 options =
 arguments =
 
-[soundvolumeviewoptions]
+[soundvolumeview]
 options =
 arguments =
 
-[swreoptions]
+[swre]
 options =
 arguments =
 
-[wincdemuoptions]
+[wincdemu]
 options =
 arguments =
 
-[osfoptions]
+[osf]
 options =
 arguments =
 
-[cdmageoptions]
+[cdmage]
 options =
 arguments =
 
-[imgdriveoptions]
+[imgdrive]
 options =
 arguments =

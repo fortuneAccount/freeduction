@@ -1753,7 +1753,7 @@ class SetupTab(QWidget):
         if not os.path.exists(constants.OPTIONS_ARGUMENTS_SET):
             return mapping
         
-        config = configparser.ConfigParser()
+        config = configparser.ConfigParser(strict=False)
         try:
             with open(constants.OPTIONS_ARGUMENTS_SET, 'r', encoding='utf-8-sig') as f:
                 config.read_file(f)
@@ -1762,7 +1762,8 @@ class SetupTab(QWidget):
                 arguments = config.get(section, 'arguments', fallback="").strip()
                 key = section.lower()
                 mapping[key] = (options, arguments)
-                config_key = constants.SECTION_TO_CONFIG_KEY.get(key)
+                config_key = constants.SECTION_TO_CONFIG_KEY.get(
+                    constants.canonical_options_section(section))
                 if config_key:
                     mapping[config_key] = (options, arguments)
         except Exception as e:

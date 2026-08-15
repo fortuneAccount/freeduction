@@ -34,49 +34,70 @@ NORMALIZED_GOG_INDEX_CACHE = "normalized_gog_games.cache"
 NORMALIZED_COMBINED_INDEX_CACHE = "normalized_combined_games.cache"
 
 # --- Options/Arguments Section Mapping ---
-# Maps section names in options_arguments.set to internal config attribute keys.
+# Maps canonical section names in options_arguments.set to internal config
+# attribute keys.  Sections are named after the tool/app and carry the
+# 'options' and 'arguments' keys inside the section:
+#
+#   [monitorapp]
+#   options = |/loadconfig|
+#   arguments =
+#
+# (Legacy flat sections such as [monitorappoptions] / [monitorapparguments]
+# are still accepted by the parsers via canonical_options_section().)
 SECTION_TO_CONFIG_KEY = {
-    'controllermapperoptions': 'controller_mapper_path',
-    'player1profileoptions': 'p1_profile_path',
-    'player2profileoptions': 'p2_profile_path',
-    'deskprofileoptions': 'desk_profile_path',
-    'monitorappoptions': 'monitorapp_path',
-    'monitorgamecfgoptions': 'monitor_game_path',
-    'monitordeskcfgoptions': 'monitor_desk_path',
-    'borderlessgamingoptions': 'borderless_gaming_path',
-    'unbordercfgoptions': 'unborder_cfg',
-    'rebordercfgoptions': 'reborder_cfg',
-    'discmountoptions': 'disc_mount_path',
-    'discmountcfgoptions': 'disc_mount_cfg',
-    'discunmountcfgoptions': 'disc_unmount_cfg',
-    'localbackupoptions': 'local_backup_path',
-    'cloudsyncoptions': 'cloud_sync_path',
-    'audiotooloptions': 'audio_tool_path',
-    'gameaudiooptions': 'audio_game_cfg',
-    'deskaudiooptions': 'audio_desk_cfg',
-    'pre1options': 'pre1_path',
-    'pre2options': 'pre2_path',
-    'pre3options': 'pre3_path',
-    'post1options': 'post1_path',
-    'post2options': 'post2_path',
-    'post3options': 'post3_path',
-'justafterlaunchoptions': 'just_after_launch_path',
-    'justbeforeexitoptions': 'just_before_exit_path',
-    'launcherexecutableoptions': 'launcher_executable',
+    'controllermapper': 'controller_mapper_path',
+    'player1profile': 'p1_profile_path',
+    'player2profile': 'p2_profile_path',
+    'deskprofile': 'desk_profile_path',
+    'monitorapp': 'monitorapp_path',
+    'monitorgamecfg': 'monitor_game_path',
+    'monitordeskcfg': 'monitor_desk_path',
+    'borderlessgaming': 'borderless_gaming_path',
+    'unbordercfg': 'unborder_cfg',
+    'rebordercfg': 'reborder_cfg',
+    'discmount': 'disc_mount_path',
+    'discmountcfg': 'disc_mount_cfg',
+    'discunmountcfg': 'disc_unmount_cfg',
+    'localbackup': 'local_backup_path',
+    'cloudsync': 'cloud_sync_path',
+    'audiotool': 'audio_tool_path',
+    'gameaudio': 'audio_game_cfg',
+    'deskaudio': 'audio_desk_cfg',
+    'pre1': 'pre1_path',
+    'pre2': 'pre2_path',
+    'pre3': 'pre3_path',
+    'post1': 'post1_path',
+    'post2': 'post2_path',
+    'post3': 'post3_path',
+    'justafterlaunch': 'just_after_launch_path',
+    'justbeforeexit': 'just_before_exit_path',
+    'launcherexecutable': 'launcher_executable',
 
     # Alias sections — map alternate .set section names to the canonical
     # config attribute (mirrors the alias remapping in the C config_editor).
-    'borderlesswindowingoptions': 'borderless_gaming_path',
-    'borderlesswindowingarguments': 'borderless_gaming_path',
-    'audioappoptions': 'audio_tool_path',
-    'audioapparguments': 'audio_tool_path',
-    'gameaudiooptions': 'audio_game_cfg',
-    'gameaudioarguments': 'audio_game_cfg',
-    'deskaudiooptions': 'audio_desk_cfg',
-    'deskaudioarguments': 'audio_desk_cfg',
-    'discunmountoptions': 'disc_unmount_cfg',
-    'discunmountarguments': 'disc_unmount_cfg',
+    'borderlesswindowing': 'borderless_gaming_path',
+    'audioapp': 'audio_tool_path',
+    'audiogamecfg': 'audio_game_cfg',
+    'audiodeskcfg': 'audio_desk_cfg',
+    'discunmount': 'disc_unmount_cfg',
 }
+
+
+def canonical_options_section(name):
+    """Return the canonical section name for an options_arguments.set section.
+
+    Strips a trailing 'options'/'arguments' suffix so legacy flat sections
+    ([monitorappoptions], [monitorapparguments], ...) resolve to the same
+    canonical entry ([monitorapp]) as the corrected format.
+    """
+    if not name:
+        return ""
+    low = str(name).lower().strip()
+    if low.endswith('options'):
+        return low[:-len('options')]
+    if low.endswith('arguments'):
+        return low[:-len('arguments')]
+    return low
 
 # --- Editor Column Indices ---
 class EditorCols(Enum):

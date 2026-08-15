@@ -1,8 +1,9 @@
+/*
  * launcher.c - Game Launcher
  *
  * A complete C port of the Python game launcher script.
  *
-* Compilation (using MinGW-w64):
+ * Compilation (using MinGW-w64):
  * gcc -o launcher.exe launcher.c inih/ini.c -luser32 -lshlwapi -lole32 -lpsapi -Wall
  *
  * Dependencies:
@@ -986,7 +987,9 @@ void action_run_controller_mapper(int is_exit) {
 
     if (is_exit) {
         // Exit sequence: kill any running mapper and start a single instance
-        // using the desk profile.
+        // using the desk profile.  The desk instance is intentionally NOT
+        // tracked so it survives the launcher's own exit/cleanup and keeps
+        // controller mappings active on the desktop.
         action_kill_controller_mapper();
         if (strlen(G_CONFIG.desk_profile) == 0) {
             show_message("  - Desk Profile not configured/found.");
@@ -1001,8 +1004,11 @@ void action_run_controller_mapper(int is_exit) {
         char cmd[MAX_CMD_LEN];
         snprintf(cmd, sizeof(cmd), "\"%s\" --tray --hidden --profile-controller 1 --profile \"%s\"",
                  G_CONFIG.controller_mapper_app, G_CONFIG.desk_profile);
-        if (run_process(cmd, NULL, FALSE, &pi)) {
-            add_tracked_process("controller_mapper", &pi);
+        PROCESS_INFORMATION desk_pi;
+        if (run_process(cmd, NULL, FALSE, &desk_pi)) {
+            // Handles are closed immediately; the process itself is left running.
+            CloseHandle(desk_pi.hProcess);
+            CloseHandle(desk_pi.hThread);
         }
         return;
     }
