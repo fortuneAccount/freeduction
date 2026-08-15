@@ -38,7 +38,7 @@ behaviour so the open/collapsed state is driven only by the user and this
 panel.
 """
 
-from PyQt6.QtCore import Qt, QRect, QRectF, QSize, pyqtSignal
+from PyQt6.QtCore import Qt, QEasingCurve, QRect, QRectF, QSize, pyqtSignal
 from PyQt6.QtGui import QColor, QIcon, QImage, QPainter, QPainterPath, QPalette, QPixmap
 from PyQt6.QtWidgets import (
     QButtonGroup,
@@ -342,6 +342,9 @@ class SlideMenuPanel(QWidget):
         nav_width: int = 220,
         collapsed_width: int = 48,
         icon_size: int = 22,
+        expand_duration: int = 220,
+        collapse_duration: int = 168,
+        easing: QEasingCurve.Type = QEasingCurve.Type.InBack,
     ) -> None:
         super().__init__(parent)
         self.nav_width = nav_width
@@ -396,6 +399,11 @@ class SlideMenuPanel(QWidget):
             expandedWidth=nav_width,
             expandedHeight="parent",
             update=False,
+        )
+        self.set_animation_profile(
+            expand_duration=expand_duration,
+            collapse_duration=collapse_duration,
+            easing=easing,
         )
 
         outer.addWidget(self.slide_menu)
@@ -510,6 +518,24 @@ class SlideMenuPanel(QWidget):
         return self._current_index
 
     # -- Open/collapse control -------------------------------------------
+
+    def set_animation_profile(
+        self,
+        *,
+        expand_duration: int = 220,
+        collapse_duration: int = 168,
+        easing: QEasingCurve.Type = QEasingCurve.Type.InBack,
+    ) -> None:
+        """Configure the rail's open/collapse animation timing and easing.
+
+        ``expand_duration`` / ``collapse_duration`` are in milliseconds and
+        *easing* is the ``QEasingCurve`` type applied to both directions.
+        The change takes effect the next time the rail animates.
+        """
+        self.slide_menu._expandingAnimationDuration = int(expand_duration)
+        self.slide_menu._collapsingAnimationDuration = int(collapse_duration)
+        self.slide_menu._expandingAnimationEasingCurve = easing
+        self.slide_menu._collapsingAnimationEasingCurve = easing
 
     def expand(self) -> None:
         """Animate the rail to its expanded width."""

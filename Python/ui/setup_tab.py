@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import (
     QButtonGroup
 )
 import re
-from PyQt6.QtCore import pyqtSignal, Qt, QThread, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, Qt, QEasingCurve, QThread, pyqtSlot
 from PyQt6.QtGui import QFont, QColor, QBrush
 from Python.models import AppConfig
 from Python.ui.widgets import DragDropListWidget, PathConfigRow
@@ -27,6 +27,54 @@ from Python.ui.config_preset_manager import (
 )
 from Python import constants
     
+
+# Easing curves offered for the vertical navigation rail's expand/collapse
+# animation. The label is what gets persisted to config as ``menu_easing``.
+_MENU_EASING_OPTIONS: tuple[tuple[str, QEasingCurve.Type], ...] = (
+    ("Linear", QEasingCurve.Type.Linear),
+    ("InQuad", QEasingCurve.Type.InQuad),
+    ("OutQuad", QEasingCurve.Type.OutQuad),
+    ("InOutQuad", QEasingCurve.Type.InOutQuad),
+    ("InCubic", QEasingCurve.Type.InCubic),
+    ("OutCubic", QEasingCurve.Type.OutCubic),
+    ("InOutCubic", QEasingCurve.Type.InOutCubic),
+    ("InQuart", QEasingCurve.Type.InQuart),
+    ("OutQuart", QEasingCurve.Type.OutQuart),
+    ("InOutQuart", QEasingCurve.Type.InOutQuart),
+    ("InQuint", QEasingCurve.Type.InQuint),
+    ("OutQuint", QEasingCurve.Type.OutQuint),
+    ("InOutQuint", QEasingCurve.Type.InOutQuint),
+    ("InSine", QEasingCurve.Type.InSine),
+    ("OutSine", QEasingCurve.Type.OutSine),
+    ("InOutSine", QEasingCurve.Type.InOutSine),
+    ("InExpo", QEasingCurve.Type.InExpo),
+    ("OutExpo", QEasingCurve.Type.OutExpo),
+    ("InOutExpo", QEasingCurve.Type.InOutExpo),
+    ("InCirc", QEasingCurve.Type.InCirc),
+    ("OutCirc", QEasingCurve.Type.OutCirc),
+    ("InOutCirc", QEasingCurve.Type.InOutCirc),
+    ("InBack", QEasingCurve.Type.InBack),
+    ("OutBack", QEasingCurve.Type.OutBack),
+    ("InOutBack", QEasingCurve.Type.InOutBack),
+    ("InElastic", QEasingCurve.Type.InElastic),
+    ("OutElastic", QEasingCurve.Type.OutElastic),
+    ("InOutElastic", QEasingCurve.Type.InOutElastic),
+    ("InBounce", QEasingCurve.Type.InBounce),
+    ("OutBounce", QEasingCurve.Type.OutBounce),
+    ("InOutBounce", QEasingCurve.Type.InOutBounce),
+)
+
+_MENU_EASING_BY_NAME: dict[str, QEasingCurve.Type] = dict(_MENU_EASING_OPTIONS)
+
+
+def _easing_curve_from_name(name: str) -> QEasingCurve.Type:
+    """Resolve an easing-curve name to its ``QEasingCurve.Type``.
+
+    Falls back to ``InOutCubic`` for unknown or hand-edited config values.
+    """
+    return _MENU_EASING_BY_NAME.get(name, QEasingCurve.Type.InOutCubic)
+
+
 class DownloadThread(QThread):
     """Thread for downloading and extracting tools."""
     progress = pyqtSignal(int)
@@ -313,7 +361,7 @@ class SetupTab(QWidget):
         # ── b1 (row 0, col 1): Add/Remove buttons for Source Dirs ──
         source_btn_widget = QWidget()
         source_btn_layout = QHBoxLayout(source_btn_widget)
-        source_btn_layout.setContentsMargins(0, 0, 0, 0)
+        source_btn_layout.setContentsMargins(0, 25, 0, 0)  # move buttons down 25px
         add_source_button = QPushButton()
         add_source_button.setToolTip("Add a directory to scan for games.")
         add_source_button.setFixedWidth(30)
@@ -352,6 +400,7 @@ class SetupTab(QWidget):
         excluded_btn_widget = QWidget()
         excluded_btn_layout = QVBoxLayout(excluded_btn_widget)
         excluded_btn_layout.setContentsMargins(0, 0, 0, 0)
+        excluded_btn_layout.addSpacing(60)  # move buttons down 60px
         add_excluded_button = QPushButton()
         add_excluded_button.setToolTip("Add a directory to exclude from scanning.")
         add_excluded_button.setFixedWidth(30)
@@ -368,11 +417,8 @@ class SetupTab(QWidget):
         self.add_excluded_dir_button = add_excluded_button
         self.remove_excluded_dir_button = remove_excluded_button
 
-        # ── d1 (row 0, col 3): Config-file-history combobox ──
-        # (preset_combo created in _setup_config_presets_ui, placed here later)
-
-        # ── e1 (row 0, col 4): Config-file icon buttons ──
-        # (preset_load/save/remove/browse_btn created in _setup_config_presets_ui, placed here later)
+        # NOTE: The config-file combobox + action buttons were moved to the
+        # top of the BEHAVIOR section (see _setup_config_presets_ui).
 
         # ── a3 (row 2, col 0): Exclude Manager checkbox ──
         self.exclude_manager_checkbox = QCheckBox("Exclude Selected Manager's Games")
@@ -384,9 +430,6 @@ class SetupTab(QWidget):
         self.other_managers_combo.addItems(["None", "Steam", "Epic", "GOG", "Origin", "Ubisoft Connect", "Battle.net", "Xbox"])
         self.other_managers_combo.setToolTip("Select which game manager is installed. Games managed by this platform will be excluded when the checkbox is enabled.")
         source_config_layout.addWidget(self.other_managers_combo, 2, 1, Qt.AlignmentFlag.AlignBottom)
-
-        # Store reference for _setup_config_presets_ui to place combo + buttons
-        self._sources_grid = source_config_layout
 
         # ── row 3 (spanning all cols): Directories ──
         directories_group = QGroupBox("Directories")
@@ -905,6 +948,42 @@ class SetupTab(QWidget):
         editor_font_row.addWidget(self.reset_editor_font_btn)
         appearance_layout.addRow("EDITOR FONT:", editor_font_row)
 
+        # Menu Animation Row
+        self.menu_expand_spin = QSpinBox()
+        self.menu_expand_spin.setRange(0, 2000)
+        self.menu_expand_spin.setSuffix(" ms")
+        self.menu_expand_spin.setToolTip(
+            "Duration of the navigation rail's expand animation in milliseconds."
+        )
+
+        self.menu_collapse_spin = QSpinBox()
+        self.menu_collapse_spin.setRange(0, 2000)
+        self.menu_collapse_spin.setSuffix(" ms")
+        self.menu_collapse_spin.setToolTip(
+            "Duration of the navigation rail's collapse animation in milliseconds."
+        )
+
+        self.menu_easing_combo = QComboBox()
+        for label, curve in _MENU_EASING_OPTIONS:
+            self.menu_easing_combo.addItem(label, curve)
+        self.menu_easing_combo.setToolTip(
+            "Motion curve applied to the navigation rail's expand/collapse animation."
+        )
+
+        self.reset_menu_animation_btn = QPushButton("Reset")
+        self.reset_menu_animation_btn.setFixedWidth(50)
+        self.reset_menu_animation_btn.setToolTip(
+            "Reset the menu animation to the defaults (InBack, 220/168 ms)."
+        )
+        self.reset_menu_animation_btn.clicked.connect(self._reset_menu_animation)
+
+        menu_anim_row = QHBoxLayout()
+        menu_anim_row.addWidget(self.menu_expand_spin, 1)
+        menu_anim_row.addWidget(self.menu_collapse_spin, 1)
+        menu_anim_row.addWidget(self.menu_easing_combo, 2)
+        menu_anim_row.addWidget(self.reset_menu_animation_btn)
+        appearance_layout.addRow("MENU ANIMATION:", menu_anim_row)
+
         # --- Section 6: Configuration Presets (rows within BEHAVIOR) ---
         # The preset control widgets are built here and later injected into the
         # BEHAVIOR section's form layout (see _setup_config_presets_ui).
@@ -1006,20 +1085,17 @@ class SetupTab(QWidget):
     def _setup_config_presets_ui(self, behavior_layout: QFormLayout):
         """Build the Configuration Presets UI.
 
-        The current-config combobox is placed in cell d1 (row 0, col 3) and
-        the action buttons in cell e1 (row 0, col 4) of the SOURCES AND
-        INDEXING grid.  The Ovr/Add radios, Index button and search-roots
-        field (plus a header) are added as rows to the BEHAVIOR form layout.
+        The whole block — header, config-file combobox with its action
+        buttons, and the Ovr/Add radios + Index button + search-roots field —
+        is inserted at the TOP of the BEHAVIOR form layout.
         """
-        # ── d1 (row 0, col 3): Config-file-history combobox ──
+        # ── Config-file-history combobox ──
         self.preset_combo = QComboBox()
         self.preset_combo.setEditable(True)
         self.preset_combo.setToolTip("Currently loaded configuration file (or the LOCAL default preset)")
         self.preset_combo.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        if hasattr(self, "_sources_grid"):
-            self._sources_grid.addWidget(self.preset_combo, 0, 3, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
 
-        # ── e1 (row 0, col 4): Config-file action buttons ──
+        # ── Config-file action buttons ──
         preset_btn_widget = QWidget()
         preset_btn_layout = QHBoxLayout(preset_btn_widget)
         preset_btn_layout.setContentsMargins(0, 0, 0, 0)
@@ -1068,13 +1144,17 @@ class SetupTab(QWidget):
         self.preset_browse_btn.clicked.connect(self._on_preset_browse)
         preset_btn_layout.addWidget(self.preset_browse_btn)
 
-        if hasattr(self, "_sources_grid"):
-            self._sources_grid.addWidget(preset_btn_widget, 0, 4, Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignRight)
+        # ── One BEHAVIOR row: label + [combo][load][save][remove][browse] ──
+        config_row = QWidget()
+        config_row_layout = QHBoxLayout(config_row)
+        config_row_layout.setContentsMargins(0, 0, 0, 0)
+        config_row_layout.setSpacing(4)
+        config_row_layout.addWidget(self.preset_combo, 1)
+        config_row_layout.addWidget(preset_btn_widget)
 
-        # ── BEHAVIOR section rows: radios + Index button + search roots ──
+        # ── BEHAVIOR section rows: header + radios + Index button + search roots ──
         header = QLabel("<b>Configuration Presets</b>")
         header.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        behavior_layout.addRow(header)
 
         # Row 2: Ovr / Add radio pair + Index button + search roots
         mid_row = QWidget()
@@ -1110,7 +1190,11 @@ class SetupTab(QWidget):
         self.preset_search_roots_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         mid_layout.addWidget(self.preset_search_roots_edit, 1)
 
-        behavior_layout.addRow(mid_row)
+        # Insert the whole Configuration Presets block at the TOP of the
+        # BEHAVIOR form layout (rows below were added before this call).
+        behavior_layout.insertRow(0, mid_row)
+        behavior_layout.insertRow(0, "CONFIG FILE:", config_row)
+        behavior_layout.insertRow(0, header)
 
     def _init_config_preset_manager(self):
         """Create the preset manager and populate the presets combobox."""
@@ -1174,6 +1258,9 @@ class SetupTab(QWidget):
             self.preset_combo.addItem(os.path.normpath(path), path)
 
         self.preset_combo.blockSignals(False)
+
+        # Extend the config-file combobox 50px beyond its natural minimum.
+        self.preset_combo.setMinimumWidth(self.preset_combo.minimumSizeHint().width() + 50)
 
     def _current_preset_selection(self):
         """Return (display_text, data) for the current combobox selection."""
@@ -1540,6 +1627,9 @@ class SetupTab(QWidget):
         self.font_size_spin.valueChanged.connect(self._on_font_size_changed)
         self.editor_font_selector.currentFontChanged.connect(self._on_editor_font_changed)
         self.editor_font_size_spin.valueChanged.connect(self._on_editor_font_size_changed)
+        self.menu_expand_spin.valueChanged.connect(self._on_menu_animation_changed)
+        self.menu_collapse_spin.valueChanged.connect(self._on_menu_animation_changed)
+        self.menu_easing_combo.currentIndexChanged.connect(self._on_menu_animation_changed)
 
         # Connect Cloud/Backup enable signals to update sub-tab state
         if "cloud_sync_path" in self.path_rows:
@@ -2592,6 +2682,14 @@ exit 1
     def sync_ui_from_config(self, config: AppConfig):
         self.blockSignals(True)
 
+        # Block the rail-animation widgets too: their signals feed
+        # _on_menu_animation_changed, which writes the widget state back into
+        # config. Without blocking, the first setValue() here would persist a
+        # partially-synced profile (e.g. collapse=0, easing=Linear) into config.
+        self.menu_expand_spin.blockSignals(True)
+        self.menu_collapse_spin.blockSignals(True)
+        self.menu_easing_combo.blockSignals(True)
+
         self.source_dirs_list.clear()
         self.source_dirs_list.addItems(config.source_dirs)
         self.excluded_dirs_list.clear()
@@ -2619,6 +2717,12 @@ exit 1
         
         editor_font_size = getattr(config, 'editor_font_size', 9)
         self.editor_font_size_spin.setValue(editor_font_size)
+
+        self.menu_expand_spin.setValue(int(getattr(config, 'menu_expand_duration', 220)))
+        self.menu_collapse_spin.setValue(int(getattr(config, 'menu_collapse_duration', 168)))
+        easing_name = getattr(config, 'menu_easing', 'InBack') or 'InBack'
+        easing_idx = self.menu_easing_combo.findData(_easing_curve_from_name(easing_name))
+        self.menu_easing_combo.setCurrentIndex(easing_idx if easing_idx >= 0 else 0)
 
         self.run_as_admin_checkbox.setChecked(config.run_as_admin)
         self.use_kill_list_checkbox.setChecked(config.use_kill_list)
@@ -2796,6 +2900,12 @@ exit 1
 
         self.blockSignals(False)
 
+        self.menu_expand_spin.blockSignals(False)
+        self.menu_collapse_spin.blockSignals(False)
+        self.menu_easing_combo.blockSignals(False)
+
+        self._apply_menu_animation()
+
         if _auto_populated:
             self.config_changed.emit()
 
@@ -2817,6 +2927,11 @@ exit 1
         
         config.editor_font_family = self.editor_font_selector.currentFont().family()
         config.editor_font_size = self.editor_font_size_spin.value()
+
+        config.menu_expand_duration = self.menu_expand_spin.value()
+        config.menu_collapse_duration = self.menu_collapse_spin.value()
+        easing = self.menu_easing_combo.currentData()
+        config.menu_easing = easing.name if easing is not None else "InBack"
 
         config.run_as_admin = self.run_as_admin_checkbox.isChecked()
         config.use_kill_list = self.use_kill_list_checkbox.isChecked()
@@ -2927,6 +3042,39 @@ exit 1
         """Reset Editor font to system default."""
         self.editor_font_selector.setCurrentFont(self.font().family())
         self.editor_font_size_spin.setValue(9)
+
+    def _reset_menu_animation(self):
+        """Reset the menu animation to the defaults (InBack, 220/168 ms)."""
+        self.menu_expand_spin.setValue(220)
+        self.menu_collapse_spin.setValue(168)
+        idx = self.menu_easing_combo.findData(QEasingCurve.Type.InBack)
+        self.menu_easing_combo.setCurrentIndex(idx if idx >= 0 else 0)
+
+    def _on_menu_animation_changed(self, *_):
+        """Apply the rail animation profile immediately and persist it."""
+        self._apply_menu_animation()
+        if hasattr(self.main_window, 'config'):
+            config = self.main_window.config
+            config.menu_expand_duration = self.menu_expand_spin.value()
+            config.menu_collapse_duration = self.menu_collapse_spin.value()
+            easing = self.menu_easing_combo.currentData()
+            config.menu_easing = easing.name if easing is not None else "InBack"
+            self.config_changed.emit()
+
+    def _apply_menu_animation(self):
+        """Push the current animation profile to every navigation rail."""
+        easing = self.menu_easing_combo.currentData()
+        profile = {
+            'expand_duration': self.menu_expand_spin.value(),
+            'collapse_duration': self.menu_collapse_spin.value(),
+            'easing': easing,
+        }
+        self._slide_panel.set_animation_profile(**profile)
+        mw = self.main_window
+        if hasattr(mw, 'deployment_tab'):
+            panel = getattr(mw.deployment_tab, '_slide_panel', None)
+            if panel is not None:
+                panel.set_animation_profile(**profile)
 
     def _on_font_changed(self, font):
         """Apply font change immediately."""

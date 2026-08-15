@@ -155,6 +155,7 @@ class DeploymentTab(QWidget):
         self.indexing_progress.setVisible(False)
 
         self.name_check_checkbox = QCheckBox("Enable Steam Name Matching")
+        self.name_check_checkbox.setChecked(True)
         self.name_check_checkbox.setToolTip("Attempt to match indexed games with Steam titles for better naming. Requires steam.json.")
 
         self.auto_flag_checkbox = QCheckBox("Demote current library")
@@ -189,11 +190,14 @@ class DeploymentTab(QWidget):
 
         self.download_game_json_checkbox = QCheckBox("Download Steam's Game.json")
         self.download_game_json_checkbox.setToolTip("If checked, attempts to download game metadata from Steam using the Steam ID during creation.")
+        self.download_game_json_checkbox.setChecked(True)
 
         self.download_pcgw_checkbox = QCheckBox("Download PcGamingWiki")
+        self.download_pcgw_checkbox.setChecked(True)
 
         self.download_artwork_checkbox = QCheckBox("Download Artwork")
         self.download_artwork_checkbox.setToolTip("Downloads header and background images to the profile folder.")
+        self.download_artwork_checkbox.setChecked(True)
 
         # Layout the checkboxes
         meta_layout.addWidget(self.download_game_json_checkbox, 0, 0)
@@ -217,15 +221,20 @@ class DeploymentTab(QWidget):
         self.overwrite_artwork_checkbox = QCheckBox("Overwrite Artwork")
         self.overwrite_game_ini_checkbox = QCheckBox("Overwrite Game.ini")
         self.recreate_game_ini_checkbox = QCheckBox("Recreate Game.ini")
+        for cb in (
+            self.overwrite_game_json_checkbox,
+            self.overwrite_pcgw_checkbox,
+            self.overwrite_artwork_checkbox,
+            self.overwrite_game_ini_checkbox,
+            self.recreate_game_ini_checkbox,
+        ):
+            cb.setChecked(True)
 
         for i, key in enumerate(PATH_KEYS):
             label = PATH_LABELS.get(key, f"Overwrite {key}")
             cb = QCheckBox(f"{label}")
-            # Only check by default for profiles_dir and launchers_dir
-            if key in ["profiles_dir", "launchers_dir"]:
-                cb.setChecked(True)
-            else:
-                cb.setChecked(False)
+            # All overwrite options are enabled by default
+            cb.setChecked(True)
             cb.stateChanged.connect(self.config_changed.emit)
             self.overwrite_checkboxes[key] = cb
             overwrite_layout.addWidget(cb, i // 2, i % 2)
@@ -529,15 +538,8 @@ class DeploymentTab(QWidget):
         
         # Sync overwrite checkboxes with proper defaults
         for key, cb in self.overwrite_checkboxes.items():
-            # Get the mode for this key
-            mode = config.deployment_path_modes.get(key, "CEN")
-            # Default to checked only for profiles_dir and launchers_dir, or when mode is LC
-            if key in ["profiles_dir", "launchers_dir"]:
-                default_state = True
-            elif mode == "LC":
-                default_state = True
-            else:
-                default_state = False
+            # All overwrite options default to enabled.
+            default_state = True
             cb.setChecked(config.overwrite_states.get(key, default_state))
 
         self.blockSignals(False)

@@ -6,10 +6,12 @@ from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QIcon, QFontDatabase, QFont
 import os
 import shutil
+import platform
 from Python.ui.deployment_tab import DeploymentTab
 from Python.ui.setup_tab import SetupTab
 from Python.ui.steam_cache import GameCacheManager, STEAM_FILTERED_TXT
 from Python.ui.editor_tab import EditorTab
+from Python.ui.titlebar import TitleBar
 from Python.models import AppConfig
 from Python.managers.config_manager import ConfigManager
 from Python.managers.data_manager import DataManager
@@ -18,6 +20,22 @@ from Python.managers.plugin_manager import PluginManager
 from Python import constants
 from Python.utils import format_bytes
 import logging
+import ctypes
+import ctypes.wintypes
+
+
+class _POINTL(ctypes.Structure):
+    _fields_ = [("x", ctypes.c_long), ("y", ctypes.c_long)]
+
+
+class _MINMAXINFO(ctypes.Structure):
+    _fields_ = [
+        ("ptReserved", _POINTL),
+        ("ptMaxSize", _POINTL),
+        ("ptMaxPosition", _POINTL),
+        ("ptMinTrackSize", _POINTL),
+        ("ptMaxTrackSize", _POINTL),
+    ]
 
 
 class MainWindow(QMainWindow):
@@ -144,6 +162,11 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(constants.APP_ICON))
         self.setGeometry(100, 100, 930, 500)
         self.setMinimumWidth(470)
+
+        # Frameless window with a custom title bar (min/max/close + context menu).
+        self.setWindowFlag(Qt.WindowType.FramelessWindowHint, True)
+        self.title_bar = TitleBar(self)
+        self.setMenuWidget(self.title_bar)
 
         if self.plugin_mode:
             self.setStyleSheet("""
@@ -438,6 +461,95 @@ class MainWindow(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             self.data_manager.delete_indexes()
 
+    # ------------------------------------------------------------------
+    # Frameless-window resizing (native Windows messages)
+    # ------------------------------------------------------------------
+
+    # Windows message ids / hit-test results (defined locally so pywin32 is
+    # not required for the frameless resize to work).
+    _WM_NCHITTEST = 0x0084
+    _WM_GETMINMAXINFO = 0x0024
+    _HTCLIENT = 1
+    _HTLEFT = 10
+    _HTRIGHT = 11
+    _HTTOP = 12
+    _HTTOPLEFT = 13
+    _HTTOPRIGHT = 14
+    _HTBOTTOM = 15
+    _HTBOTTOMLEFT = 16
+    _HTBOTTOMRIGHT = 17
+    _RESIZE_BORDER = 6
+
+    def nativeEvent(self, eventType, message):
+        """Handle Windows native messages for frameless edge-resize/maximize."""
+        if platform.system() == "Windows":
+            try:
+                address = (
+                    message.__int__()
+                    if hasattr(message, "__int__")
+                    else int(message)
+                )
+                msg = ctypes.wintypes.MSG.from_address(address)
+                if msg.message == self._WM_NCHITTEST:
+                    return True, self._hit_test_result()
+                if msg.message == self._WM_GETMINMAXINFO:
+                    self._set_maximized_bounds(msg)
+                    return True, 0
+            except Exception:
+                logging.debug("nativeEvent handling failed.", exc_info=True)
+        return False, 0
+
+    def _hit_test_result(self) -> int:
+        """Map the cursor position to a Windows hit-test constant for resizing."""
+        from PyQt6.QtGui import QCursor
+        border = self._RESIZE_BORDER
+        local = self.mapFromGlobal(QCursor.pos())
+        x, y = local.x(), local.y()
+        w, h = self.width(), self.height()
+
+        on_left = x <= border
+        on_right = x >= w - border - 1
+        on_top = y <= border
+        on_bottom = y >= h - border - 1
+
+        if on_top and on_left:
+            return self._HTTOPLEFT
+        if on_top and on_right:
+            return self._HTTOPRIGHT
+        if on_bottom and on_left:
+            return self._HTBOTTOMLEFT
+        if on_bottom and on_right:
+            return self._HTBOTTOMRIGHT
+        if on_left:
+            return self._HTLEFT
+        if on_right:
+            return self._HTRIGHT
+        if on_top:
+            return self._HTTOP
+        if on_bottom:
+            return self._HTBOTTOM
+        return self._HTCLIENT
+
+    def _set_maximized_bounds(self, msg) -> None:
+        """Constrain a frameless maximize to the monitor's work area."""
+        screen = self.screen()
+        if screen is None:
+            return
+        area = screen.availableGeometry()
+        try:
+            dpr = screen.devicePixelRatio()
+        except Exception:
+            dpr = 1.0
+        mmi = _MINMAXINFO.from_address(int(msg.lParam))
+        mmi.ptMaxPosition.x = int(area.x() * dpr)
+        mmi.ptMaxPosition.y = int(area.y() * dpr)
+        mmi.ptMaxSize.x = int(area.width() * dpr)
+        mmi.ptMaxSize.y = int(area.height() * dpr)
+        min_w = self.minimumWidth()
+        min_h = self.minimumHeight()
+        if min_w > 0 or min_h > 0:
+            mmi.ptMinTrackSize.x = int(min_w * dpr)
+            mmi.ptMinTrackSize.y = int(min_h * dpr)
 
     def _setup_creation_controller(self):
         """Initialize the creation controller"""

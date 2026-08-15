@@ -13,6 +13,9 @@ class AppConfig:
         self.ui_font_size = 9
         self.editor_font_family = ""
         self.editor_font_size = 9
+        self.menu_expand_duration = 220
+        self.menu_collapse_duration = 168
+        self.menu_easing = "InBack"
 
         # Setup Tab: Element & Application Locations
         self.profiles_dir = ""
@@ -192,11 +195,11 @@ class AppConfig:
 
         # Deployment Tab: General Options
         self.download_game_json = True
-        self.overwrite_game_json = False
+        self.overwrite_game_json = True
         self.download_artwork = True
-        self.overwrite_artwork = False
+        self.overwrite_artwork = True
         self.download_pcgw_metadata = True
-        self.overwrite_pcgw_metadata = False
+        self.overwrite_pcgw_metadata = True
         self.overwrite_game_ini = True
         self.recreate_game_ini = True
         self.hide_taskbar = False
@@ -253,13 +256,26 @@ class AppConfig:
         self.defaults = {}
 
         # Overwrite states for paths (Deployment Tab -> Creation)
-        # Default to False except for profiles_dir and launchers_dir
+        # Enabled by default for all deployable paths.
         self.overwrite_states = {
             "profiles_dir": True,
             "launchers_dir": True,
+            "launcher_executable": True,
+            "controller_mapper_path": True,
+            "monitorapp_path": True,
+            "just_after_launch_path": True,
+            "just_before_exit_path": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
-            "desk_profile_path": True
+            "desk_profile_path": True,
+            "monitor_game_path": True,
+            "monitor_desk_path": True,
+            "pre1_path": True,
+            "post1_path": True,
+            "pre2_path": True,
+            "post2_path": True,
+            "pre3_path": True,
+            "post3_path": True,
         }
 
         # Default run-wait states for various features

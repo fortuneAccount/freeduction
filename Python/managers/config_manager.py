@@ -160,19 +160,37 @@ class ConfigManager(QObject):
         }
 
         # Set default overwrite states (Deployment Tab -> Creation)
-        # Only profiles_dir and launchers_dir should be True by default
+        # Enabled by default for all deployable paths.
         config.overwrite_states = {
             "profiles_dir": True,
             "launchers_dir": True,
+            "launcher_executable": True,
+            "controller_mapper_path": True,
+            "monitorapp_path": True,
+            "just_after_launch_path": True,
+            "just_before_exit_path": True,
             "p1_profile_path": True,
             "p2_profile_path": True,
             "desk_profile_path": True,
+            "monitor_game_path": True,
+            "monitor_desk_path": True,
+            "pre1_path": True,
+            "post1_path": True,
+            "pre2_path": True,
+            "post2_path": True,
+            "pre3_path": True,
+            "post3_path": True,
         }
 
         # Set default deployment tab options
         config.download_game_json = True
+        config.overwrite_game_json = True
         config.download_pcgw_metadata = True
+        config.overwrite_pcgw_metadata = True
         config.download_artwork = True
+        config.overwrite_artwork = True
+        config.overwrite_game_ini = True
+        config.recreate_game_ini = True
         config.hide_taskbar = False
         config.run_as_admin = True
         config.enable_name_matching = True
