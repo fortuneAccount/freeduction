@@ -11,6 +11,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     tigervnc-tools \
     xfce4 \
     xfce4-goodies \
+    dbus-x11 \
     websockify \
     xterm \
     libegl1 \
@@ -50,7 +51,7 @@ export XDG_CURRENT_DESKTOP=XFCE
 export XDG_SESSION_DESKTOP=xfce
 export XDG_CONFIG_DIRS=/etc/xdg/xdg-xfce:/etc/xdg/xdg-xfce:/etc/xdg
 
-exec startxfce4
+exec dbus-run-session -- startxfce4
 EOF
 
 chmod +x "$HOME/.vnc/xstartup"
