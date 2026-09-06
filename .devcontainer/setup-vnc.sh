@@ -8,6 +8,7 @@ sudo apt-get update
 sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     tigervnc-standalone-server \
     tigervnc-common \
+    tigervnc-tools \
     xfce4 \
     xfce4-goodies \
     websockify \
