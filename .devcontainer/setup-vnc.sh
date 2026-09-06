@@ -59,7 +59,4 @@ chmod +x "$HOME/.vnc/xstartup"
 echo
 echo "VNC setup complete."
 echo
-echo "Create a VNC password with:"
-echo "  vncpasswd"
-echo
-echo "Then rebuild/restart the container."
+echo "VNC password authentication is disabled for this local development setup."

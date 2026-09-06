@@ -11,6 +11,7 @@ pkill -f "websockify.*6080" >/dev/null 2>&1 || true
 vncserver :1 \
     -geometry 1920x1080 \
     -depth 24 \
+    -SecurityTypes None \
     -localhost \
     -IdleTimeout 0 \
     -MaxDisconnectionTime 0
