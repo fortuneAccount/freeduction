@@ -27,7 +27,8 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
     libgl1 \
     libglib2.0-0 \
     libdbus-1-3 \
-    libfontconfig1
+    libfontconfig1 \
+    xcb-cursor0 
 
 echo "Installing noVNC..."
 
