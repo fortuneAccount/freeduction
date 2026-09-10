@@ -15,9 +15,9 @@ QT-PyQt-PySide-Custom-Widgets
 winshell
 pywin32
 
-#setuptools
-#screeninfo
-#qdarkstyle
-#pyqtdarktheme
-#PyQt6-Fluent-Widgets[full]
-#PyQt6-Qlementine
+setuptools
+screeninfo
+qdarkstyle
+pyqtdarktheme
+PyQt6-Fluent-Widgets[full]
+PyQt6-Qlementine
