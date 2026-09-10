@@ -320,8 +320,9 @@ class SetupTab(QWidget):
         self._setup_ui()
 
     def _add_path_row(self, layout, label_text, config_key, row_widget, tooltip_prefix=None):
-        formatted_text = f"`^ {label_text}"
+        formatted_text = f"^ {label_text}"
         label = QLabel(formatted_text)
+        label.setCursor(Qt.CursorShape.PointingHandCursor)
         label.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         base_tip = "Right-click to configure Options & Arguments"
         label.setToolTip(f"{tooltip_prefix} — {base_tip}" if tooltip_prefix else base_tip)

@@ -343,15 +343,22 @@ def show_taskbar():
     if TASKBAR_HWND:
         win32gui.ShowWindow(TASKBAR_HWND, win32con.SW_SHOW)
 
-def run_generic_app(app_key: str, wait_key: str):
+def run_generic_app(app_key: str, wait_key: str, options_key: str = '', arguments_key: str = ''):
     app_path = CONFIG.get(app_key, '')
     wait = CONFIG.get(wait_key, False)
+    options = CONFIG.get(options_key, '') if options_key else ''
+    arguments = CONFIG.get(arguments_key, '') if arguments_key else ''
     
     # Resolve path case-insensitively
     app_path = find_path_case_insensitive(app_path)
     
     if app_path:
-        process = run_process(f'"{app_path}"', wait=wait)
+        command = f'"{app_path}"'
+        if options:
+            command += f' {options}'
+        if arguments:
+            command += f' {arguments}'
+        process = run_process(command, wait=wait)
         if process and not wait:
             RUNNING_PROCESSES[app_key] = process
 
@@ -391,10 +398,26 @@ def execute_action(action_name: str, is_exit_sequence: bool):
         if not is_exit_sequence: show_message("  - Borderless windowing will be applied after game launch.")
         else: kill_borderless()
     elif action_name == 'Pre1':
-        run_generic_app('app1', 'app1wait')
+        run_generic_app('app1', 'app1wait', 'app1options', 'app1arguments')
+    elif action_name == 'Pre2':
+        run_generic_app('app2', 'app2wait', 'app2options', 'app2arguments')
+    elif action_name == 'Pre3':
+        run_generic_app('app3', 'app3wait', 'app3options', 'app3arguments')
     elif action_name == 'Post1':
-        run_generic_app('postlaunch_app1', 'postlaunch_app1wait')
-    # ... Add all other Pre/Post/Just-In-Time apps here
+        run_generic_app('postlaunch_app1', 'postlaunch_app1wait',
+                        'postlaunch_app1options', 'postlaunch_app1arguments')
+    elif action_name == 'Post2':
+        run_generic_app('postlaunch_app2', 'postlaunch_app2wait',
+                        'postlaunch_app2options', 'postlaunch_app2arguments')
+    elif action_name == 'Post3':
+        run_generic_app('postlaunch_app3', 'postlaunch_app3wait',
+                        'postlaunch_app3options', 'postlaunch_app3arguments')
+    elif action_name == 'JustAfterLaunch':
+        run_generic_app('justafterlaunchapp', 'justafterlaunchwait',
+                        'justafterlaunchoptions', 'justafterlauncharguments')
+    elif action_name == 'JustBeforeExit':
+        run_generic_app('justbeforeexitapp', 'justbeforeexitwait',
+                        'justbeforeexitoptions', 'justbeforeexitarguments')
     else:
         show_message(f"  - Unknown action: {action_name}")
 

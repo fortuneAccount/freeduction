@@ -37,7 +37,6 @@ cache/
 
 # IDE specific
 .agent.md
-.devcontainer/
 .vscode/
 .idea/
 .kiro/
