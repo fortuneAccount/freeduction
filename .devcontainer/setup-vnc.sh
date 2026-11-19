@@ -8,6 +8,8 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
     fluxbox \
     libegl1 \
     libxcb-cursor0 \
+    libxcb-xtest0 \
+    libxcb-xinput0 \
     libxcb-glx0 \
     libxcb-icccm4 \
     libxcb-image0 \
@@ -24,6 +26,7 @@ sudo DEBIAN_FRONTEND=noninteractive apt-get install -y \
     libx11-xcb1 \
     libxkbcommon-x11-0 \
     novnc \
+    xterm \
     websockify \
     x11vnc \
     xvfb

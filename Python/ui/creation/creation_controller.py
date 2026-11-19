@@ -17,6 +17,104 @@ from Python import constants
 from Python.managers.pcgw_manager import PCGWManager
 from Python.ui.name_utils import make_safe_filename
 
+RUN_AS_ADMIN_LINK_FLAG = 0x2000
+
+SHELL_LINK_COM_HELPER = r"""
+using System;
+using System.Runtime.InteropServices;
+using System.Text;
+
+namespace Freeduction.ShortcutInterop
+{
+    [ComImport, Guid("000214F9-0000-0000-C000-000000000046"),
+     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IShellLinkW
+    {
+        void GetPath([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder path,
+            int maxPath, IntPtr findData, uint flags);
+        void GetIDList(out IntPtr itemIdList);
+        void SetIDList(IntPtr itemIdList);
+        void GetDescription([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder name,
+            int maxName);
+        void SetDescription([MarshalAs(UnmanagedType.LPWStr)] string name);
+        void GetWorkingDirectory([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder directory,
+            int maxPath);
+        void SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string directory);
+        void GetArguments([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder arguments,
+            int maxPath);
+        void SetArguments([MarshalAs(UnmanagedType.LPWStr)] string arguments);
+        void GetHotkey(out short hotkey);
+        void SetHotkey(short hotkey);
+        void GetShowCmd(out int showCommand);
+        void SetShowCmd(int showCommand);
+        void GetIconLocation([Out, MarshalAs(UnmanagedType.LPWStr)] StringBuilder iconPath,
+            int maxPath, out int iconIndex);
+        void SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string iconPath, int iconIndex);
+        void SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string path, uint reserved);
+        void Resolve(IntPtr windowHandle, uint flags);
+        void SetPath([MarshalAs(UnmanagedType.LPWStr)] string path);
+    }
+
+    [ComImport, Guid("45E2B4AE-B1C3-11D0-B92F-00A0C90312E1"),
+     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IShellLinkDataList
+    {
+        void AddDataBlock(IntPtr dataBlock);
+        void CopyDataBlock(uint signature, out IntPtr dataBlock);
+        void RemoveDataBlock(uint signature);
+        void GetFlags(out uint flags);
+        void SetFlags(uint flags);
+    }
+
+    [ComImport, Guid("0000010b-0000-0000-C000-000000000046"),
+     InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+    public interface IPersistFile
+    {
+        void GetClassID(out Guid classId);
+        [PreserveSig] int IsDirty();
+        void Load([MarshalAs(UnmanagedType.LPWStr)] string path, uint mode);
+        void Save([MarshalAs(UnmanagedType.LPWStr)] string path, bool remember);
+        void SaveCompleted([MarshalAs(UnmanagedType.LPWStr)] string path);
+        void GetCurFile([MarshalAs(UnmanagedType.LPWStr)] out string path);
+    }
+
+    public static class ShellLinkCreator
+    {
+        public static void Create(string shortcutPath, string targetPath,
+            string arguments, string workingDirectory, string iconPath,
+            string description, bool runAsAdmin)
+        {
+            var classId = new Guid("00021401-0000-0000-C000-000000000046");
+            var link = (IShellLinkW)Activator.CreateInstance(
+                Type.GetTypeFromCLSID(classId));
+            try
+            {
+                link.SetPath(targetPath);
+                link.SetArguments(arguments ?? "");
+                if (!String.IsNullOrEmpty(workingDirectory))
+                    link.SetWorkingDirectory(workingDirectory);
+                if (!String.IsNullOrEmpty(iconPath))
+                    link.SetIconLocation(iconPath, 0);
+                if (!String.IsNullOrEmpty(description))
+                    link.SetDescription(description);
+                if (runAsAdmin)
+                {
+                    var data = (IShellLinkDataList)link;
+                    uint flags;
+                    data.GetFlags(out flags);
+                    data.SetFlags(flags | 0x2000u);
+                }
+                ((IPersistFile)link).Save(shortcutPath, true);
+            }
+            finally
+            {
+                Marshal.ReleaseComObject(link);
+            }
+        }
+    }
+}
+"""
+
 class CreationController:
     """
     Handles the creation of launcher files, shortcuts, and Game.ini configurations.
@@ -312,7 +410,8 @@ class CreationController:
                 target_path=game_exe_path,
                 shortcut_path=profile_shortcut_path,
                 working_dir=game_data.get('directory', ''),
-                description=f"Shortcut to {game_name_override}"
+                description=f"Shortcut to {game_name_override}",
+                run_as_admin=game_data.get('run_as_admin', False)
             )
 
             # 7. Create Launcher Shortcut (pointing to Launcher.exe)
@@ -329,7 +428,8 @@ class CreationController:
                 arguments=launcher_args,
                 working_dir=game_profile_dir,
                 icon_path=game_exe_path,
-                description=f"Launch {game_name_override}"
+                description=f"Launch {game_name_override}",
+                run_as_admin=game_data.get('run_as_admin', False)
             )
 
             if sc1 and sc2:
@@ -344,48 +444,82 @@ class CreationController:
             self.main_window.statusBar().showMessage(f"Error creating launcher for {game_name_override}: {e}", 5000)
             return False
 
-    def _create_shortcut_powershell(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description=""):
-        """Fallback method to create shortcuts using PowerShell (handles Unicode correctly)."""
-        def ps_escape(s):
-            return str(s).replace("'", "''")
-
-        target_norm = os.path.normpath(str(target_path))
-        shortcut_norm = os.path.normpath(str(shortcut_path))
-        working_norm = os.path.normpath(str(working_dir)) if working_dir else ""
-        icon_norm = os.path.normpath(str(icon_path)) if icon_path else ""
-
-        # Build PS script to create the shortcut via WScript.Shell COM object
+    def _create_shortcut_powershell(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description="", run_as_admin=False):
+        """Create shortcuts through the Unicode ShellLink COM interface."""
+        shortcut_data = json.dumps({
+            "shortcut_path": os.path.normpath(str(shortcut_path)),
+            "target_path": os.path.normpath(str(target_path)),
+            "arguments": arguments or "",
+            "working_dir": os.path.normpath(str(working_dir)) if working_dir else "",
+            "icon_path": os.path.normpath(str(icon_path)) if icon_path else "",
+            "description": description or "",
+            "run_as_admin": bool(run_as_admin),
+        }, ensure_ascii=True)
+        helper_b64 = base64.b64encode(SHELL_LINK_COM_HELPER.encode("utf-8")).decode("ascii")
+        shortcut_b64 = base64.b64encode(shortcut_data.encode("utf-8")).decode("ascii")
         ps_cmd = (
-            f"$s=(New-Object -ComObject WScript.Shell).CreateShortcut('{ps_escape(shortcut_norm)}');"
-            f"$s.TargetPath='{ps_escape(target_norm)}';"
-            f"$s.Arguments='{ps_escape(arguments)}';"
-            f"$s.WorkingDirectory='{ps_escape(working_norm)}';"
-            f"$s.Description='{ps_escape(description)}';"
+            "$source=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String("
+            f"'{helper_b64}'));Add-Type -TypeDefinition $source;"
+            "$shortcut=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String("
+            f"'{shortcut_b64}'))|ConvertFrom-Json;"
+            "[Freeduction.ShortcutInterop.ShellLinkCreator]::Create("
+            "$shortcut.shortcut_path,$shortcut.target_path,$shortcut.arguments,"
+            "$shortcut.working_dir,$shortcut.icon_path,$shortcut.description,"
+            "$shortcut.run_as_admin)"
         )
-        if icon_norm:
-            ps_cmd += f"$s.IconLocation='{ps_escape(icon_norm)}';"
-        ps_cmd += "$s.Save()"
-
+        ps_b64 = base64.b64encode(ps_cmd.encode("utf-16-le")).decode("ascii")
         try:
-            # Encode as UTF-16LE and Base64 for PowerShell -EncodedCommand to avoid
-            # Windows command-line encoding issues with non-ASCII characters.
-            ps_b64 = base64.b64encode(ps_cmd.encode("utf-16-le")).decode("ascii")
-            subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy", "Bypass", "-EncodedCommand", ps_b64], 
-                           check=True, capture_output=True)
+            subprocess.run(
+                ["powershell", "-NoProfile", "-NonInteractive", "-ExecutionPolicy",
+                 "Bypass", "-EncodedCommand", ps_b64],
+                check=True, capture_output=True, text=True, encoding="utf-8",
+                errors="replace"
+            )
             return True
-        except Exception as e:
-            logging.error(f"PowerShell shortcut creation failed for {shortcut_path}: {e}")
+        except subprocess.CalledProcessError as e:
+            logging.error(
+                "PowerShell shortcut creation failed for %s (exit %s): %s",
+                shortcut_path, e.returncode, (e.stderr or "").strip() or e
+            )
+            return False
+        except OSError as e:
+            logging.error("Could not run PowerShell for shortcut %s: %s", shortcut_path, e)
             return False
 
-    def _create_shortcut(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description=""):
+    @staticmethod
+    def _set_shortcut_run_as_admin(shortcut_path):
+        """Set the Windows Shell Link RunAsUser flag on an existing shortcut."""
+        try:
+            with open(shortcut_path, "r+b") as shortcut:
+                header = shortcut.read(0x18)
+                if len(header) < 0x18 or header[:4] != b"\x4c\x00\x00\x00":
+                    raise ValueError(f"Invalid shortcut file: {shortcut_path}")
+                flags = int.from_bytes(header[0x14:0x18], "little")
+                if flags & RUN_AS_ADMIN_LINK_FLAG:
+                    return True
+                shortcut.seek(0x14)
+                shortcut.write((flags | RUN_AS_ADMIN_LINK_FLAG).to_bytes(4, "little"))
+            return True
+        except (OSError, ValueError) as e:
+            logging.error("Failed to mark shortcut as Run As Administrator (%s): %s",
+                          shortcut_path, e)
+            return False
+
+    def _create_shortcut(self, target_path, shortcut_path, arguments="", working_dir="", icon_path=None, description="", run_as_admin=False):
         """Creates a Windows shortcut using the bundled Shortcut.exe."""
         # Pre-check for Unicode characters which Shortcut.exe (ANSI) cannot handle
-        is_unicode = any(ord(c) > 127 for c in (str(target_path) + str(shortcut_path) + str(arguments) + str(working_dir)))
+        is_unicode = any(ord(c) > 127 for c in (
+            str(target_path) + str(shortcut_path) + str(arguments) +
+            str(working_dir) + str(icon_path or "") + str(description)
+        ))
         # Shortcut.exe crashes (0xC0000005) on nested quoting, so arguments that already
         # contain double quotes are handled by the PowerShell fallback instead.
         if is_unicode or '"' in str(arguments):
             logging.info(f"Unicode or quoted arguments detected. Using PowerShell for shortcut: {shortcut_path}")
-            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
+            return self._create_shortcut_powershell(
+                target_path, shortcut_path, arguments, working_dir, icon_path,
+                description, run_as_admin
+            )
 
         shortcut_exe = os.path.join(constants.APP_ROOT_DIR, "bin", "Shortcut.exe")
         if not os.path.exists(shortcut_exe):
@@ -431,19 +565,29 @@ class CreationController:
         try:
             # Pass the command string directly to avoid Python's default argument list processing
             subprocess.run(cmd_str, check=True, capture_output=True, text=True, encoding='utf-8', errors='ignore')
-            return True
+            created = True
         except subprocess.CalledProcessError as e:
             # Check if the file was created DESPITE the crash. 
             # Legacy tools like Shortcut.exe often crash (0xC0000005) during exit routine when handling long paths.
             if os.path.exists(shortcut_norm):
                 logging.warning(f"Shortcut.exe crashed with exit status {e.returncode}, but the shortcut was created successfully at {shortcut_norm}.")
-                return True
-
-            logging.warning(f"Shortcut.exe failed (code {e.returncode}). Attempting PowerShell fallback...")
-            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
+                created = True
+            else:
+                logging.warning(f"Shortcut.exe failed (code {e.returncode}). Attempting PowerShell fallback...")
+                return self._create_shortcut_powershell(
+                    target_path, shortcut_path, arguments, working_dir, icon_path,
+                    description, run_as_admin
+                )
         except Exception as e:
             logging.warning(f"Unexpected error calling Shortcut.exe: {e}. Attempting PowerShell fallback...")
-            return self._create_shortcut_powershell(target_path, shortcut_path, arguments, working_dir, icon_path, description)
+            return self._create_shortcut_powershell(
+                target_path, shortcut_path, arguments, working_dir, icon_path,
+                description, run_as_admin
+            )
+
+        if created and run_as_admin:
+            return self._set_shortcut_run_as_admin(shortcut_norm)
+        return created
 
     def _download_game_json(self, game_data, game_launcher_dir):
         """Downloads Game.json from Steam API if steam_id is present."""

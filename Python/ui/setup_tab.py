@@ -809,22 +809,26 @@ class SetupTab(QWidget):
         for i in range(1, 4):
             key = f"pre{i}_path"
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)
+            self.path_rows[key].combo.setCurrentIndex(-1)
             self.path_rows[key].enabled_cb.setToolTip(f"Enable Pre-Launch App {i}")
             self._add_path_row(scripts_layout, f"Pre-Launch App {i}:", key, self.path_rows[key],
                                tooltip_prefix=f"Set the path to pre-launch application {i}")
         self.path_rows["just_after_launch_path"] = PathConfigRow(
             "just_after_launch_path", add_run_wait=True, repo_items=all_tools)
+        self.path_rows["just_after_launch_path"].combo.setCurrentIndex(-1)
         self.path_rows["just_after_launch_path"].enabled_cb.setToolTip("Enable Just After Launch App")
         self._add_path_row(scripts_layout, "    Just After Launch:", "just_after_launch_path",
                            self.path_rows["just_after_launch_path"], tooltip_prefix="Set the path to the application that runs just after launch")
         self.path_rows["just_before_exit_path"] = PathConfigRow(
             "just_before_exit_path", add_run_wait=True, repo_items=all_tools)
+        self.path_rows["just_before_exit_path"].combo.setCurrentIndex(-1)
         self.path_rows["just_before_exit_path"].enabled_cb.setToolTip("Enable Just Before Exit App")
         self._add_path_row(scripts_layout, "    Just Before Exit:", "just_before_exit_path",
                            self.path_rows["just_before_exit_path"], tooltip_prefix="Set the path to the application that runs just before exit")
         for i in range(1, 4):
             key = f"post{i}_path"
             self.path_rows[key] = PathConfigRow(key, add_run_wait=True, repo_items=all_tools)
+            self.path_rows[key].combo.setCurrentIndex(-1)
             self.path_rows[key].enabled_cb.setToolTip(f"Enable Post-Launch App {i}")
             self._add_path_row(scripts_layout, f"Post-Launch App {i}:", key, self.path_rows[key],
                                tooltip_prefix=f"Set the path to post-launch application {i}")
@@ -2704,6 +2708,8 @@ exit 1
         # Appearance
         theme_id = getattr(config, 'ui_theme', 'default') or 'default'
         idx = self.theme_selector.findData(theme_id)
+        if idx < 0:
+            idx = self.theme_selector.findData("universal")
         self.theme_selector.setCurrentIndex(idx if idx >= 0 else 0)
 
         font_family = getattr(config, 'ui_font_family', "")
@@ -2746,19 +2752,12 @@ exit 1
                 if row.enabled_cb:
                     row.enabled = should_be_enabled
                 
-                # If disabled and using combobox, ensure blank option is prepended and selected
-                if not should_be_enabled and row.use_combobox:
-                    # Prepend blank option if not already there
-                    if row.combo.count() == 0 or row.combo.itemText(0) != "":
-                        row.combo.insertItem(0, "")
-                    row.combo.setCurrentIndex(0)
+                # Special handling for launcher_executable: if empty, keep the default selection
+                if attr_name == "launcher_executable" and not path_value:
+                    # Don't set the path, keep the default from _populate_launcher_combo
+                    pass
                 else:
-                    # Special handling for launcher_executable: if empty, keep the default selection
-                    if attr_name == "launcher_executable" and not path_value:
-                        # Don't set the path, keep the default from _populate_launcher_combo
-                        pass
-                    else:
-                        row.path = path_value
+                    row.path = path_value
                 
                 row.mode = config.deployment_path_modes.get(attr_name, "CEN")
                 row.run_wait = config.run_wait_states.get(f"{attr_name}_run_wait", False)
@@ -2944,11 +2943,7 @@ exit 1
             if attr_name in self.path_rows:
                 row = self.path_rows[attr_name]
                 
-                # If disabled, save empty string; otherwise save the path
-                if row.enabled_cb and not row.enabled:
-                    setattr(config, attr_name, "")
-                else:
-                    setattr(config, attr_name, row.path)
+                setattr(config, attr_name, row.path)
                 
                 config.deployment_path_modes[attr_name] = row.mode
                 if row.enabled_cb:
@@ -3031,8 +3026,8 @@ exit 1
             )
 
     def _reset_theme(self):
-        """Reset theme to default (Fluent WinUI 3)."""
-        idx = self.theme_selector.findData("fluent_winui3")
+        """Reset theme to the built-in Universal style."""
+        idx = self.theme_selector.findData("universal")
         self.theme_selector.setCurrentIndex(idx if idx >= 0 else 0)
 
     def _reset_ui_font(self):

@@ -53,6 +53,14 @@ class ConfigManager(QObject):
             if not getattr(config, 'app_directory', ''):
                 config.app_directory = constants.APP_ROOT_DIR
 
+            if not config.monitorapp_path:
+                monitorapp_path = self._find_executable_recursive(
+                    Path(constants.APP_ROOT_DIR) / "bin", MONITOR_EXES
+                )
+                if monitorapp_path:
+                    config.monitorapp_path = monitorapp_path
+                    self.save_config(config)
+
             self.status_updated.emit("Configuration loaded.", 3000)
             return config
         except Exception as e:

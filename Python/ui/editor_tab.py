@@ -1053,7 +1053,7 @@ class EditorTab(QWidget):
             'borderless_windowing_arguments': config.borderless_gaming_path_arguments,
 
             # Monitor
-            'monitorapp_path': config.monitorapp_path if config.defaults.get('monitorapp_path_enabled', True) else "",
+            'monitorapp_path': config.monitorapp_path,
             'monitorapp_enabled': config.defaults.get('monitorapp_path_enabled', True),
             'monitorapp_overwrite': config.overwrite_states.get('monitorapp_path', True),
             'monitorapp_run_wait': config.run_wait_states.get('monitorapp_path_run_wait', False),
@@ -3115,7 +3115,6 @@ class EditorTab(QWidget):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('monitorapp_path', 'monitorapp_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),
@@ -3657,7 +3656,6 @@ class EditorTab(QWidget):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('monitorapp_path', 'monitorapp_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),

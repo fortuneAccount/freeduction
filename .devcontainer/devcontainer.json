@@ -19,7 +19,7 @@
     },
     "6080": {
       "label": "noVNC",
-      "visibility": "private"
+      "visibility": "public"
     }
   },
 

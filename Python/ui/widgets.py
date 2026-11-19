@@ -273,18 +273,8 @@ class PathConfigRow(QWidget):
         
         if self.use_combobox:
             self.combo.setEnabled(is_enabled)
-            
-            # When disabling, prepend blank option and select it
-            if not is_enabled:
-                # Check if blank option already exists at index 0
-                if self.combo.count() == 0 or self.combo.itemText(0) != "":
-                    self.combo.insertItem(0, "")
-                self.combo.setCurrentIndex(0)
         else:
             self.line_edit.setEnabled(is_enabled)
-            # When disabling, clear the line edit
-            if not is_enabled:
-                self.line_edit.setText("")
         
         self.browse_btn.setEnabled(is_enabled)
         

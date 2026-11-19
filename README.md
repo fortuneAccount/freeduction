@@ -56,7 +56,7 @@ AntimicroX, keySticks, monitorapp,  borderless-gaming,  borderless ,  rclone,  l
 
 ## Installation
 
-0.99.53.23
+0.99.53.28
 
 Run the installer or extract the binary to a location of your choice, **or** download and build and run the source files and executables.
 ```

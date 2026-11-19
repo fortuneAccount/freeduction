@@ -38,7 +38,7 @@ arguments = --profile-controller ${P#} --profile
 ; ── Display ──────────────────────────────────────────────────────────────────
 
 [monitorapp]
-options = |/loadconfig|/internal|/extend|/clone|/external|
+options = /loadconfig|/internal|/extend|/clone|/external|
 arguments =
 
 ; ── Windowing ────────────────────────────────────────────────────────────────

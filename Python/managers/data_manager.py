@@ -225,7 +225,6 @@ class DataManager(QObject):
         path_enabled_pairs = [
             ('controller_mapper_path', 'controller_mapper_enabled'),
             ('borderless_windowing_path', 'borderless_windowing_enabled'),
-            ('monitorapp_path', 'monitorapp_enabled'),
             ('just_after_launch_path', 'just_after_launch_enabled'),
             ('just_before_exit_path', 'just_before_exit_enabled'),
             ('pre1_path', 'pre_1_enabled'),
@@ -252,6 +251,8 @@ class DataManager(QObject):
                 # If the enabled flag is False, clear the path
                 if not game.get(enabled_key, True):
                     game[path_key] = ""
+            if not game.get('monitorapp_path'):
+                game['monitorapp_path'] = self.config.monitorapp_path
         
         return sanitized_data
 

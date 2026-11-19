@@ -170,7 +170,7 @@ def _process_executable(
             # Paths from setup tab (only if enabled)
             'controller_mapper_path': config.controller_mapper_path if config.defaults.get('controller_mapper_path_enabled', True) else "",
             'borderless_windowing_path': config.borderless_gaming_path if config.defaults.get('borderless_gaming_path_enabled', True) else "",
-            'monitorapp_path': config.monitorapp_path if config.defaults.get('monitorapp_path_enabled', True) else "",
+            'monitorapp_path': config.monitorapp_path,
             'monitor_game_cfg': config.monitor_game_path if config.defaults.get('monitor_game_path_enabled', False) else "",
             'monitor_desk_cfg': config.monitor_desk_path if config.defaults.get('monitor_desk_path_enabled', False) else "",
             'player1_profile': config.p1_profile_path if config.defaults.get('p1_profile_path_enabled', True) else "",

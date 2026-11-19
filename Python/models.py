@@ -5,7 +5,7 @@ class AppConfig:
         self.source_dirs = []
         self.excluded_dirs = []
         self.logging_verbosity = "Debug"
-        self.ui_theme: str = "Universal"
+        self.ui_theme: str = "universal"
         self.plugin_creation_mode: bool = False
         self.game_managers_present = "None"
         self.exclude_selected_manager_games = False
